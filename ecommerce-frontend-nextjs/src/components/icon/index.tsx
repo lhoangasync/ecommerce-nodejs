@@ -1,0 +1,15 @@
+export { default as IconFacebook } from "./IconFacebook";
+export { default as IconGoogle } from "./IconGoogle";
+export { default as IconUser } from "./IconUser";
+export { default as IconEmail } from "./IconEmail";
+export { default as IconPassword } from "./IconPassword";
+export { default as IconAddress } from "./IconAddress";
+export { default as IconExit } from "./IconExit";
+export { default as IconUsers } from "./IconUsers";
+export { default as IconCosmetic } from "./IconCosmetic";
+export { default as IconOrder } from "./IconOrder";
+export { default as IconCoupon } from "./IconCoupon";
+export { default as IconEdit } from "./IconEdit";
+export { default as IconDelete } from "./IconDelete";
+export { default as IconEye } from "./IconEye";
+export { default as IconPhone } from "./IconPhone";
