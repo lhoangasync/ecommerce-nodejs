@@ -72,7 +72,10 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
                     <div className="flex items-center gap-3">
                       <Image
                         alt=""
-                        src={user.avatar}
+                        src={
+                          user.avatar ||
+                          "https://plus.unsplash.com/premium_photo-1732757787074-0f95bf19cf73?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZGVmYXVsdCUyMGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D"
+                        }
                         width={70}
                         height={70}
                         className="shrink-0 size-16 rounded-full h-[40px] w-[40px] object-cover"

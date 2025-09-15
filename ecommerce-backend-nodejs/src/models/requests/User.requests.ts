@@ -20,6 +20,10 @@ export interface LoginReqBody {
   password: string
 }
 
+export interface VerifyEmailReqBody {
+  email_verify_token: string
+}
+
 export interface UpdateUserReqBody {
   name?: string
   username?: string

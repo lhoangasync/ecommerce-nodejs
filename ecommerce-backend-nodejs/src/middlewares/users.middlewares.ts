@@ -300,7 +300,7 @@ export const refreshTokenCookieValidator = validate(
     {
       refresh_token: {
         custom: {
-          options: async (value, { req }) => {
+          options: async (_, { req }) => {
             const token = req.cookies?.refresh_token
             if (!token) {
               throw new ErrorWithStatus({
@@ -341,6 +341,44 @@ export const refreshTokenCookieValidator = validate(
       }
     },
     ['cookies']
+  )
+)
+
+export const emailVerifyTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            try {
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                secretOrPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+              })
+
+              ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize(error.message),
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )
 

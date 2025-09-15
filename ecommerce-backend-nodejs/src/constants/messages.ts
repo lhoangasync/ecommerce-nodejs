@@ -45,5 +45,8 @@ export const USERS_MESSAGES = {
   PHONE_LENGTH: 'Phone number must be between 10 and 11 digits',
   UPDATE_USER_SUCCESS: 'Update user successfully',
   DELETE_USER_SUCCESS: 'Delete user successfully',
-  INVALID_USER_ID: 'Invalid user id'
+  INVALID_USER_ID: 'Invalid user id',
+  EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
+  EMAIL_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
+  EMAIL_VERIFY_SUCCESS: 'Email verify successfully'
 } as const

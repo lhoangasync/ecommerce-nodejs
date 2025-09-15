@@ -152,7 +152,10 @@ function UserUpdate({ user }: { user: UserProfile }) {
                   <div className="relative shrink-0">
                     <Image
                       alt=""
-                      src={user.avatar}
+                      src={
+                        user.avatar ||
+                        "https://plus.unsplash.com/premium_photo-1732757787074-0f95bf19cf73?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZGVmYXVsdCUyMGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D"
+                      }
                       width={72}
                       height={72}
                       className="rounded-full object-cover w-24 h-24 "

@@ -7,11 +7,13 @@ import {
   logoutController,
   refreshTokenController,
   registerController,
-  updateUserController
+  updateUserController,
+  verifyEmailController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
   checkRoleValidator,
+  emailVerifyTokenValidator,
   loginValidator,
   paginateValidator,
   refreshTokenCookieValidator,
@@ -29,6 +31,8 @@ usersRouter.post('/register', registerValidator, wrapRequestHandler(registerCont
 usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
 
 usersRouter.post('/logout', accessTokenValidator, refreshTokenCookieValidator, wrapRequestHandler(logoutController))
+
+usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(verifyEmailController))
 
 usersRouter.get('/refresh-token', refreshTokenCookieValidator, wrapRequestHandler(refreshTokenController))
 

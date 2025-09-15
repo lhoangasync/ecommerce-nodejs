@@ -183,6 +183,31 @@ class UsersService {
     }
   }
 
+  async verifyEmail(user_id: string, role: UserRoles) {
+    const [token] = await Promise.all([
+      this.signAccessAndRefreshToken({ user_id, verify: UserVerifyStatus.VERIFIED, role }),
+      databaseService.users.updateOne(
+        {
+          _id: new ObjectId(user_id)
+        },
+        [
+          {
+            $set: {
+              email_verify_token: '',
+              verify: UserVerifyStatus.VERIFIED,
+              updated_at: '$$NOW'
+            }
+          }
+        ]
+      )
+    ])
+    const [access_token, refresh_token] = token
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
+    return { access_token, refresh_token }
+  }
+
   async refreshToken(decoded_refresh_token: TokenPayload) {
     const { user_id, verify, role } = decoded_refresh_token
 
