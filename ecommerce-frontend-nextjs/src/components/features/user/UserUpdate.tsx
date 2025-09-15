@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,13 +32,14 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { BadgeAlert, Ban, CheckCircle2 } from "lucide-react";
+import { BadgeAlert, Ban, CheckCircle2, XIcon } from "lucide-react";
 import { updateUsers } from "@/api/user.api";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import getDirtyValues from "@/utils/getDirtyFields";
 import { getMsg } from "@/utils/error-message";
 import { EUserVerifyStatus } from "@/types/enums";
+import { UploadButton } from "@/utils/uploadthing";
 
 const formSchema = z.object({
   name: z.string().nonempty("Name is required").optional(),
@@ -48,7 +48,10 @@ const formSchema = z.object({
     .min(4, "Username must more than 4 characters")
     .optional(),
   email: z.email().nonempty("Email is required").optional(),
-  address: z.string().min(1, { message: "Address is required" }).optional(),
+  address: z
+    .string()
+    .min(1, { message: "Address is more than 1 character" })
+    .optional(),
   phone: z
     .string()
     .regex(/^\d+$/, { message: "Phone number must contain only digits." })
@@ -121,6 +124,8 @@ function UserUpdate({ user }: { user: UserProfile }) {
     }
   };
 
+  const avatarWatch = form.watch("avatar");
+
   return (
     <Dialog onOpenChange={handleModalClose}>
       <DialogTrigger asChild>
@@ -147,10 +152,10 @@ function UserUpdate({ user }: { user: UserProfile }) {
                   <div className="relative shrink-0">
                     <Image
                       alt=""
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fHww"
+                      src={user.avatar}
                       width={72}
                       height={72}
-                      className="rounded-full  object-cover w-24 h-24 "
+                      className="rounded-full object-cover w-24 h-24 "
                     />
                     <div className="absolute -bottom-1 -right-1">
                       {user.verify === EUserVerifyStatus.VERIFIED ? (
@@ -183,7 +188,7 @@ function UserUpdate({ user }: { user: UserProfile }) {
                         <FormLabel>Name</FormLabel>
                       </div>
                       <FormControl>
-                        <Input placeholder="Tên..." {...field} />
+                        <Input placeholder="Name..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -263,30 +268,59 @@ function UserUpdate({ user }: { user: UserProfile }) {
                 )}
               />
 
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-start">
                 <FormField
                   control={form.control}
                   name="avatar"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Profile Photo</FormLabel>
-
                       <FormControl>
-                        <Image
-                          alt=""
-                          src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8dXNlciUyMHByb2ZpbGV8ZW58MHx8MHx8fDA%3D"
-                          width={72}
-                          height={72}
-                          className="rounded-full object-cover w-12 h-12 "
-                        />
+                        <div className="h-[100px] w-[100px] bg-white rounded-full border border-gray-500 border-dashed flex relative">
+                          {!avatarWatch ? (
+                            <UploadButton
+                              className=" h-[100px] w-[100px] bg-gray-300 rounded-full text-red-500"
+                              endpoint="imageUploader"
+                              onClientUploadComplete={(res) => {
+                                // Do something with the response
+                                form.setValue("avatar", res[0].ufsUrl, {
+                                  shouldDirty: true,
+                                });
+                                console.log(">>>>>>>>>", res[0].ufsUrl);
+                              }}
+                              onUploadError={(error: Error) => {
+                                // Do something with the error.
+                                console.error(`ERROR! ${error.message}`);
+                              }}
+                            />
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <Image
+                                alt="Avatar preview"
+                                src={avatarWatch}
+                                fill
+                                className="rounded-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  form.setValue("avatar", "", {
+                                    shouldDirty: true,
+                                  });
+                                }}
+                                className="absolute top-0 right-0 z-10 flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-full transition-transform hover:scale-110 focus:outline-none"
+                                aria-label="Remove profile photo"
+                              >
+                                <XIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="mx-auto w-[200px]">
-                  <Input className="p-2" id="image" type="file" />
-                </div>
               </div>
             </div>
 

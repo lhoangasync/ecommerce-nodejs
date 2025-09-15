@@ -3,7 +3,6 @@ import React from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -13,7 +12,7 @@ import Heading from "@/components/shared/Heading";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
-import { IconDelete, IconEdit, IconEye } from "@/components/icon";
+import { IconDelete, IconEye } from "@/components/icon";
 import { UserProfile } from "@/types/backend";
 import { commonClassName, userType } from "@/constants";
 import { cn } from "@/lib/utils";
@@ -73,10 +72,10 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
                     <div className="flex items-center gap-3">
                       <Image
                         alt=""
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fHww"
-                        width={80}
-                        height={80}
-                        className="shrink-0 size-16 rounded-lg object-cover"
+                        src={user.avatar}
+                        width={70}
+                        height={70}
+                        className="shrink-0 size-16 rounded-full h-[40px] w-[40px] object-cover"
                       />
                       <div className="flex flex-col gap-1">
                         <h3 className="font-bold text-sm lg:text-base">
@@ -117,14 +116,11 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
                       >
                         <IconEye className="size-12" />
                       </Link>
-                      {/* <Link
-                        href="#"
-                        className="size-8 rounded-md border flex items-center justify-center p-2 text-blue-500 hover:border-primary  border-gray-500/10  cursor-pointer"
-                      >
-                        <IconEdit className="size-12" />
-                      </Link> */}
+
+                      {/*  Update User */}
                       <UserUpdate user={user} />
 
+                      {/* Delete User */}
                       <button
                         onClick={() => handleDeleteUser(user._id)}
                         className={cn("text-red-500", commonClassName.action)}
