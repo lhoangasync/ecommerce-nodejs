@@ -96,11 +96,10 @@ function UserUpdate({ user }: { user: UserProfile }) {
         user._id,
         payload as Partial<UpdateUserReqBody>
       );
-      if (res.status === 200) {
-        toast.success(res.message);
-        form.reset(values);
-        router.refresh();
-      }
+
+      toast.success(res.message);
+      form.reset(values);
+      router.refresh();
     } catch (error) {
       // toast.error("An error occurred. Please try again.");
       // console.error("Failed to update user:", error);
@@ -216,13 +215,13 @@ function UserUpdate({ user }: { user: UserProfile }) {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-8 mt-2">
+              <div className="grid grid-cols-2 gap-8 mt-2">
                 {/* Email */}
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem>
                       <div className="flex items-center justify-start gap-2">
                         <IconEmail className="size-4" />
                         <FormLabel>Email address</FormLabel>
@@ -239,7 +238,7 @@ function UserUpdate({ user }: { user: UserProfile }) {
                   control={form.control}
                   name="phone"
                   render={({ field }) => (
-                    <FormItem className="col-span-1">
+                    <FormItem>
                       <div className="flex items-center justify-start gap-2">
                         <IconPhone className="size-4" />
                         <FormLabel>Phone</FormLabel>

@@ -8,7 +8,7 @@ import React from "react";
 
 const page = async ({ searchParams }: TPage) => {
   const currentPage = Number((await searchParams).page) || 1;
-  const limit = Number((await searchParams).limit) || 10;
+  const limit = Number((await searchParams).limit) || 5;
 
   const response = await getAllUsers(currentPage, limit);
   const users = response.data?.items || ([] as UserProfile[]);
