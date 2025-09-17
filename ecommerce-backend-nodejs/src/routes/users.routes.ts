@@ -7,6 +7,7 @@ import {
   logoutController,
   refreshTokenController,
   registerController,
+  resendVerificationEmailController,
   updateUserController,
   verifyEmailController
 } from '~/controllers/users.controllers'
@@ -18,6 +19,7 @@ import {
   paginateValidator,
   refreshTokenCookieValidator,
   registerValidator,
+  resendVerificationEmailValidator,
   updateUserValidator,
   userIdValidator,
   verifiedUserValidator
@@ -33,7 +35,11 @@ usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
 usersRouter.post('/logout', accessTokenValidator, refreshTokenCookieValidator, wrapRequestHandler(logoutController))
 
 usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(verifyEmailController))
-
+usersRouter.post(
+  '/resend-verification-email',
+  resendVerificationEmailValidator,
+  wrapRequestHandler(resendVerificationEmailController)
+)
 usersRouter.get('/refresh-token', refreshTokenCookieValidator, wrapRequestHandler(refreshTokenController))
 
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))

@@ -8,6 +8,7 @@ import {
   DeleteUserReqParams,
   LoginReqBody,
   RegisterReqBody,
+  ResendVerificationEmailReqBody,
   TokenPayload,
   UpdateUserReqBody,
   UpdateUserReqParams,
@@ -83,7 +84,24 @@ export const verifyEmailController = async (
     data: result
   })
 }
+export const resendVerificationEmailController = async (
+  req: Request<ParamsDictionary, any, ResendVerificationEmailReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body
+    const result = await usersService.resendVerificationEmail(email)
 
+    return res.json({
+      status: HTTP_STATUS.OK,
+      message: result.message,
+      data: null
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 export const refreshTokenController = async (req: Request, res: Response) => {
   const payload = req.decoded_refresh_token as TokenPayload
   const result = await usersService.refreshToken(payload)

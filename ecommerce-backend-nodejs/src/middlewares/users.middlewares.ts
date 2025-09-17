@@ -155,7 +155,20 @@ export const registerValidator = validate(
     ['body']
   )
 )
-
+export const resendVerificationEmailValidator = validate(
+  checkSchema(
+    {
+      email: {
+        isEmail: {
+          errorMessage: 'Email is invalid'
+        },
+        trim: true,
+        normalizeEmail: true
+      }
+    },
+    ['body']
+  )
+)
 export const loginValidator = validate(
   checkSchema(
     {

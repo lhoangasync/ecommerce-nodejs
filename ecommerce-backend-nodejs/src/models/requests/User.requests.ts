@@ -24,6 +24,10 @@ export interface VerifyEmailReqBody {
   email_verify_token: string
 }
 
+export interface ResendVerificationEmailReqBody {
+  email: string
+}
+
 export interface UpdateUserReqBody {
   name?: string
   username?: string

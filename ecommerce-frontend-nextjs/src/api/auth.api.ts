@@ -40,6 +40,22 @@ export const AuthAPI = {
     return data;
   },
 
+  async verifyEmail(email_verify_token: string) {
+    const { data } = await api.post<IBackEndResponse<null>>(
+      "/users/verify-email",
+      { email_verify_token }
+    );
+    return data;
+  },
+
+  async resendVerificationEmail(email: string) {
+    const { data } = await api.post<IBackEndResponse<null>>(
+      "/users/resend-verify-email",
+      { email }
+    );
+    return data;
+  },
+
   async me() {
     const { data } = await api.get<IBackEndResponse<UserProfile>>("/users/me");
     return data;

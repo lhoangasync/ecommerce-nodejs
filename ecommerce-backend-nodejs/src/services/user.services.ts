@@ -11,6 +11,7 @@ import { RegisterReqBody, TokenPayload, UpdateUserReqBody } from '~/models/reque
 import { USERS_MESSAGES } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { ErrorWithStatus } from '~/models/Errors'
+import emailService from './email.services'
 
 config()
 
@@ -153,8 +154,13 @@ class UsersService {
     })
 
     await databaseService.refreshTokens.insertOne(new RefreshToken({ user_id, token: refresh_token }))
+    try {
+      await emailService.sendVerificationEmail(payload.email, email_verify_token)
+      console.log('Verification email sent successfully to:', payload.email)
+    } catch (error) {
+      console.error('Failed to send verification email:', error)
+    }
 
-    console.log('email verify token: ', email_verify_token)
     return {
       access_token,
       refresh_token
@@ -184,6 +190,9 @@ class UsersService {
   }
 
   async verifyEmail(user_id: string, role: UserRoles) {
+    // Get user info before verification
+    const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
     const [token] = await Promise.all([
       this.signAccessAndRefreshToken({ user_id, verify: UserVerifyStatus.VERIFIED, role }),
       databaseService.users.updateOne(
@@ -201,13 +210,25 @@ class UsersService {
         ]
       )
     ])
+
     const [access_token, refresh_token] = token
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
+
+    // Send welcome email after successful verification
+    if (user) {
+      try {
+        await emailService.sendWelcomeEmail(user.email, user.name)
+        console.log('Welcome email sent successfully to:', user.email)
+      } catch (error) {
+        console.error('Failed to send welcome email:', error)
+        // Continue with verification even if welcome email fails
+      }
+    }
+
     return { access_token, refresh_token }
   }
-
   async refreshToken(decoded_refresh_token: TokenPayload) {
     const { user_id, verify, role } = decoded_refresh_token
 
@@ -300,6 +321,55 @@ class UsersService {
 
     return {
       message: USERS_MESSAGES.DELETE_USER_SUCCESS
+    }
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await databaseService.users.findOne({ email })
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (user.verify === UserVerifyStatus.VERIFIED) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const email_verify_token = await this.signEmailVerifyToken({
+      user_id: user._id.toString(),
+      verify: user.verify,
+      role: user.role
+    })
+
+    await databaseService.users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          email_verify_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    try {
+      await emailService.sendVerificationEmail(email, email_verify_token)
+      return {
+        message: 'Verification email sent successfully'
+      }
+    } catch (error) {
+      console.error('Failed to resend verification email:', error)
+      throw new ErrorWithStatus({
+        message: 'Failed to send verification email',
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
     }
   }
 }

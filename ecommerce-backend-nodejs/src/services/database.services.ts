@@ -4,7 +4,7 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 config()
 
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cosmetic.mdo9nye.mongodb.net/?retryWrites=true&w=majority&appName=cosmetic`
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cosmetic.mdo9nye.mongodb.net/`
 class DatabaseService {
   private client: MongoClient
   private db: Db
