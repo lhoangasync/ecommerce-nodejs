@@ -256,28 +256,34 @@ class UsersService {
   async getUsers({ page, limit }: { page: number; limit: number }) {
     const skip = (page - 1) * limit
 
-    const users = await databaseService.users
-      .find(
-        {},
+    const result = await databaseService.users
+      .aggregate([
         {
-          projection: {
+          $project: {
             password: 0,
             email_verify_token: 0,
             forgot_password_token: 0
           }
+        },
+        {
+          $sort: { created_at: -1 }
+        },
+        {
+          $facet: {
+            items: [{ $skip: skip }, { $limit: limit }],
+            totalCount: [{ $count: 'count' }]
+          }
         }
-      )
-      .sort({ created_at: -1 }) // newest user
-      .skip(skip)
-      .limit(limit)
+      ])
       .toArray()
 
-    const totalItems = await databaseService.users.countDocuments({})
+    const items = result[0]?.items || []
+    const totalItems = result[0]?.totalCount[0]?.count || 0
 
     const totalPages = Math.ceil(totalItems / limit)
 
     return {
-      items: users,
+      items,
       totalItems,
       totalPages
     }
