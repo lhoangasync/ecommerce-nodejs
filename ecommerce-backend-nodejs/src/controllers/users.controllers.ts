@@ -6,7 +6,9 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import {
   DeleteUserReqParams,
+  FacebookOAuthReqBody,
   ForgetPasswordReqBody,
+  GoogleOAuthReqBody,
   LoginReqBody,
   RegisterReqBody,
   ResendVerificationEmailReqBody,
@@ -18,6 +20,7 @@ import {
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
+import oauthService from '~/services/oauth.services'
 import usersService from '~/services/user.services'
 import { clearRefreshCookie, setRefreshCookie } from '~/utils/cookie'
 
@@ -209,4 +212,52 @@ export const resetPasswordController = async (
   } catch (error) {
     next(error)
   }
+}
+export const googleOAuthController = async (
+  req: Request<ParamsDictionary, any, GoogleOAuthReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { code } = req.body
+    const result = await oauthService.handleGoogleLogin(code)
+
+    setRefreshCookie(res, result.refresh_token)
+    return res.json({
+      status: HTTP_STATUS.OK,
+      message: 'Google login successful',
+      data: { access_token: result.access_token }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const facebookOAuthController = async (
+  req: Request<ParamsDictionary, any, FacebookOAuthReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { accessToken } = req.body
+    const result = await oauthService.handleFacebookLogin(accessToken)
+
+    setRefreshCookie(res, result.refresh_token)
+    return res.json({
+      status: HTTP_STATUS.OK,
+      message: 'Facebook login successful',
+      data: { access_token: result.access_token }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getGoogleAuthURLController = async (req: Request, res: Response) => {
+  const authURL = oauthService.getGoogleAuthURL()
+  return res.json({
+    status: HTTP_STATUS.OK,
+    message: 'Google auth URL generated',
+    data: { authURL }
+  })
 }

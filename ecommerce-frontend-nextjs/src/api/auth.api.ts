@@ -76,7 +76,30 @@ export const AuthAPI = {
     );
     return data;
   },
+  async getGoogleAuthURL() {
+    const { data } = await api.get<IBackEndResponse<{ authURL: string }>>(
+      "/users/auth/google"
+    );
+    return data;
+  },
 
+  async googleLogin(code: string) {
+    const { data } = await api.post<IBackEndResponse<{ access_token: string }>>(
+      "/users/google/callback",
+      { code }
+    );
+    setAccessToken(data.data.access_token);
+    return data;
+  },
+
+  async facebookLogin(accessToken: string) {
+    const { data } = await api.post<IBackEndResponse<{ access_token: string }>>(
+      "/users/auth/facebook",
+      { accessToken }
+    );
+    setAccessToken(data.data.access_token);
+    return data;
+  },
   async resetPassword(
     body: ResetPasswordRequest
   ): Promise<IBackEndResponse<null>> {

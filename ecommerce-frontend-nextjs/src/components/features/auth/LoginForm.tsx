@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import { getMsg } from "@/utils/error-message";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
-
+import { useOAuth } from "@/hooks/useOAuth";
 const formSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
@@ -32,6 +32,7 @@ export default function LoginForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { refetch } = useAuth();
+  const { handleGoogleLogin, handleFacebookLogin } = useOAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -142,6 +143,7 @@ export default function LoginForm() {
       {/* Google Login */}
       <Button
         variant="outline"
+        onClick={handleGoogleLogin}
         className="w-full flex items-center justify-center gap-2 rounded-lg mb-2"
       >
         <IconGoogle />
@@ -150,6 +152,7 @@ export default function LoginForm() {
 
       <Button
         variant="outline"
+        onClick={handleFacebookLogin}
         className="w-full flex items-center justify-center gap-2 rounded-lg"
       >
         <IconFacebook />

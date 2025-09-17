@@ -1,9 +1,12 @@
 import { Router } from 'express'
 import {
   deleteUserController,
+  facebookOAuthController,
   forgotPasswordController,
+  getGoogleAuthURLController,
   getMeController,
   getUsersController,
+  googleOAuthController,
   loginController,
   logoutController,
   refreshTokenController,
@@ -48,7 +51,9 @@ usersRouter.get('/refresh-token', refreshTokenCookieValidator, wrapRequestHandle
 usersRouter.post('/forgot-password', forgotPasswordController)
 
 usersRouter.post('/reset-password', verifyForgotPasswordTokenMiddleware, resetPasswordController)
-
+usersRouter.get('/auth/google', getGoogleAuthURLController)
+usersRouter.post('/google/callback', googleOAuthController)
+usersRouter.post('/auth/facebook', facebookOAuthController)
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
 
 usersRouter.get(

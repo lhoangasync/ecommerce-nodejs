@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "plus.unsplash.com",
         port: "",
         pathname: "/**",
@@ -21,6 +27,11 @@ const nextConfig: NextConfig = {
         hostname: "84b8l0y98s.ufs.sh",
         port: "",
         pathname: "/f/**",
+      },
+      {
+        protocol: "https",
+        hostname: "platform-lookaside.fbsbx.com",
+        pathname: "/**",
       },
     ],
   },

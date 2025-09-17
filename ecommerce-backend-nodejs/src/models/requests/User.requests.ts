@@ -55,3 +55,10 @@ export interface ResetPasswordReqBody {
   password: string
   confirm_password: string
 }
+export interface GoogleOAuthReqBody {
+  code: string
+}
+
+export interface FacebookOAuthReqBody {
+  accessToken: string
+}

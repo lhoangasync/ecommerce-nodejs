@@ -12,7 +12,8 @@ interface IUser {
   username?: string
   avatar?: string
   phone?: string
-
+  oauth_provider?: 'google' | 'facebook' | null // Add this
+  oauth_id?: string | null
   forgot_password_token?: string
   email_verify_token?: string
   verify?: UserVerifyStatus
@@ -22,7 +23,7 @@ interface IUser {
 }
 
 export default class User {
-  _id?: ObjectId
+  _id: ObjectId
   name: string
   email: string
   password: string
@@ -33,6 +34,9 @@ export default class User {
   avatar: string
   phone: string
 
+  oauth_provider?: 'google' | 'facebook' | null // Add this
+  oauth_id?: string | null
+
   forgot_password_token: string // jwt or ''
   email_verify_token: string // jwt or ''
   verify: UserVerifyStatus
@@ -42,7 +46,7 @@ export default class User {
 
   constructor(user: IUser) {
     const date = new Date()
-    this._id = user._id
+    this._id = user._id || new ObjectId()
     this.name = user.name
     this.email = user.email
     this.password = user.password
@@ -52,7 +56,8 @@ export default class User {
     this.username = user.username || ''
     this.avatar = user.avatar || ''
     this.phone = user.phone || ''
-
+    this.oauth_provider = user.oauth_provider || null // Add this
+    this.oauth_id = user.oauth_id || null // Add this
     this.forgot_password_token = user.forgot_password_token || ''
     this.email_verify_token = user.email_verify_token || ''
     this.verify = user.verify || UserVerifyStatus.UNVERIFIED
