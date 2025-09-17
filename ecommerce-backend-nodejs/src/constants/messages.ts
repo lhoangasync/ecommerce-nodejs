@@ -48,5 +48,8 @@ export const USERS_MESSAGES = {
   INVALID_USER_ID: 'Invalid user id',
   EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
   EMAIL_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
-  EMAIL_VERIFY_SUCCESS: 'Email verify successfully'
+  EMAIL_VERIFY_SUCCESS: 'Email verify successfully',
+  FORGOT_PASSWORD_SUCCESS: 'Password reset email sent successfully',
+  RESET_PASSWORD_SUCCESS: 'Password reset successfully',
+  INVALID_RESET_TOKEN: 'Invalid or expired reset token'
 } as const

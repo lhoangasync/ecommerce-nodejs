@@ -127,6 +127,93 @@ class UsersService {
     const user = await databaseService.users.findOne({ email })
     return Boolean(user)
   }
+  async forgotPassword(email: string) {
+    const user = await databaseService.users.findOne({ email })
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const forgot_password_token = await this.signForgotPasswordToken({
+      user_id: user._id.toString(),
+      verify: user.verify,
+      role: user.role
+    })
+
+    await databaseService.users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          forgot_password_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    try {
+      await emailService.sendForgotPasswordEmail(email, forgot_password_token, user.name)
+      return {
+        message: 'Password reset email sent successfully'
+      }
+    } catch (error) {
+      console.error('Failed to send forgot password email:', error)
+      throw new ErrorWithStatus({
+        message: 'Failed to send password reset email',
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+  }
+
+  async resetPassword(user_id: string, new_password: string) {
+    const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (user.forgot_password_token === '') {
+      throw new ErrorWithStatus({
+        message: 'Invalid or expired reset token',
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(new_password),
+          forgot_password_token: ''
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    // Invalidate all refresh tokens for security
+    await databaseService.refreshTokens.deleteMany({ user_id: new ObjectId(user_id) })
+
+    try {
+      await emailService.sendPasswordResetSuccessEmail(user.email, user.name)
+      console.log('Password reset success email sent to:', user.email)
+    } catch (error) {
+      console.error('Failed to send password reset success email:', error)
+      // Continue even if email fails
+    }
+
+    return {
+      message: 'Password reset successfully'
+    }
+  }
 
   async register(payload: RegisterReqBody) {
     const user_id = new ObjectId()

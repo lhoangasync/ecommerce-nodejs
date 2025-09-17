@@ -45,3 +45,13 @@ export interface UpdateUserReqParams extends ParamsDictionary {
 export interface DeleteUserReqParams extends ParamsDictionary {
   user_id: string
 }
+
+export interface ForgetPasswordReqBody {
+  email: string
+}
+
+export interface ResetPasswordReqBody {
+  forgot_password_token: string
+  password: string
+  confirm_password: string
+}

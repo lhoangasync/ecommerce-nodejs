@@ -6,9 +6,11 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import {
   DeleteUserReqParams,
+  ForgetPasswordReqBody,
   LoginReqBody,
   RegisterReqBody,
   ResendVerificationEmailReqBody,
+  ResetPasswordReqBody,
   TokenPayload,
   UpdateUserReqBody,
   UpdateUserReqParams,
@@ -167,4 +169,44 @@ export const deleteUserController = async (req: Request<DeleteUserReqParams>, re
     message: result.message,
     data: null
   })
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgetPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body
+    const result = await usersService.forgotPassword(email)
+
+    return res.json({
+      status: HTTP_STATUS.OK,
+      message: result.message,
+      data: null
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user_id } = req.decoded_forgot_password_token as TokenPayload
+    const { password } = req.body
+
+    const result = await usersService.resetPassword(user_id, password)
+
+    return res.json({
+      status: HTTP_STATUS.OK,
+      message: result.message,
+      data: null
+    })
+  } catch (error) {
+    next(error)
+  }
 }

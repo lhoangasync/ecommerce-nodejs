@@ -2,7 +2,7 @@
 
 import PublicOnly from "@/components/features/auth/PublicOnly";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
 import { redirect } from "next/navigation";
 
 export default function AuthLayout({

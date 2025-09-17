@@ -44,3 +44,13 @@ export interface UpdateUserReqBody {
   address?: string;
   avatar?: string;
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  forgot_password_token: string;
+  password: string;
+  confirm_password: string;
+}

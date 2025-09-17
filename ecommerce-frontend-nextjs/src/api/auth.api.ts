@@ -1,11 +1,18 @@
 import { api, setAccessToken } from "@/lib/axios";
 import {
+  ForgotPasswordRequest,
   IBackEndResponse,
   LoginBody,
   RegisterBody,
+  ResetPasswordRequest,
   UserProfile,
 } from "@/types/backend";
-
+export type ForgotPasswordBody = { email: string };
+export type ResetPasswordBody = {
+  forgot_password_token: string;
+  password: string;
+  confirm_password: string;
+};
 export const AuthAPI = {
   async login(body: LoginBody) {
     const { data } = await api.post<IBackEndResponse<{ access_token: string }>>(
@@ -58,6 +65,25 @@ export const AuthAPI = {
 
   async me() {
     const { data } = await api.get<IBackEndResponse<UserProfile>>("/users/me");
+    return data;
+  },
+  async forgotPassword(
+    body: ForgotPasswordRequest
+  ): Promise<IBackEndResponse<null>> {
+    const { data } = await api.post<IBackEndResponse<null>>(
+      "/users/forgot-password",
+      body
+    );
+    return data;
+  },
+
+  async resetPassword(
+    body: ResetPasswordRequest
+  ): Promise<IBackEndResponse<null>> {
+    const { data } = await api.post<IBackEndResponse<null>>(
+      "/users/reset-password",
+      body
+    );
     return data;
   },
 };

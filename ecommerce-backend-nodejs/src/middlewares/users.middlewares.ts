@@ -550,3 +550,41 @@ export const userIdValidator = validate(
     ['params']
   )
 )
+export const verifyForgotPasswordTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { forgot_password_token } = req.body
+
+    if (!forgot_password_token) {
+      throw new ErrorWithStatus({
+        message: 'Forgot password token is required',
+        status: HTTP_STATUS.UNAUTHORIZED
+      })
+    }
+
+    const decoded_forgot_password_token = await verifyToken({
+      token: forgot_password_token,
+      secretOrPublicKey: process.env.JWT_SECRECT_FORGOT_PASSWORD_TOKEN as string
+    })
+
+    // Check if user exists and token matches
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(decoded_forgot_password_token.user_id),
+      forgot_password_token
+    })
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: 'Invalid or expired reset token',
+        status: HTTP_STATUS.UNAUTHORIZED
+      })
+    }
+
+    req.decoded_forgot_password_token = decoded_forgot_password_token
+    next()
+  } catch (error) {
+    throw new ErrorWithStatus({
+      message: 'Invalid or expired reset token',
+      status: HTTP_STATUS.UNAUTHORIZED
+    })
+  }
+}
