@@ -33,7 +33,9 @@ import {
   ChevronLastIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  RotateCcw,
 } from "lucide-react";
+import BrandAdd from "./BrandAdd";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -44,6 +46,10 @@ interface DataTableProps<TData, TValue> {
 
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+
+  onRefresh: () => void;
+
+  isLoading: boolean;
 }
 
 export function BrandDataTable<TData, TValue>({
@@ -54,6 +60,8 @@ export function BrandDataTable<TData, TValue>({
   setPagination,
   searchQuery,
   setSearchQuery,
+  onRefresh,
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
@@ -76,13 +84,25 @@ export function BrandDataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center py-4">
+      <div className="flex justify-between items-center py-4">
         <Input
-          placeholder="Filter by brand name..."
+          placeholder="Search brand name..."
           className="max-w-sm"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
         />
+
+        <div className="flex justify-between items-center">
+          <BrandAdd />
+          <Button
+            isLoading={isLoading}
+            disabled={isLoading}
+            className="ml-3 bg-blue-400 hover:bg-blue-500"
+            onClick={onRefresh}
+          >
+            <RotateCcw />
+          </Button>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>

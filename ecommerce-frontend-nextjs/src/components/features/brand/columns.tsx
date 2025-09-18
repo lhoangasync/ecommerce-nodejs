@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Brand } from "@/types/backend";
 import { IconCopy, IconDelete, IconEdit, IconEye } from "@/components/icon";
+import Swal from "sweetalert2";
+import { deleteBrand } from "@/api/brand.api";
+import { toast } from "react-toastify";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const columns: ColumnDef<Brand>[] = [
   // Cột Checkbox
@@ -51,7 +55,7 @@ export const columns: ColumnDef<Brand>[] = [
       return (
         <div className="flex items-center gap-3">
           <Avatar className="rounded-sm h-10 w-10">
-            <AvatarImage src={brand.img} alt={brand.name} />
+            <AvatarImage src={brand.img || undefined} alt={brand.name} />
             <AvatarFallback className="text-xs rounded-sm">
               {fallback}
             </AvatarFallback>
@@ -95,7 +99,7 @@ export const columns: ColumnDef<Brand>[] = [
           {date.toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
-            year: "2-digit",
+            year: "numeric",
           })}
         </div>
       );
@@ -107,7 +111,35 @@ export const columns: ColumnDef<Brand>[] = [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
+      const queryClient = useQueryClient();
       const brand = row.original;
+
+      const deleteMutation = useMutation({
+        mutationFn: deleteBrand,
+        onSuccess: (result) => {
+          toast.success(result?.data?.message);
+          queryClient.invalidateQueries({ queryKey: ["brands"] });
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      });
+      const handleDelete = async () => {
+        Swal.fire({
+          title: `Are you sure you want to delete "${brand.name}"`,
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#78C841",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            deleteMutation.mutate(brand._id);
+          }
+        });
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -133,7 +165,10 @@ export const columns: ColumnDef<Brand>[] = [
               <IconEdit />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={handleDelete}
+            >
               <IconDelete />
               Delete
             </DropdownMenuItem>

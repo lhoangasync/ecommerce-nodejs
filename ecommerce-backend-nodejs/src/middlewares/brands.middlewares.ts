@@ -45,6 +45,7 @@ const countrySchema: ParamSchema = {
 }
 
 const descSchema: ParamSchema = {
+  optional: true,
   isString: {
     errorMessage: BRANDS_MESSAGES.DESCRIPTION_MUSE_BE_A_STRING
   },
@@ -52,7 +53,7 @@ const descSchema: ParamSchema = {
 
   isLength: {
     options: {
-      min: 1,
+      min: 0,
       max: 200
     },
     errorMessage: BRANDS_MESSAGES.DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_200
@@ -67,7 +68,7 @@ const imageSchema: ParamSchema = {
   trim: true,
   isLength: {
     options: {
-      min: 1,
+      min: 0,
       max: 400
     },
     errorMessage: BRANDS_MESSAGES.IMAGE_URL_LENGTH

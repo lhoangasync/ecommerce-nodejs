@@ -3,6 +3,7 @@ import databaseService from './database.services'
 import Brand from '~/models/schemas/Brand.schema'
 import { ObjectId } from 'mongodb'
 import { BRANDS_MESSAGES } from '~/constants/messages'
+import { escapeRegExp } from 'lodash'
 
 class BrandsService {
   async checkSlugExist(slug: string) {
@@ -22,9 +23,10 @@ class BrandsService {
     const pipeline: any[] = []
 
     if (name) {
+      const escapedName = escapeRegExp(name.trim())
       pipeline.push({
         $match: {
-          name: { $regex: name, $options: 'i' }
+          name: { $regex: escapedName, $options: 'i' }
         }
       })
     }

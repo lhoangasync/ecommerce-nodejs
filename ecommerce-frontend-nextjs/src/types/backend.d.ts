@@ -54,6 +54,7 @@ export interface ResetPasswordRequest {
   password: string;
   confirm_password: string;
 }
+
 export type Brand = {
   _id: string;
   name: string;
@@ -64,3 +65,5 @@ export type Brand = {
   created_at: string;
   updated_at: string;
 };
+
+export type AddBrandReqBody = Omit<Brand, "_id" | "created_at" | "updated_at">;

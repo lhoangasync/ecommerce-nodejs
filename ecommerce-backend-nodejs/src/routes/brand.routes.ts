@@ -40,7 +40,7 @@ brandsRouter.patch(
 )
 
 brandsRouter.delete(
-  '/:brand_id',
+  '/delete/:brand_id',
   accessTokenValidator,
   verifiedUserValidator,
   checkRoleValidator,
