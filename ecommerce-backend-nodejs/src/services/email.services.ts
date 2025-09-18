@@ -20,104 +20,315 @@ class EmailService {
     const verifyEmailUrl = `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`
 
     const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Email Verification</title>
-        <style>
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Cosmetic Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #f8b500 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* Background pattern overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+                radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px, 60px 60px, 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(196, 69, 105, 0.3);
+        }
+        
+        .header {
+            background: url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80') center/cover;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.8), rgba(196, 69, 105, 0.8));
+        }
+        
+        .logo {
+            position: relative;
+            z-index: 1;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .logo::before {
+            content: '✨';
+            margin-right: 10px;
+            font-size: 28px;
+        }
+        
+        .logo::after {
+            content: '💄';
+            margin-left: 10px;
+            font-size: 28px;
+        }
+        
+        .title {
+            position: relative;
+            z-index: 1;
+            color: #ff3366;;
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .content {
+            padding: 40px 30px;
+            color: #2c2c2c;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #c44569;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .verify-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(196, 69, 105, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .verify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(196, 69, 105, 0.4);
+            background: linear-gradient(135deg, #c44569, #ff6b9d);
+        }
+        
+        .link-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 4px solid #ff6b9d;
+        }
+        
+        .link-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .link-url {
+            word-break: break-all;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #c44569;
+            border: 1px solid #e9ecef;
+        }
+        
+        .warning {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 1px solid #ffb74d;
+            color: #e65100;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 5px solid #ff9800;
+        }
+        
+        .warning-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .signature {
+            font-size: 16px;
+            color: #c44569;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .team-name {
+            color: #ff6b9d;
+            font-weight: 700;
+        }
+        
+        .support-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+        
+        .beauty-icons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 24px;
+        }
+        
+        @media (max-width: 600px) {
             body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
+                padding: 10px;
             }
-            .container {
-                background: #f9f9f9;
-                padding: 30px;
-                border-radius: 10px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            
+            .email-wrapper {
+                border-radius: 15px;
             }
+            
             .header {
-                text-align: center;
-                margin-bottom: 30px;
+                padding: 30px 20px;
             }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
             .logo {
-                font-size: 24px;
-                font-weight: bold;
-                color: #007bff;
-                margin-bottom: 10px;
+                font-size: 28px;
             }
+            
             .title {
-                color: #333;
-                margin-bottom: 20px;
+                font-size: 20px;
             }
-            .button {
-                display: inline-block;
-                padding: 12px 30px;
-                background-color: #007bff;
-                color: white;
-                text-decoration: none;
-                border-radius: 5px;
-                margin: 20px 0;
-                font-weight: bold;
-            }
-            .button:hover {
-                background-color: #0056b3;
-            }
-            .footer {
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #ddd;
-                font-size: 14px;
-                color: #666;
-            }
-            .warning {
-                background-color: #fff3cd;
-                border: 1px solid #ffeaa7;
-                color: #856404;
-                padding: 15px;
-                border-radius: 5px;
-                margin: 20px 0;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <div class="logo">🌟 Cosmetic Store</div>
-                <h1 class="title">Verify Your Email Address</h1>
-            </div>
             
-            <p>Hi there!</p>
+            .verify-button {
+                padding: 14px 30px;
+                color: white !important;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <div class="logo">Comestic Store</div>
+            <h1 class="title">Verify Your Email Address</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">Hello Beautiful! 💖</div>
             
-            <p>Thank you for registering with our cosmetic store. To complete your registration and start shopping for amazing beauty products, please verify your email address.</p>
-            
-            <div style="text-align: center;">
-                <a href="${verifyEmailUrl}" class="button">Verify Email Address</a>
-            </div>
-            
-            <p>Or copy and paste this link in your browser:</p>
-            <p style="word-break: break-all; background: #f1f1f1; padding: 10px; border-radius: 3px;">
-                ${verifyEmailUrl}
+            <p class="message">
+                Thank you for joining our exclusive beauty community! We're thrilled to have you discover our carefully curated collection of premium cosmetics and skincare products.
             </p>
             
-            <div class="warning">
-                <strong>⚠️ Important:</strong> This verification link will expire in 7 days. If you didn't create an account with us, please ignore this email.
+            <p class="message">
+                To unlock your beauty journey and start exploring our amazing products, please verify your email address by clicking the button below:
+            </p>
+            
+            <div class="cta-section">
+                <a href="${verifyEmailUrl}" class="verify-button">✨ Verify Email Address ✨</a>
             </div>
             
-            <div class="footer">
-                <p>Best regards,<br>
-                The Cosmetic Store Team</p>
-                
-                <p><small>If you have any questions, please contact our support team.</small></p>
+            <div class="link-section">
+                <div class="link-text">Can't click the button? Copy and paste this link in your browser:</div>
+                <div class="link-url">${verifyEmailUrl}</div>
+            </div>
+            
+            <div class="warning">
+                <div class="warning-title">
+                    <span>⚠️</span>
+                    <span>Important Notice</span>
+                </div>
+                <div>This verification link will expire in 7 days for security reasons. If you didn't create an account with Cosmic Store, please ignore this email safely.</div>
+            </div>
+            
+            <div class="beauty-icons">
+                <span>💄</span>
+                <span>✨</span>
+                <span>🌸</span>
+                <span>💖</span>
+                <span>🎀</span>
             </div>
         </div>
-    </body>
-    </html>
+        
+        <div class="footer">
+            <div class="signature">
+                With love & beauty,<br>
+                <span class="team-name">Comestic Store Team</span>
+            </div>
+            
+            <div class="support-text">
+                Questions? Our beauty experts are here to help!<br>
+                Contact our support team anytime for personalized assistance.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
     `
 
     const textContent = `
