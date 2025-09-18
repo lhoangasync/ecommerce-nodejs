@@ -44,3 +44,14 @@ export interface UpdateUserReqBody {
   address?: string;
   avatar?: string;
 }
+
+export type Brand = {
+  _id: string;
+  name: string;
+  slug: string;
+  country?: string;
+  desc?: string;
+  img?: string;
+  created_at: string;
+  updated_at: string;
+};

@@ -61,7 +61,7 @@ export default function Pagination({ currentPage, totalPages }: Props) {
         {currentPage > 1 && (
           <PaginationItem suppressHydrationWarning>
             <Link href={createPageURL(currentPage - 1)}>
-              <PaginationPrevious />
+              <PaginationPrevious className="hover:bg-primary2" />
             </Link>
           </PaginationItem>
         )}
@@ -73,7 +73,7 @@ export default function Pagination({ currentPage, totalPages }: Props) {
               <Link href={createPageURL(page)}>
                 <PaginationLink
                   isActive={currentPage === page}
-                  className="text-white"
+                  className="text-white hover:bg-primary2"
                 >
                   {page}
                 </PaginationLink>
@@ -90,7 +90,7 @@ export default function Pagination({ currentPage, totalPages }: Props) {
         {currentPage < totalPages && (
           <PaginationItem suppressHydrationWarning>
             <Link href={createPageURL(currentPage + 1)}>
-              <PaginationNext />
+              <PaginationNext className="hover:bg-primary2" />
             </Link>
           </PaginationItem>
         )}

@@ -1,4 +1,4 @@
-import { AddBrandReqBody, UpdateBrandReqBody } from '~/models/requests/Brand.requests'
+import { AddBrandReqBody, GetBrandsParams, UpdateBrandReqBody } from '~/models/requests/Brand.requests'
 import databaseService from './database.services'
 import Brand from '~/models/schemas/Brand.schema'
 import { ObjectId } from 'mongodb'
@@ -16,26 +16,35 @@ class BrandsService {
     return brand
   }
 
-  async getBrands({ page, limit }: { page: number; limit: number }) {
+  async getBrands({ page, limit, name }: GetBrandsParams) {
     const skip = (page - 1) * limit
 
-    const result = await databaseService.brands
-      .aggregate([
-        {
-          $sort: { created_at: -1 }
-        },
-        {
-          $facet: {
-            items: [{ $skip: skip }, { $limit: limit }],
-            totalCount: [{ $count: 'count' }]
-          }
+    const pipeline: any[] = []
+
+    if (name) {
+      pipeline.push({
+        $match: {
+          name: { $regex: name, $options: 'i' }
         }
-      ])
-      .toArray()
+      })
+    }
+
+    pipeline.push(
+      {
+        $sort: { created_at: -1 }
+      },
+      {
+        $facet: {
+          items: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: 'count' }]
+        }
+      }
+    )
+
+    const result = await databaseService.brands.aggregate(pipeline).toArray()
 
     const items = result[0]?.items || []
     const totalItems = result[0]?.totalCount[0]?.count || 0
-
     const totalPages = Math.ceil(totalItems / limit)
 
     return {

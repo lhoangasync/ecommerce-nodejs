@@ -13,3 +13,6 @@ export { default as IconEdit } from "./IconEdit";
 export { default as IconDelete } from "./IconDelete";
 export { default as IconEye } from "./IconEye";
 export { default as IconPhone } from "./IconPhone";
+export { default as IconBrand } from "./IconBrand";
+export { default as IconCategory } from "./IconCategory";
+export { default as IconCopy } from "./IconCopy";
