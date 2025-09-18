@@ -1,4 +1,6 @@
 import {
+  IconBrand,
+  IconCategory,
   IconCosmetic,
   IconCoupon,
   IconOrder,
@@ -17,6 +19,16 @@ export const menuItems: TMenuItem[] = [
     url: "/manage/product",
     title: "Product Management",
     icon: <IconCosmetic className="size-6" />,
+  },
+  {
+    url: "/manage/brand",
+    title: "Brand Management",
+    icon: <IconBrand className="size-6" />,
+  },
+  {
+    url: "/manage/category",
+    title: "Category Management",
+    icon: <IconCategory className="size-6" />,
   },
   {
     url: "/manage/order",

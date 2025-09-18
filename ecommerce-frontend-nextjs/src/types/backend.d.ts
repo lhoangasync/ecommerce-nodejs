@@ -54,3 +54,13 @@ export interface ResetPasswordRequest {
   password: string;
   confirm_password: string;
 }
+export type Brand = {
+  _id: string;
+  name: string;
+  slug: string;
+  country?: string;
+  desc?: string;
+  img?: string;
+  created_at: string;
+  updated_at: string;
+};

@@ -29,7 +29,10 @@ export const getBrandsController = async (req: Request, res: Response, next: Nex
   const page = Number(req.query.page) || 1
   const limit = Number(req.query.limit) || 10
 
-  const brands = await brandsService.getBrands({ page, limit })
+  const name = req.query.name as string | undefined
+
+  const brands = await brandsService.getBrands({ page, limit, name })
+
   return res.json({
     status: HTTP_STATUS.OK,
     message: BRANDS_MESSAGES.GET_ALL_BRANDS_SUCCESS,

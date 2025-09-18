@@ -16,6 +16,12 @@ export interface GetBrandByIdReqParams extends ParamsDictionary {
   brand_id: string
 }
 
+export interface GetBrandsParams {
+  page: number
+  limit: number
+  name?: string
+}
+
 export interface UpdateBrandReqBody {
   name?: string
   slug?: string
