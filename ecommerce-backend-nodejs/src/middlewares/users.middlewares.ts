@@ -130,6 +130,7 @@ const userIdSchema: ParamSchema = {
     }
   }
 }
+
 export const registerValidator = validate(
   checkSchema(
     {
@@ -469,7 +470,7 @@ export const updateUserValidator = validate(
             const user = await databaseService.users.findOne({ username: value })
             if (user) {
               if (req.params && user._id.toString() !== req.params.user_id) {
-                throw new Error(USERS_MESSAGES.USERNAME_EXISTED)
+                throw new ErrorWithStatus({ message: USERS_MESSAGES.USERNAME_EXISTED, status: HTTP_STATUS.BAD_REQUEST })
               }
             }
           }
