@@ -67,3 +67,7 @@ export type Brand = {
 };
 
 export type AddBrandReqBody = Omit<Brand, "_id" | "created_at" | "updated_at">;
+
+export type UpdateBrandReqBody = Partial<
+  Omit<Brand, "_id" | "created_at" | "updated_at">
+>;

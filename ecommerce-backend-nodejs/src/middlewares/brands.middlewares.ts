@@ -49,15 +49,15 @@ const descSchema: ParamSchema = {
   isString: {
     errorMessage: BRANDS_MESSAGES.DESCRIPTION_MUSE_BE_A_STRING
   },
-  trim: true,
+  trim: true
 
-  isLength: {
-    options: {
-      min: 0,
-      max: 200
-    },
-    errorMessage: BRANDS_MESSAGES.DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_200
-  }
+  // isLength: {
+  //   options: {
+  //     min: 0,
+  //     max: 500
+  //   },
+  //   errorMessage: BRANDS_MESSAGES.DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_500
+  // }
 }
 
 const imageSchema: ParamSchema = {

@@ -19,6 +19,9 @@ import Swal from "sweetalert2";
 import { deleteBrand } from "@/api/brand.api";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import BrandUpdate from "./BrandUpdate";
+import { useState } from "react";
+import BrandViewDetails from "./BrandViewDetail";
 
 export const columns: ColumnDef<Brand>[] = [
   // Cột Checkbox
@@ -71,7 +74,7 @@ export const columns: ColumnDef<Brand>[] = [
     accessorKey: "country",
     header: "Country",
     cell: ({ row }) => (
-      <div className="font-semibold text-blue-500">
+      <div className="font-semibold text-muted-foreground">
         {row.getValue("country") || "N/A"}
       </div>
     ),
@@ -82,7 +85,7 @@ export const columns: ColumnDef<Brand>[] = [
     accessorKey: "slug",
     header: "Slug",
     cell: ({ row }) => (
-      <div className="italic text-orange-400">
+      <div className="italic text-slate-500">
         {row.getValue("slug") || "N/A"}
       </div>
     ),
@@ -95,7 +98,25 @@ export const columns: ColumnDef<Brand>[] = [
     cell: ({ row }) => {
       const date = new Date(row.getValue("created_at"));
       return (
-        <div className="text-green-400">
+        <div className="text-emerald-600">
+          {date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </div>
+      );
+    },
+  },
+
+  // Cột Updated At
+  {
+    accessorKey: "updated_at",
+    header: "Updated At",
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("updated_at"));
+      return (
+        <div className="text-emerald-600">
           {date.toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
@@ -111,6 +132,9 @@ export const columns: ColumnDef<Brand>[] = [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
+      const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+      const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+
       const queryClient = useQueryClient();
       const brand = row.original;
 
@@ -141,39 +165,59 @@ export const columns: ColumnDef<Brand>[] = [
       };
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel className="font-bold">Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(brand._id)}
-            >
-              <IconCopy />
-              Copy Brand ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-blue-400">
-              <IconEye />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-yellow-600">
-              <IconEdit />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={handleDelete}
-            >
-              <IconDelete />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-bold">
+                Actions
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(brand._id)}
+              >
+                <IconCopy />
+                Copy Brand ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-blue-400"
+                onSelect={() => setIsViewDialogOpen(true)}
+              >
+                <IconEye />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-yellow-600"
+                onSelect={() => setIsEditDialogOpen(true)}
+              >
+                <IconEdit />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={handleDelete}
+              >
+                <IconDelete />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <BrandUpdate
+            brand={brand}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+          />
+          <BrandViewDetails
+            brand={brand}
+            open={isViewDialogOpen}
+            onOpenChange={setIsViewDialogOpen}
+          />
+        </>
       );
     },
   },

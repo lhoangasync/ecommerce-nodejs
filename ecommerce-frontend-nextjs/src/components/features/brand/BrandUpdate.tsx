@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -29,10 +29,12 @@ import { UploadButton } from "@/utils/uploadthing";
 
 import { toast } from "react-toastify";
 import CKEditor from "@/components/shared/CKEditor";
-import { addBrand } from "@/api/brand.api";
-import { AddBrandReqBody } from "@/types/backend";
+import { addBrand, updateBrand } from "@/api/brand.api";
+import { AddBrandReqBody, Brand, UpdateBrandReqBody } from "@/types/backend";
 import slugify from "slugify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { IconEdit } from "@/components/icon";
+import getDirtyValues from "@/utils/getDirtyFields";
 
 const formSchema = z.object({
   name: z
@@ -46,28 +48,56 @@ const formSchema = z.object({
   img: z.string().optional(),
 });
 
-function BrandAdd() {
-  const [open, setOpen] = useState(false);
+interface BrandUpdateProps {
+  brand: Brand;
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+function BrandUpdate({ brand, open, onOpenChange }: BrandUpdateProps) {
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      country: "",
-      desc: "",
-      img: "",
+
+    values: {
+      name: brand.name || "",
+      slug: brand.slug || "",
+      country: brand.country || "",
+      desc: brand.desc || "",
+      img: brand.img || "",
     },
   });
 
-  const addBrandMutation = useMutation({
-    mutationFn: (body: AddBrandReqBody) => addBrand(body),
+  //   const addBrandMutation = useMutation({
+  //     mutationFn: (body: AddBrandReqBody) => addBrand(body),
+  //     onSuccess: (result) => {
+  //       if (result.success) {
+  //         toast.success(result.data?.message);
+  //         queryClient.invalidateQueries({ queryKey: ["brands"] });
+  //         setOpen(false);
+  //       } else {
+  //         toast.error(result.error);
+  //       }
+  //     },
+  //     onError: (error) => {
+  //       toast.error(error.message);
+  //     },
+  //   });
+
+  const updateBrandMutation = useMutation({
+    mutationFn: ({
+      brandId,
+      body,
+    }: {
+      brandId: string;
+      body: UpdateBrandReqBody;
+    }) => updateBrand(brandId, body),
     onSuccess: (result) => {
       if (result.success) {
-        toast.success(result.data?.message);
+        toast.success(result.data?.message || "Brand updated successfully!");
         queryClient.invalidateQueries({ queryKey: ["brands"] });
-        setOpen(false);
+        onOpenChange(false);
       } else {
         toast.error(result.error);
       }
@@ -77,70 +107,63 @@ function BrandAdd() {
     },
   });
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   setIsSubmitting(true);
-  //   try {
-  //     const payload: AddBrandReqBody = {
-  //       name: values.name,
-  //       slug:
-  //         values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-  //       country: values.country || "",
-  //       desc: values.desc || "",
-  //       img: values.img || "",
-  //     };
-
-  //     const res = await addBrand(payload);
-  //     if (res.success) {
-  //       toast.success("Brand added successfully!");
-  //       router.refresh();
-  //     } else {
-  //       toast.error(res.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to add brand:", error);
-  //     toast.error("Failed to add brand. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const payload: AddBrandReqBody = {
-      name: values.name,
-      slug: values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-      country: values.country || "",
-      desc: values.desc || "",
-      img: values.img || "",
-    };
-    addBrandMutation.mutate(payload);
+    const { dirtyFields } = form.formState;
+
+    if (Object.keys(dirtyFields).length === 0) {
+      toast.info("No changes to save.");
+      return;
+    }
+
+    const payload = getDirtyValues<typeof values>(dirtyFields, values);
+
+    if (payload.name && !payload.slug) {
+      payload.slug = slugify(payload.name, {
+        lower: true,
+        locale: "vi",
+        strict: true,
+      });
+    }
+
+    updateBrandMutation.mutate({ brandId: brand._id, body: payload });
   }
 
   const handleModalClose = (isOpen: boolean) => {
-    setOpen(isOpen);
+    onOpenChange(isOpen);
     if (!isOpen) {
-      form.reset();
+      form.reset({
+        name: brand.name,
+        slug: brand.slug,
+        country: brand.country,
+        desc: brand.desc,
+        img: brand.img,
+      });
     }
   };
 
   const imageWatch = form.watch("img");
 
   return (
-    <Dialog onOpenChange={handleModalClose}>
-      <DialogTrigger asChild>
-        <Button type="button" className="bg-green-500 hover:bg-green-600">
-          Add Brand <Plus className="size-5 ml-2" />
-        </Button>
-      </DialogTrigger>
+    <Dialog onOpenChange={handleModalClose} open={open}>
+      {/* <DialogTrigger asChild>
+        <IconEdit />
+      </DialogTrigger> */}
 
-      <DialogContent className="sm:max-w-2xl p-0 grid grid-rows-[auto_1fr_auto] max-h-[90vh]">
+      <DialogContent
+        className="sm:max-w-2xl p-0 grid grid-rows-[auto_1fr_auto] max-h-[90vh]"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+        }}
+      >
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
             autoComplete="off"
+            onSubmit={form.handleSubmit(onSubmit)}
             className="contents"
           >
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="text-xl text-green-500">
-                Create New Brand
+              <DialogTitle className="text-xl text-blue-500 text-center">
+                Update Brand
               </DialogTitle>
             </DialogHeader>
 
@@ -215,7 +238,9 @@ function BrandAdd() {
                               className="w-full h-full ut-button:text-primary "
                               endpoint="imageUploader"
                               onClientUploadComplete={(res) => {
-                                form.setValue("img", res[0].ufsUrl);
+                                form.setValue("img", res[0].ufsUrl, {
+                                  shouldDirty: true,
+                                });
                                 toast.success("Image uploaded!");
                               }}
                               onUploadError={(error: Error) => {
@@ -277,10 +302,10 @@ function BrandAdd() {
               </DialogClose>
               <Button
                 type="submit"
-                className="bg-green-500 hover:bg-green-600"
-                disabled={addBrandMutation.isPending}
+                className="bg-blue-500 hover:bg-green-600"
+                disabled={updateBrandMutation.isPending}
               >
-                {addBrandMutation.isPending ? "Saving..." : "Save Brand"}
+                {updateBrandMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>
@@ -290,4 +315,4 @@ function BrandAdd() {
   );
 }
 
-export default BrandAdd;
+export default BrandUpdate;

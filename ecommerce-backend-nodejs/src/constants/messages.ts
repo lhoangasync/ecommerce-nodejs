@@ -61,7 +61,7 @@ export const BRANDS_MESSAGES = {
   COUNTRY_MUSE_BE_A_STRING: 'Country must be a string',
   COUNTRY_LENGTH_MUST_BE_FROM_1_TO_50: 'Country length must be from 1 to 50 characters',
   DESCRIPTION_MUSE_BE_A_STRING: 'Description must be a string',
-  DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_200: 'Description length must be from 1 to 50 characters',
+  DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_500: 'Description length must be from 1 to 50 characters',
   IMAGE_URL_MUST_BE_A_STRING: 'Image must be a string',
   IMAGE_URL_LENGTH: 'Image url length must be 1 from 400',
   SLUG_INVALID: 'Slug invalid',

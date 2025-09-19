@@ -5,6 +5,7 @@ import {
   Brand,
   IBackEndResponse,
   Paginated,
+  UpdateBrandReqBody,
 } from "@/types/backend";
 import { isAxiosError } from "axios";
 
@@ -83,6 +84,27 @@ export async function deleteBrand(
       errorMessage = error.response.data?.message || "Failed to delete brand.";
     }
 
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function updateBrand(
+  brandId: string,
+  body: UpdateBrandReqBody
+): Promise<FetchApiResponse<Brand>> {
+  try {
+    const api = await createServerApi();
+    const { data } = await api.patch<IBackEndResponse<Brand>>(
+      `/brands/update/${brandId}`,
+      body
+    );
+    return { success: true, data: data };
+  } catch (error) {
+    console.error(`Error updating brand ${brandId}:`, error);
+    let errorMessage = "An unknown error occurred.";
+    if (isAxiosError(error) && error.response) {
+      errorMessage = error.response.data?.message || "Failed to update brand.";
+    }
     return { success: false, error: errorMessage };
   }
 }
