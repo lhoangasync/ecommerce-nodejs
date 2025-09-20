@@ -3,7 +3,12 @@ import axios from "axios";
 import { cookies } from "next/headers";
 
 export async function createServerApi() {
-  const cookieHeader = (await cookies()).toString();
+  const cookieHeader = (await cookies())
+    .getAll()
+    .map((c) => `${c.name}=${encodeURIComponent(c.value)}`)
+    .join("; ");
+
+  console.log(">>>> refresh token: ", cookieHeader);
 
   const instance = axios.create({
     baseURL:
