@@ -16,3 +16,13 @@ export const clearRefreshCookie = (res: Response) => {
     sameSite: 'strict'
   })
 }
+
+// export const setAccessCookie = (res: Response, access_token: string) => {
+//   res.cookie('access_token', access_token, {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === 'production',
+//     sameSite: 'lax',
+//     path: '/',
+//     maxAge: 15 * 60 * 1000 // 15min
+//   })
+// }
