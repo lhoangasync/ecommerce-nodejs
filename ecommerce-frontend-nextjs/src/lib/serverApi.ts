@@ -1,23 +1,31 @@
 // lib/serverApi.ts
 import axios from "axios";
 import { cookies } from "next/headers";
+import { wrapper } from "axios-cookiejar-support";
+import { CookieJar } from "tough-cookie";
 
 export async function createServerApi() {
-  const cookieHeader = (await cookies())
-    .getAll()
-    .map((c) => `${c.name}=${encodeURIComponent(c.value)}`)
-    .join("; ");
+  const jar = new CookieJar();
+  const cookieStore = cookies();
+  const allCookies = (await cookieStore).getAll();
 
-  console.log(">>>> refresh token: ", cookieHeader);
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
 
-  const instance = axios.create({
-    baseURL:
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
-    headers: { cookie: cookieHeader },
-    withCredentials: true,
-  });
+  await Promise.all(
+    allCookies.map((cookie) => {
+      const cookieString = `${cookie.name}=${cookie.value}`;
+      return jar.setCookie(cookieString, apiUrl);
+    })
+  );
 
-  // (optional) refresh ở server
+  const instance = wrapper(
+    axios.create({
+      baseURL: apiUrl,
+      jar: jar,
+    })
+  );
+
   let isRefreshing = false;
   let queue: Array<(t: string | null) => void> = [];
   const flush = (t: string | null) => {
