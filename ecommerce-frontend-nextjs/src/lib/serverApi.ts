@@ -5,26 +5,21 @@ import { wrapper } from "axios-cookiejar-support";
 import { CookieJar } from "tough-cookie";
 
 export async function createServerApi() {
-  const jar = new CookieJar();
   const cookieStore = cookies();
   const allCookies = (await cookieStore).getAll();
 
-  const apiUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+  const cookieHeader = allCookies
+    .map((cookie) => `${cookie.name}=${cookie.value}`)
+    .join("; ");
 
-  await Promise.all(
-    allCookies.map((cookie) => {
-      const cookieString = `${cookie.name}=${cookie.value}`;
-      return jar.setCookie(cookieString, apiUrl);
-    })
-  );
-
-  const instance = wrapper(
-    axios.create({
-      baseURL: apiUrl,
-      jar: jar,
-    })
-  );
+  const instance = axios.create({
+    baseURL:
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
+    headers: {
+      Cookie: cookieHeader,
+    },
+    withCredentials: true,
+  });
 
   let isRefreshing = false;
   let queue: Array<(t: string | null) => void> = [];
