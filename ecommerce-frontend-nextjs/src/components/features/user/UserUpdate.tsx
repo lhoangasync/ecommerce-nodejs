@@ -97,7 +97,7 @@ function UserUpdate({ user }: { user: UserProfile }) {
         payload as Partial<UpdateUserReqBody>
       );
 
-      toast.success(res.message);
+      toast.success(res.data?.message);
       form.reset(values);
       router.refresh();
     } catch (error) {
