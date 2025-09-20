@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -21,23 +21,61 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { deleteUser } from "@/api/user.api";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+// 1. CẬP NHẬT PROPS ĐỂ NHẬN ĐẦY ĐỦ CÁC HÀM TỪ CHA
+interface UserManageProps {
+  users: UserProfile[];
+  isLoading: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onRefresh: () => void;
+}
 
-const UserManage = ({ users }: { users: UserProfile[] }) => {
-  const router = useRouter();
-  const handleDeleteUser = (userId: string) => {
+const UserManage = ({
+  users,
+  isLoading,
+  searchQuery,
+  setSearchQuery,
+  onRefresh,
+}: UserManageProps) => {
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const queryClient = useQueryClient();
+
+  // 2. DI CHUYỂN `useMutation` RA CẤP CAO NHẤT CỦA COMPONENT
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: (result) => {
+      if (result.success) {
+        Swal.fire(
+          "Deleted!",
+          result.data?.message || "User deleted successfully.",
+          "success"
+        );
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      } else {
+        Swal.fire("Error!", result.error, "error");
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // `handleDeleteUser` bây giờ là một hàm bình thường, không phải hook
+  const handleDeleteUser = (user: UserProfile) => {
     Swal.fire({
-      title: "Delete it ? :((",
+      title: `Delete user "${user.name}"?`,
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#78C841",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
-    }).then(async (result) => {
+    }).then((result) => {
       if (result.isConfirmed) {
-        const res = await deleteUser(userId);
-        toast.success("Delete user successfully!");
-        router.refresh();
+        // Chỉ cần gọi `mutate` ở đây
+        deleteUserMutation.mutate(user._id);
       }
     });
   };
@@ -47,7 +85,11 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
       <div className="flex flex-col lg:flex-row lg:items-center gap-5 justify-between mb-10">
         <Heading>User Management</Heading>
         <div className="w-full lg:w-[300px]">
-          <Input placeholder="Search user..." />
+          <Input
+            placeholder="Search user by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
       <Table>
@@ -120,16 +162,16 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
                         <IconEye className="size-12" />
                       </Link>
 
-                      {/*  Update User */}
-                      <UserUpdate user={user} />
-
                       {/* Delete User */}
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className={cn("text-red-500", commonClassName.action)}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-8 text-red-500 hover:border-destructive"
+                        onClick={() => handleDeleteUser(user)}
+                        disabled={deleteUserMutation.isPending}
                       >
-                        <IconDelete className="size-12" />
-                      </button>
+                        <IconDelete className="size-5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -138,6 +180,17 @@ const UserManage = ({ users }: { users: UserProfile[] }) => {
         </TableBody>
       </Table>
       {users.length <= 0 && <p className="text-red-500 p-5">No user data</p>}
+      {editingUser && (
+        <UserUpdate
+          user={editingUser}
+          open={!!editingUser}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setEditingUser(null);
+            }
+          }}
+        />
+      )}
     </>
   );
 };
