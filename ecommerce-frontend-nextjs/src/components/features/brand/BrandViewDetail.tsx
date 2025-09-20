@@ -49,7 +49,10 @@ export default function BrandViewDetails({
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="relative shrink-0">
               <Image
-                src={brand.img || "/placeholder.svg"}
+                src={
+                  brand.img ||
+                  "https://plus.unsplash.com/premium_photo-1676194560725-bf17a3162d2b?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                }
                 alt={brand.name}
                 width={128}
                 height={128}

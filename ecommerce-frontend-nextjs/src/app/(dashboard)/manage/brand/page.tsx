@@ -64,7 +64,7 @@ export default function BrandsPage() {
   const cardTitle = debouncedSearchQuery ? `Found Brands` : `Total Brands`;
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-3">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Brand Management</h1>
         <Card>

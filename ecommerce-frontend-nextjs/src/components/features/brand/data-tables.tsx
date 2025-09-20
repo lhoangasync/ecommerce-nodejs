@@ -83,7 +83,7 @@ export function BrandDataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex justify-between items-center py-4">
         <Input
           placeholder="Search brand name..."

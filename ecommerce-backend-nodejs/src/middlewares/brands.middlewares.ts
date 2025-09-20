@@ -84,8 +84,8 @@ const brandIdSchema: ParamSchema = {
           status: HTTP_STATUS.NOT_FOUND
         })
       }
-      const user = await databaseService.brands.findOne({ _id: new ObjectId(value) })
-      if (user === null) {
+      const brand = await databaseService.brands.findOne({ _id: new ObjectId(value) })
+      if (brand === null) {
         throw new ErrorWithStatus({
           message: BRANDS_MESSAGES.BRAND_NOT_FOUND,
           status: HTTP_STATUS.NOT_FOUND

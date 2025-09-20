@@ -7,8 +7,8 @@ import { escapeRegExp } from 'lodash'
 
 class BrandsService {
   async checkSlugExist(slug: string) {
-    const user = await databaseService.brands.findOne({ slug })
-    return Boolean(user)
+    const brand = await databaseService.brands.findOne({ slug })
+    return Boolean(brand)
   }
 
   async add(payload: AddBrandReqBody) {
@@ -67,11 +67,11 @@ class BrandsService {
   }
 
   async deleteBrand(brand_id: string) {
-    const deletedUser = await databaseService.brands.findOneAndDelete({
+    const deletedBrand = await databaseService.brands.findOneAndDelete({
       _id: new ObjectId(brand_id)
     })
 
-    if (!deletedUser) {
+    if (!deletedBrand) {
       return {
         message: BRANDS_MESSAGES.BRAND_NOT_FOUND
       }
