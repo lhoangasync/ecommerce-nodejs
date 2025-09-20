@@ -12,6 +12,8 @@ databaseService.connect()
 const app = express()
 const port = 4000
 
+app.set('trust proxy', 1)
+
 const allowedOrigins = [process.env.FRONT_END_URL, 'http://localhost:3000'].filter(Boolean) as string[]
 
 app.use(
