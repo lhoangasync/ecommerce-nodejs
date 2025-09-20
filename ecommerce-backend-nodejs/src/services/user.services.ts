@@ -2,7 +2,6 @@ import { config } from 'dotenv'
 import databaseService from './database.services'
 import { TokenType, UserRoles, UserVerifyStatus } from '~/constants/enums'
 import { signToken } from '~/utils/jwt'
-import { type StringValue } from 'ms'
 import { ObjectId } from 'mongodb'
 import User from '~/models/schemas/User.schema'
 import { hashPassword } from '~/utils/crypto'
@@ -34,7 +33,7 @@ class UsersService {
       },
       privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       options: {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN as StringValue
+        expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN)
       }
     })
   }
@@ -57,7 +56,7 @@ class UsersService {
       },
       privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN as StringValue
+        expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN)
       }
     })
   }
@@ -80,7 +79,7 @@ class UsersService {
       },
       privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
       options: {
-        expiresIn: process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN as StringValue
+        expiresIn: Number(process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN)
       }
     })
   }
@@ -103,7 +102,7 @@ class UsersService {
       },
       privateKey: process.env.JWT_SECRECT_FORGOT_PASSWORD_TOKEN as string,
       options: {
-        expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN as StringValue
+        expiresIn: Number(process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN)
       }
     })
   }
