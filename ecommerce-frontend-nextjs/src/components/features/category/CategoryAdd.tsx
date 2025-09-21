@@ -23,15 +23,14 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Plus, XIcon, Tags, Globe, FileText } from "lucide-react";
+import { Plus, XIcon, Tags } from "lucide-react";
 import { UploadButton } from "@/utils/uploadthing";
 
 import { toast } from "react-toastify";
-import CKEditor from "@/components/shared/CKEditor";
-import { addBrand } from "@/api/brand.api";
-import { AddBrandReqBody } from "@/types/backend";
+import { AddCategoryReqBody } from "@/types/backend";
 import slugify from "slugify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addCategory } from "@/api/category.api";
 
 const formSchema = z.object({
   name: z
@@ -39,13 +38,10 @@ const formSchema = z.object({
     .min(2, "Name must be at least 2 characters.")
     .nonempty("Name cannot be empty"),
   slug: z.string().optional(),
-
-  country: z.string().optional(),
-  desc: z.string().optional(),
   img: z.string().optional(),
 });
 
-function BrandAdd() {
+function CategoryAdd() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -54,18 +50,16 @@ function BrandAdd() {
     defaultValues: {
       name: "",
       slug: "",
-      country: "",
-      desc: "",
       img: "",
     },
   });
 
-  const addBrandMutation = useMutation({
-    mutationFn: (body: AddBrandReqBody) => addBrand(body),
+  const addCategoryMutation = useMutation({
+    mutationFn: (body: AddCategoryReqBody) => addCategory(body),
     onSuccess: (result) => {
       if (result.success) {
         toast.success(result.data?.message);
-        queryClient.invalidateQueries({ queryKey: ["brands"] });
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
         setOpen(false);
       } else {
         toast.error(result.error);
@@ -76,41 +70,13 @@ function BrandAdd() {
     },
   });
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   setIsSubmitting(true);
-  //   try {
-  //     const payload: AddBrandReqBody = {
-  //       name: values.name,
-  //       slug:
-  //         values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-  //       country: values.country || "",
-  //       desc: values.desc || "",
-  //       img: values.img || "",
-  //     };
-
-  //     const res = await addBrand(payload);
-  //     if (res.success) {
-  //       toast.success("Brand added successfully!");
-  //       router.refresh();
-  //     } else {
-  //       toast.error(res.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to add brand:", error);
-  //     toast.error("Failed to add brand. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const payload: AddBrandReqBody = {
+    const payload: AddCategoryReqBody = {
       name: values.name,
       slug: values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-      country: values.country || "",
-      desc: values.desc || "",
       img: values.img || "",
     };
-    addBrandMutation.mutate(payload);
+    addCategoryMutation.mutate(payload);
   }
 
   const handleModalClose = (isOpen: boolean) => {
@@ -126,7 +92,7 @@ function BrandAdd() {
     <Dialog onOpenChange={handleModalClose}>
       <DialogTrigger asChild>
         <Button type="button" className="bg-green-500 hover:bg-green-600">
-          Add Brand <Plus className="size-5 ml-2" />
+          Add Category <Plus className="size-5 ml-2" />
         </Button>
       </DialogTrigger>
 
@@ -139,7 +105,7 @@ function BrandAdd() {
           >
             <DialogHeader className="p-6 pb-0">
               <DialogTitle className="text-xl text-green-500">
-                Create New Brand
+                Create New Category
               </DialogTitle>
             </DialogHeader>
 
@@ -153,7 +119,7 @@ function BrandAdd() {
                     <FormItem>
                       <div className="flex items-center gap-2">
                         <Tags className="size-4" />
-                        <FormLabel>Brand Name</FormLabel>
+                        <FormLabel>Category Name</FormLabel>
                       </div>
                       <FormControl>
                         <Input placeholder="e.g., Paula's Choice" {...field} />
@@ -182,31 +148,13 @@ function BrandAdd() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                {/* Country */}
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        <Globe className="size-4" />
-                        <FormLabel>Country</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Input placeholder="e.g., Japan" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Brand Image */}
                 <FormField
                   control={form.control}
                   name="img"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brand Image</FormLabel>
+                      <FormLabel>Category Image</FormLabel>
                       <FormControl>
                         <div className="h-[100px] w-[100px] bg-white rounded-md border border-gray-500 border-dashed flex relative">
                           {!imageWatch ? (
@@ -246,26 +194,6 @@ function BrandAdd() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="desc"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2">
-                      <FileText className="size-4" />
-                      <FormLabel>Description</FormLabel>
-                    </div>
-                    <FormControl>
-                      <CKEditor
-                        initialData={field.value || ""}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <DialogFooter className="p-6 pt-0">
@@ -277,9 +205,9 @@ function BrandAdd() {
               <Button
                 type="submit"
                 className="bg-green-500 hover:bg-green-600"
-                disabled={addBrandMutation.isPending}
+                disabled={addCategoryMutation.isPending}
               >
-                {addBrandMutation.isPending ? "Saving..." : "Save Brand"}
+                {addCategoryMutation.isPending ? "Saving..." : "Save Brand"}
               </Button>
             </DialogFooter>
           </form>
@@ -289,4 +217,4 @@ function BrandAdd() {
   );
 }
 
-export default BrandAdd;
+export default CategoryAdd;

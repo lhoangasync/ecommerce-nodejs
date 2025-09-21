@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogClose,
@@ -7,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,20 +19,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Plus, XIcon, Tags, Globe, FileText } from "lucide-react";
+import { XIcon, Tags, Globe, FileText } from "lucide-react";
 import { UploadButton } from "@/utils/uploadthing";
 
 import { toast } from "react-toastify";
 import CKEditor from "@/components/shared/CKEditor";
-import { addBrand, updateBrand } from "@/api/brand.api";
-import { AddBrandReqBody, Brand, UpdateBrandReqBody } from "@/types/backend";
+import { updateBrand } from "@/api/brand.api";
+import { Brand, UpdateBrandReqBody } from "@/types/backend";
 import slugify from "slugify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconEdit } from "@/components/icon";
 import getDirtyValues from "@/utils/getDirtyFields";
 
 const formSchema = z.object({

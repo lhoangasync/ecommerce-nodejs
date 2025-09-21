@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogClose,
@@ -7,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,15 +22,15 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Plus, XIcon, Tags, Globe, FileText } from "lucide-react";
+import { XIcon, Tags } from "lucide-react";
 import { UploadButton } from "@/utils/uploadthing";
 
 import { toast } from "react-toastify";
-import CKEditor from "@/components/shared/CKEditor";
-import { addBrand } from "@/api/brand.api";
-import { AddBrandReqBody } from "@/types/backend";
+import { Category, UpdateCategoryReqBody } from "@/types/backend";
 import slugify from "slugify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import getDirtyValues from "@/utils/getDirtyFields";
+import { updateCategory } from "@/api/category.api";
 
 const formSchema = z.object({
   name: z
@@ -45,28 +44,38 @@ const formSchema = z.object({
   img: z.string().optional(),
 });
 
-function BrandAdd() {
-  const [open, setOpen] = useState(false);
+interface CategoryUpdateProps {
+  category: Category;
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+function CategoryUpdate({ category, open, onOpenChange }: CategoryUpdateProps) {
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      country: "",
-      desc: "",
-      img: "",
+
+    values: {
+      name: category.name || "",
+      slug: category.slug || "",
+      img: category.img || "",
     },
   });
 
-  const addBrandMutation = useMutation({
-    mutationFn: (body: AddBrandReqBody) => addBrand(body),
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({
+      categoryId,
+      body,
+    }: {
+      categoryId: string;
+      body: UpdateCategoryReqBody;
+    }) => updateCategory(categoryId, body),
     onSuccess: (result) => {
       if (result.success) {
-        toast.success(result.data?.message);
-        queryClient.invalidateQueries({ queryKey: ["brands"] });
-        setOpen(false);
+        toast.success(result.data?.message || "Category updated successfully!");
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+        onOpenChange(false);
       } else {
         toast.error(result.error);
       }
@@ -76,70 +85,57 @@ function BrandAdd() {
     },
   });
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   setIsSubmitting(true);
-  //   try {
-  //     const payload: AddBrandReqBody = {
-  //       name: values.name,
-  //       slug:
-  //         values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-  //       country: values.country || "",
-  //       desc: values.desc || "",
-  //       img: values.img || "",
-  //     };
-
-  //     const res = await addBrand(payload);
-  //     if (res.success) {
-  //       toast.success("Brand added successfully!");
-  //       router.refresh();
-  //     } else {
-  //       toast.error(res.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to add brand:", error);
-  //     toast.error("Failed to add brand. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const payload: AddBrandReqBody = {
-      name: values.name,
-      slug: values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-      country: values.country || "",
-      desc: values.desc || "",
-      img: values.img || "",
-    };
-    addBrandMutation.mutate(payload);
+    const { dirtyFields } = form.formState;
+
+    if (Object.keys(dirtyFields).length === 0) {
+      toast.info("No changes to save.");
+      return;
+    }
+
+    const payload = getDirtyValues<typeof values>(dirtyFields, values);
+
+    if (payload.name && !payload.slug) {
+      payload.slug = slugify(payload.name, {
+        lower: true,
+        locale: "vi",
+        strict: true,
+      });
+    }
+
+    updateCategoryMutation.mutate({ categoryId: category._id, body: payload });
   }
 
   const handleModalClose = (isOpen: boolean) => {
-    setOpen(isOpen);
+    onOpenChange(isOpen);
     if (!isOpen) {
-      form.reset();
+      form.reset({
+        name: category.name,
+        slug: category.slug,
+        img: category.img,
+      });
     }
   };
 
   const imageWatch = form.watch("img");
 
   return (
-    <Dialog onOpenChange={handleModalClose}>
-      <DialogTrigger asChild>
-        <Button type="button" className="bg-green-500 hover:bg-green-600">
-          Add Brand <Plus className="size-5 ml-2" />
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="sm:max-w-2xl p-0 grid grid-rows-[auto_1fr_auto] max-h-[90vh]">
+    <Dialog onOpenChange={handleModalClose} open={open}>
+      <DialogContent
+        className="sm:max-w-2xl p-0 grid grid-rows-[auto_1fr_auto] max-h-[90vh]"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+        }}
+      >
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
             autoComplete="off"
+            onSubmit={form.handleSubmit(onSubmit)}
             className="contents"
           >
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="text-xl text-green-500">
-                Create New Brand
+              <DialogTitle className="text-xl text-blue-500 text-center">
+                Update Category
               </DialogTitle>
             </DialogHeader>
 
@@ -153,7 +149,7 @@ function BrandAdd() {
                     <FormItem>
                       <div className="flex items-center gap-2">
                         <Tags className="size-4" />
-                        <FormLabel>Brand Name</FormLabel>
+                        <FormLabel>Category Name</FormLabel>
                       </div>
                       <FormControl>
                         <Input placeholder="e.g., Paula's Choice" {...field} />
@@ -182,31 +178,13 @@ function BrandAdd() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                {/* Country */}
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        <Globe className="size-4" />
-                        <FormLabel>Country</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Input placeholder="e.g., Japan" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Brand Image */}
+                {/* Category Image */}
                 <FormField
                   control={form.control}
                   name="img"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brand Image</FormLabel>
+                      <FormLabel>Category Image</FormLabel>
                       <FormControl>
                         <div className="h-[100px] w-[100px] bg-white rounded-md border border-gray-500 border-dashed flex relative">
                           {!imageWatch ? (
@@ -214,7 +192,9 @@ function BrandAdd() {
                               className="w-full h-full ut-button:text-primary "
                               endpoint="imageUploader"
                               onClientUploadComplete={(res) => {
-                                form.setValue("img", res[0].ufsUrl);
+                                form.setValue("img", res[0].ufsUrl, {
+                                  shouldDirty: true,
+                                });
                                 toast.success("Image uploaded!");
                               }}
                               onUploadError={(error: Error) => {
@@ -224,7 +204,7 @@ function BrandAdd() {
                           ) : (
                             <div className="relative w-full h-full">
                               <Image
-                                alt="Brand image preview"
+                                alt="Category image preview"
                                 src={imageWatch}
                                 fill
                                 className="rounded-sm object-cover"
@@ -233,7 +213,7 @@ function BrandAdd() {
                                 type="button"
                                 onClick={() => form.setValue("img", "")}
                                 className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-full"
-                                aria-label="Remove brand image"
+                                aria-label="Remove category image"
                               >
                                 <XIcon className="w-4 h-4" />
                               </button>
@@ -246,26 +226,6 @@ function BrandAdd() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="desc"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2">
-                      <FileText className="size-4" />
-                      <FormLabel>Description</FormLabel>
-                    </div>
-                    <FormControl>
-                      <CKEditor
-                        initialData={field.value || ""}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <DialogFooter className="p-6 pt-0">
@@ -276,10 +236,12 @@ function BrandAdd() {
               </DialogClose>
               <Button
                 type="submit"
-                className="bg-green-500 hover:bg-green-600"
-                disabled={addBrandMutation.isPending}
+                className="bg-blue-500 hover:bg-green-600"
+                disabled={updateCategoryMutation.isPending}
               >
-                {addBrandMutation.isPending ? "Saving..." : "Save Brand"}
+                {updateCategoryMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>
@@ -289,4 +251,4 @@ function BrandAdd() {
   );
 }
 
-export default BrandAdd;
+export default CategoryUpdate;

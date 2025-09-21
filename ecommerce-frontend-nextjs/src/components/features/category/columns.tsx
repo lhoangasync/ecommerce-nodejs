@@ -1,0 +1,200 @@
+"use client";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Brand } from "@/types/backend";
+import { IconCopy, IconDelete, IconEdit, IconEye } from "@/components/icon";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { deleteCategory } from "@/api/category.api";
+import CategoryUpdate from "./CategoryUpdate";
+
+export const columns: ColumnDef<Brand>[] = [
+  // Cột Checkbox
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+
+  // Brand Name
+  {
+    accessorKey: "name",
+    header: "Category",
+    cell: ({ row }) => {
+      const category = row.original;
+      const fallback = category.name.substring(0, 2).toUpperCase();
+      return (
+        <div className="flex items-center gap-3">
+          <Avatar className="rounded-sm h-10 w-10">
+            <AvatarImage src={category.img || undefined} alt={category.name} />
+            <AvatarFallback className="text-xs rounded-sm">
+              {fallback}
+            </AvatarFallback>
+          </Avatar>
+          <div className="font-bold text-primary">{category.name}</div>
+        </div>
+      );
+    },
+  },
+
+  // Cột Slug
+  {
+    accessorKey: "slug",
+    header: "Slug",
+    cell: ({ row }) => (
+      <div className="italic text-slate-500">
+        {row.getValue("slug") || "N/A"}
+      </div>
+    ),
+  },
+
+  // Cột Created At
+  {
+    accessorKey: "created_at",
+    header: "Created At",
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("created_at"));
+      return (
+        <div className="text-emerald-600">
+          {date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </div>
+      );
+    },
+  },
+
+  // Cột Updated At
+  {
+    accessorKey: "updated_at",
+    header: "Updated At",
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("updated_at"));
+      return (
+        <div className="text-emerald-600">
+          {date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </div>
+      );
+    },
+  },
+
+  // Cột Actions
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+      const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+
+      const queryClient = useQueryClient();
+      const category = row.original;
+
+      const deleteMutation = useMutation({
+        mutationFn: deleteCategory,
+        onSuccess: (result) => {
+          toast.success(result?.data?.message);
+          queryClient.invalidateQueries({ queryKey: ["categories"] });
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      });
+      const handleDelete = async () => {
+        Swal.fire({
+          title: `Are you sure you want to delete "${category.name}"`,
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#78C841",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            deleteMutation.mutate(category._id);
+          }
+        });
+      };
+
+      return (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-bold">
+                Actions
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(category._id)}
+              >
+                <IconCopy />
+                Copy Brand ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-yellow-600"
+                onSelect={() => setIsEditDialogOpen(true)}
+              >
+                <IconEdit />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={handleDelete}
+              >
+                <IconDelete />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <CategoryUpdate
+            category={category}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+          />
+        </>
+      );
+    },
+  },
+];
