@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import useSWR from "swr";
+import useSWR, { MutatorOptions } from "swr";
 import axios from "axios";
 import { AuthAPI } from "@/api/auth.api";
 import type { UserProfile } from "@/types/backend";
@@ -12,7 +12,10 @@ type Ctx = {
   isLoading: boolean;
   isError: boolean;
   refetch: () => Promise<any>;
-  mutate: (data?: UserProfile | null) => void;
+  mutate: (
+    data?: UserProfile | null,
+    options?: MutatorOptions<UserProfile | null> | boolean
+  ) => Promise<UserProfile | null | undefined>;
 };
 
 const AuthContext = createContext<Ctx | undefined>(undefined);
@@ -43,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isError: !!error,
         refetch: () => mutate(),
-        mutate: (d) => mutate(d, false),
+        mutate,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export async function saveRefreshTokenToCookie(refreshToken: string) {
   try {
-    (await cookies()).set("refresh_token", refreshToken, {
+    (await cookies()).set("refresh_token_fe", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -20,7 +20,7 @@ export async function saveRefreshTokenToCookie(refreshToken: string) {
 
 export async function deleteRefreshTokenCookie() {
   try {
-    (await cookies()).delete("refresh_token");
+    (await cookies()).delete("refresh_token_fe");
     return { success: true };
   } catch (error) {
     return { success: false, error: "Could not log out." };

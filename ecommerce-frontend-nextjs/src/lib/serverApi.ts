@@ -10,7 +10,7 @@ export async function createServerApi() {
   //   .map((cookie) => `${cookie.name}=${cookie.value}`)
   //   .join("; ");
 
-  const refreshToken = (await cookieStore).get("refresh_token")?.value;
+  const refreshToken = (await cookieStore).get("refresh_token_fe")?.value;
 
   // Xây dựng chuỗi cookie thủ công
   let cookieHeader = "";

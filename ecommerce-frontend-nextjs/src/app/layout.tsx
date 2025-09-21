@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${manrope.className} antialiased`}>
         <Providers>
-          <AuthProvider> {children}</AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </Providers>
 
         <ToastContainer

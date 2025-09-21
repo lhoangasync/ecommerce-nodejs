@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
 import { useOAuth } from "@/hooks/useOAuth";
 import { saveRefreshTokenToCookie } from "@/lib/auth.action";
+import { revalidateTag } from "next/cache";
 const formSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
@@ -59,11 +60,10 @@ export default function LoginForm() {
       // và dùng kết quả đó để cập nhật SWR cache với mutate.
       // Tại thời điểm này, accessToken đã được set, nên request /me sẽ thành công.
       const meResponse = await AuthAPI.me();
-      await mutate(meResponse.data);
+      await mutate(meResponse.data, { revalidate: false });
 
       toast.success("Login successfully!");
       router.replace("/");
-      router.refresh();
     } catch (error) {
       const { msg } = getMsg(error);
       toast.error(msg);
