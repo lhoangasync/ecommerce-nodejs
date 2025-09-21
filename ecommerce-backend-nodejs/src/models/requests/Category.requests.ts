@@ -12,10 +12,19 @@ export interface GetCategoryByIdReqParams extends ParamsDictionary {
 export interface AddCategoryReqBody {
   name: string
   slug: string
-  desc?: string
   img?: string
 }
 
 export interface DeleteCategoryReqParams extends ParamsDictionary {
   category_id: string
+}
+
+export interface UpdateCategoryReqParams extends ParamsDictionary {
+  category_id: string
+}
+
+export interface UpdateCategoryReqBody {
+  name?: string
+  slug?: string
+  img?: string
 }

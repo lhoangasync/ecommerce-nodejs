@@ -4,6 +4,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { CATEGORIES_MESSAGES } from '~/constants/messages'
 import { REGEX_SLUG } from '~/constants/regex'
 import { ErrorWithStatus } from '~/models/Errors'
+import { UpdateCategoryReqParams } from '~/models/requests/Category.requests'
 import categoriesService from '~/services/category.services'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
@@ -46,14 +47,6 @@ const nameSchema: ParamSchema = {
   }
 }
 
-const descSchema: ParamSchema = {
-  optional: true,
-  isString: {
-    errorMessage: CATEGORIES_MESSAGES.DESCRIPTION_MUSE_BE_A_STRING
-  },
-  trim: true
-}
-
 const imageSchema: ParamSchema = {
   optional: true,
   isString: {
@@ -94,7 +87,6 @@ export const addCategoryValidator = validate(
     {
       name: nameSchema,
       slug: slugSchema,
-      desc: descSchema,
       img: imageSchema
     },
     ['body']
@@ -107,5 +99,44 @@ export const categoryIdValidator = validate(
       category_id: categoryIdSchema
     },
     ['params']
+  )
+)
+
+export const updateCategoryValidator = validate(
+  checkSchema(
+    {
+      name: {
+        ...nameSchema,
+        optional: true
+      },
+      slug: {
+        ...slugSchema,
+        optional: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const { category_id } = req.params as UpdateCategoryReqParams
+            // Tìm brand có slug này, NHƯNG không phải là category đang được update
+            const categoryWithThisSlug = await databaseService.categories.findOne({
+              slug: value,
+              _id: { $ne: new ObjectId(category_id) } // $ne = Not Equal
+            })
+
+            // Nếu tìm thấy, tức là slug này đã bị category khác chiếm dụng
+            if (categoryWithThisSlug) {
+              throw new ErrorWithStatus({
+                message: CATEGORIES_MESSAGES.SLUG_IS_EXISTED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      },
+      img: {
+        ...imageSchema,
+        optional: true
+      }
+    },
+    ['body']
   )
 )

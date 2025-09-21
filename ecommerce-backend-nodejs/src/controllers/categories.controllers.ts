@@ -5,8 +5,10 @@ import { CATEGORIES_MESSAGES } from '~/constants/messages'
 import {
   AddCategoryReqBody,
   DeleteCategoryReqParams,
-  GetCategoryByIdReqParams
-} from '~/models/requests/Category.schema'
+  GetCategoryByIdReqParams,
+  UpdateCategoryReqBody,
+  UpdateCategoryReqParams
+} from '~/models/requests/Category.requests'
 import categoriesService from '~/services/category.services'
 
 export const getCategoriesController = async (req: Request, res: Response, next: NextFunction) => {
@@ -68,5 +70,21 @@ export const deleteCategoryController = async (req: Request<DeleteCategoryReqPar
     status: HTTP_STATUS.OK,
     message: result.message,
     data: null
+  })
+}
+
+export const updateCategoryController = async (
+  req: Request<UpdateCategoryReqParams, any, UpdateCategoryReqBody>,
+  res: Response
+) => {
+  const { category_id } = req.params
+  const payload = req.body
+  console.log('>>>>update category: ', payload)
+  const updatedCategory = await categoriesService.updateCategory(category_id, payload)
+
+  return res.json({
+    status: HTTP_STATUS.OK,
+    message: CATEGORIES_MESSAGES.UPDATE_BRAND_SUCCESS,
+    data: updatedCategory
   })
 }

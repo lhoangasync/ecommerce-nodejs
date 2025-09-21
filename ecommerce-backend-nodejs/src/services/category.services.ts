@@ -1,5 +1,5 @@
 import { escapeRegExp } from 'lodash'
-import { AddCategoryReqBody, GetCategoriesParams } from '~/models/requests/Category.schema'
+import { AddCategoryReqBody, GetCategoriesParams, UpdateCategoryReqBody } from '~/models/requests/Category.requests'
 import databaseService from './database.services'
 import { CATEGORIES_MESSAGES } from '~/constants/messages'
 import { ObjectId } from 'mongodb'
@@ -79,6 +79,26 @@ class CategoriesService {
     return {
       message: CATEGORIES_MESSAGES.DELETE_CATEGORY_SUCCESS
     }
+  }
+
+  async updateCategory(category_id: string, payload: UpdateCategoryReqBody) {
+    const category = await databaseService.categories.findOneAndUpdate(
+      {
+        _id: new ObjectId(category_id)
+      },
+      {
+        $set: {
+          ...payload
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      },
+      {
+        returnDocument: 'after'
+      }
+    )
+    return category as Category
   }
 }
 

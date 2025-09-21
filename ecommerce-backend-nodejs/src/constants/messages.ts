@@ -90,5 +90,6 @@ export const CATEGORIES_MESSAGES = {
   SLUG_INVALID: 'Slug invalid',
   SLUG_IS_EXISTED: 'Slug is existed',
   ADD_CATEGORY_SUCCESS: 'Add category successfully',
-  DELETE_CATEGORY_SUCCESS: 'Delete category successfully'
+  DELETE_CATEGORY_SUCCESS: 'Delete category successfully',
+  UPDATE_BRAND_SUCCESS: 'Update brand successfully'
 }

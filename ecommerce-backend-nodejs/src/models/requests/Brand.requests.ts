@@ -26,6 +26,7 @@ export interface UpdateBrandReqBody {
   name?: string
   slug?: string
   desc?: string
+  country?: string
   img?: string
 }
 

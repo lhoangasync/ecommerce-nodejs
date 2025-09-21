@@ -3,9 +3,14 @@ import {
   addCategoryController,
   deleteCategoryController,
   getCategoriesController,
-  getCategoryByIdController
+  getCategoryByIdController,
+  updateCategoryController
 } from '~/controllers/categories.controllers'
-import { addCategoryValidator, categoryIdValidator } from '~/middlewares/categories.middlewares'
+import {
+  addCategoryValidator,
+  categoryIdValidator,
+  updateCategoryValidator
+} from '~/middlewares/categories.middlewares'
 import {
   accessTokenValidator,
   checkRoleValidator,
@@ -35,6 +40,16 @@ categoriesRouter.delete(
   checkRoleValidator,
   categoryIdValidator,
   wrapRequestHandler(deleteCategoryController)
+)
+
+categoriesRouter.patch(
+  '/update/:category_id',
+  accessTokenValidator,
+  verifiedUserValidator,
+  checkRoleValidator,
+  categoryIdValidator,
+  updateCategoryValidator,
+  wrapRequestHandler(updateCategoryController)
 )
 
 export default categoriesRouter
