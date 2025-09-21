@@ -1,16 +1,21 @@
 // lib/serverApi.ts
 import axios from "axios";
 import { cookies } from "next/headers";
-import { wrapper } from "axios-cookiejar-support";
-import { CookieJar } from "tough-cookie";
 
 export async function createServerApi() {
   const cookieStore = cookies();
-  const allCookies = (await cookieStore).getAll();
+  // const allCookies = (await cookieStore).getAll();
 
-  const cookieHeader = allCookies
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
+  // const cookieHeader = allCookies
+  //   .map((cookie) => `${cookie.name}=${cookie.value}`)
+  //   .join("; ");
+
+  const refreshToken = (await cookieStore).get("refresh_token")?.value;
+
+  // Xây dựng chuỗi cookie thủ công
+  let cookieHeader = "";
+  if (refreshToken) cookieHeader += `refresh_token=${refreshToken}`;
+  console.log(">> cookieHeader", cookieHeader);
 
   const instance = axios.create({
     baseURL:

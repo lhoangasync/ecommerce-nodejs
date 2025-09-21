@@ -23,6 +23,7 @@ import { getMsg } from "@/utils/error-message";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
 import { useOAuth } from "@/hooks/useOAuth";
+import { saveRefreshTokenToCookie } from "@/lib/auth.action";
 const formSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
@@ -45,10 +46,22 @@ export default function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      await AuthAPI.login(values);
+      const response = await AuthAPI.login(values);
+
+      const refreshToken = response.data?.access_token;
+
+      if (refreshToken) {
+        await saveRefreshTokenToCookie(refreshToken);
+      } else {
+        console.warn(
+          "Refresh token not provided by API. Server-side rendering on refresh might not work."
+        );
+      }
+
       toast.success("Login successfully!");
       await refetch();
       router.replace("/");
+      router.refresh();
     } catch (error) {
       const { msg } = getMsg(error);
       toast.error(msg);

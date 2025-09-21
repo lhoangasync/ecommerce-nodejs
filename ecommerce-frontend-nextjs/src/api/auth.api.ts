@@ -15,10 +15,9 @@ export type ResetPasswordBody = {
 };
 export const AuthAPI = {
   async login(body: LoginBody) {
-    const { data } = await api.post<IBackEndResponse<{ access_token: string }>>(
-      "/users/login",
-      body
-    );
+    const { data } = await api.post<
+      IBackEndResponse<{ access_token: string; refresh_token: string }>
+    >("/users/login", body);
     setAccessToken(data.data.access_token);
     return data;
   },
