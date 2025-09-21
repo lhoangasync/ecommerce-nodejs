@@ -32,7 +32,7 @@ const formSchema = z.object({
 export default function LoginForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { refetch } = useAuth();
+  const { mutate } = useAuth();
   const { handleGoogleLogin, handleFacebookLogin } = useOAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,19 +47,21 @@ export default function LoginForm() {
     setIsSubmitting(true);
     try {
       const response = await AuthAPI.login(values);
+      const refreshToken = response.data?.refresh_token;
 
-      const refreshToken = response.data?.access_token;
-
+      // 2. Lưu refresh token vào cookie frontend
       if (refreshToken) {
         await saveRefreshTokenToCookie(refreshToken);
-      } else {
-        console.warn(
-          "Refresh token not provided by API. Server-side rendering on refresh might not work."
-        );
       }
 
+      // 3. ✨ THAY ĐỔI QUAN TRỌNG:
+      // Thay vì refetch(), hãy gọi trực tiếp AuthAPI.me()
+      // và dùng kết quả đó để cập nhật SWR cache với mutate.
+      // Tại thời điểm này, accessToken đã được set, nên request /me sẽ thành công.
+      const meResponse = await AuthAPI.me();
+      await mutate(meResponse.data);
+
       toast.success("Login successfully!");
-      await refetch();
       router.replace("/");
       router.refresh();
     } catch (error) {

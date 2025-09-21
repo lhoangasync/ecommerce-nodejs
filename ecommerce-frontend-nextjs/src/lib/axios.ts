@@ -6,6 +6,7 @@ let isRefreshing = false;
 let queue: Array<(token: string | null) => void> = [];
 
 export function setAccessToken(token: string | null) {
+  console.log("Setting access token to:", token);
   accessToken = token;
 }
 function flushQueue(token: string | null) {
@@ -20,6 +21,7 @@ function createAxios(baseURL: string): AxiosInstance {
   });
 
   instance.interceptors.request.use((config) => {
+    console.log("Interceptor: Current access token is:", accessToken);
     if (accessToken && !config.headers?.Authorization) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${accessToken}`;
