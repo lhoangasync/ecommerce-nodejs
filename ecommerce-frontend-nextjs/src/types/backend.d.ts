@@ -54,6 +54,8 @@ export interface ResetPasswordRequest {
   password: string;
   confirm_password: string;
 }
+
+/* BRAND */
 export type Brand = {
   _id: string;
   name: string;
@@ -64,3 +66,28 @@ export type Brand = {
   created_at: string;
   updated_at: string;
 };
+
+export type AddBrandReqBody = Omit<Brand, "_id" | "created_at" | "updated_at">;
+
+export type UpdateBrandReqBody = Partial<
+  Omit<Brand, "_id" | "created_at" | "updated_at">
+>;
+
+/* CATEGORY */
+export type Category = {
+  _id: string;
+  name: string;
+  slug: string;
+  img?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AddCategoryReqBody = Omit<
+  Category,
+  "_id" | "created_at" | "updated_at"
+>;
+
+export type UpdateCategoryReqBody = Partial<
+  Omit<Category, "_id" | "created_at" | "updated_at">
+>;

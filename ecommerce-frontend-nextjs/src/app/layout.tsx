@@ -3,6 +3,7 @@ import "./globals.css";
 import { manrope } from "@/utils/font";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./auth-provider";
+import { Providers } from "./provider";
 
 export const metadata: Metadata = {
   title: "Cosmetic Shop",
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${manrope.className} antialiased`}>
-        <AuthProvider> {children}</AuthProvider>
+        <Providers>
+          <AuthProvider>{children}</AuthProvider>
+        </Providers>
 
         <ToastContainer
           autoClose={2000}

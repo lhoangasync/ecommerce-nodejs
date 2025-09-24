@@ -61,7 +61,7 @@ export const BRANDS_MESSAGES = {
   COUNTRY_MUSE_BE_A_STRING: 'Country must be a string',
   COUNTRY_LENGTH_MUST_BE_FROM_1_TO_50: 'Country length must be from 1 to 50 characters',
   DESCRIPTION_MUSE_BE_A_STRING: 'Description must be a string',
-  DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_200: 'Description length must be from 1 to 50 characters',
+  DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_500: 'Description length must be from 1 to 50 characters',
   IMAGE_URL_MUST_BE_A_STRING: 'Image must be a string',
   IMAGE_URL_LENGTH: 'Image url length must be 1 from 400',
   SLUG_INVALID: 'Slug invalid',
@@ -72,5 +72,24 @@ export const BRANDS_MESSAGES = {
   BRAND_NOT_FOUND: 'Brand not found',
   DELETE_BRAND_SUCCESS: 'Delete brand successfully',
   GET_BRAND_SUCCESS: 'Get brand by id successfully',
+  UPDATE_BRAND_SUCCESS: 'Update brand successfully'
+} as const
+
+export const CATEGORIES_MESSAGES = {
+  INVALID_CATEGORY_ID: 'Invalid category id',
+  CATEGORY_NOT_FOUND: 'Category not found',
+  GET_ALL_CATEGORIES_SUCCESS: 'Get all categories successfully',
+  GET_CATEGORY_SUCCESS: 'Get category by id successfully',
+  NAME_IS_REQUIRED: 'Name is required',
+  NAME_MUSE_BE_A_STRING: 'Name must be a string',
+  NAME_LENGTH_MUST_BE_FROM_1_TO_50: 'Name length must be from 1 to 50 characters',
+  DESCRIPTION_MUSE_BE_A_STRING: 'Description must be a string',
+  DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_500: 'Description length must be from 1 to 50 characters',
+  IMAGE_URL_MUST_BE_A_STRING: 'Image must be a string',
+  IMAGE_URL_LENGTH: 'Image url length must be 1 from 400',
+  SLUG_INVALID: 'Slug invalid',
+  SLUG_IS_EXISTED: 'Slug is existed',
+  ADD_CATEGORY_SUCCESS: 'Add category successfully',
+  DELETE_CATEGORY_SUCCESS: 'Delete category successfully',
   UPDATE_BRAND_SUCCESS: 'Update brand successfully'
 }

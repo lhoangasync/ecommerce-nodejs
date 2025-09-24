@@ -40,6 +40,7 @@ import getDirtyValues from "@/utils/getDirtyFields";
 import { getMsg } from "@/utils/error-message";
 import { EUserVerifyStatus } from "@/types/enums";
 import { UploadButton } from "@/utils/uploadthing";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().nonempty("Name is required").optional(),
@@ -62,76 +63,79 @@ const formSchema = z.object({
   avatar: z.string().optional(),
 });
 
-function UserUpdate({ user }: { user: UserProfile }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+interface UserUpdateProps {
+  user: UserProfile;
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+function UserUpdate({ user, open, onOpenChange }: UserUpdateProps) {
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     values: {
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      address: user.address,
-      avatar: user.avatar,
-      phone: user.phone,
+      name: user.name || "",
+      username: user.username || "",
+      email: user.email || "",
+      address: user.address || "",
+      avatar: user.avatar || "",
+      phone: user.phone || "",
     },
   });
 
-  async function onsubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    try {
-      const { dirtyFields } = form.formState;
-      if (Object.keys(dirtyFields).length === 0) {
-        toast.info("No changes to save.");
-        setIsSubmitting(false);
-        return;
+  // 3. SỬ DỤNG `useMutation`
+  const updateUserMutation = useMutation({
+    mutationFn: ({
+      userId,
+      payload,
+    }: {
+      userId: string;
+      payload: UpdateUserReqBody;
+    }) => updateUsers(userId, payload),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(result.data?.message || "User updated successfully!");
+        queryClient.invalidateQueries({ queryKey: ["users"] }); // Làm mới bảng users
+        onOpenChange(false); // Đóng modal
+      } else {
+        toast.error(result.error);
       }
-      const allValues = form.getValues();
-
-      const payload = getDirtyValues<typeof allValues>(dirtyFields, allValues);
-
-      console.log("payload", payload);
-      const res = await updateUsers(
-        user._id,
-        payload as Partial<UpdateUserReqBody>
-      );
-
-      toast.success(res.message);
-      form.reset(values);
-      router.refresh();
-    } catch (error) {
-      // toast.error("An error occurred. Please try again.");
-      // console.error("Failed to update user:", error);
+    },
+    onError: (error) => {
       const { msg } = getMsg(error);
       toast.error(msg);
-    } finally {
-      setIsSubmitting(false);
+    },
+  });
+
+  // 4. ĐƠN GIẢN HÓA `onSubmit`
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const { dirtyFields } = form.formState;
+    if (Object.keys(dirtyFields).length === 0) {
+      toast.info("No changes to save.");
+      return;
     }
+
+    const payload = getDirtyValues<typeof values>(dirtyFields, values);
+    updateUserMutation.mutate({ userId: user._id, payload });
   }
 
-  const handleModalClose = (open: boolean) => {
-    if (!open) {
-      form.reset({
-        name: user.name || "",
-        username: user.username || "",
-        email: user.email || "",
-        address: user.address || "",
-        avatar: user.avatar || "",
-        phone: user.phone || "",
-      });
+  const handleModalClose = (isOpen: boolean) => {
+    onOpenChange(isOpen);
+    if (!isOpen) {
+      form.reset();
     }
   };
 
   const avatarWatch = form.watch("avatar");
 
   return (
-    <Dialog onOpenChange={handleModalClose}>
-      <DialogTrigger asChild>
+    <Dialog open={open} onOpenChange={handleModalClose}>
+      {/* <DialogTrigger asChild>
         <button className="size-8 rounded-md border flex items-center justify-center p-2 text-blue-500 hover:border-primary border-gray-500/10 cursor-pointer">
           <IconEdit className="size-12" />
         </button>
-      </DialogTrigger>
+      </DialogTrigger> */}
 
       <DialogContent
         className="sm:max-w-lg p-2"
@@ -140,7 +144,7 @@ function UserUpdate({ user }: { user: UserProfile }) {
         }}
       >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onsubmit)} autoComplete="off">
+          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off">
             <div className="p-6 ">
               <DialogHeader>
                 <DialogTitle className="mx-auto mb-2">Edit User</DialogTitle>
@@ -332,12 +336,8 @@ function UserUpdate({ user }: { user: UserProfile }) {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button
-                type="submit"
-                isLoading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                Save changes
+              <Button type="submit" disabled={updateUserMutation.isPending}>
+                {updateUserMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>

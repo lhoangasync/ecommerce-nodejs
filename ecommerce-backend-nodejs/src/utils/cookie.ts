@@ -1,18 +1,24 @@
+import { config } from 'dotenv'
 import { Response } from 'express'
+config()
+
+const maxAgeInSeconds = Number(process.env.REFRESH_TOKEN_EXPIRES_IN) || 900
 
 export const setRefreshCookie = (res: Response, refresh_token: string) => {
   res.cookie('refresh_token', refresh_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    secure: true,
+    sameSite: 'none',
+    path: '/',
+    maxAge: maxAgeInSeconds * 1000
   })
 }
 
 export const clearRefreshCookie = (res: Response) => {
   res.clearCookie('refresh_token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    secure: true,
+    sameSite: 'none',
+    path: '/'
   })
 }

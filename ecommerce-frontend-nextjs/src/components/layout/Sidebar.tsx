@@ -9,12 +9,14 @@ import { Button } from "../ui/button";
 import { AuthAPI } from "@/api/auth.api";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
+import { deleteRefreshTokenCookie } from "@/lib/auth.action";
 
 const Sidebar = () => {
   const { mutate } = useAuth();
   const handleLogout = async () => {
     try {
       await AuthAPI.logout();
+      await deleteRefreshTokenCookie();
       toast.success("Logout successfully!");
       await mutate();
     } catch (error) {

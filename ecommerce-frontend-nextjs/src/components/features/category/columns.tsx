@@ -16,12 +16,11 @@ import {
 import { Brand } from "@/types/backend";
 import { IconCopy, IconDelete, IconEdit, IconEye } from "@/components/icon";
 import Swal from "sweetalert2";
-import { deleteBrand } from "@/api/brand.api";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import BrandUpdate from "./BrandUpdate";
 import { useState } from "react";
-import BrandViewDetails from "./BrandViewDetail";
+import { deleteCategory } from "@/api/category.api";
+import CategoryUpdate from "./CategoryUpdate";
 
 export const columns: ColumnDef<Brand>[] = [
   // Cột Checkbox
@@ -51,33 +50,22 @@ export const columns: ColumnDef<Brand>[] = [
   // Brand Name
   {
     accessorKey: "name",
-    header: "Brand",
+    header: "Category",
     cell: ({ row }) => {
-      const brand = row.original;
-      const fallback = brand.name.substring(0, 2).toUpperCase();
+      const category = row.original;
+      const fallback = category.name.substring(0, 2).toUpperCase();
       return (
         <div className="flex items-center gap-3">
           <Avatar className="rounded-sm h-10 w-10">
-            <AvatarImage src={brand.img || undefined} alt={brand.name} />
+            <AvatarImage src={category.img || undefined} alt={category.name} />
             <AvatarFallback className="text-xs rounded-sm">
               {fallback}
             </AvatarFallback>
           </Avatar>
-          <div className="font-bold text-primary">{brand.name}</div>
+          <div className="font-bold text-primary">{category.name}</div>
         </div>
       );
     },
-  },
-
-  // Cột Country
-  {
-    accessorKey: "country",
-    header: "Country",
-    cell: ({ row }) => (
-      <div className="font-semibold text-muted-foreground">
-        {row.getValue("country") || "N/A"}
-      </div>
-    ),
   },
 
   // Cột Slug
@@ -136,13 +124,13 @@ export const columns: ColumnDef<Brand>[] = [
       const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
       const queryClient = useQueryClient();
-      const brand = row.original;
+      const category = row.original;
 
       const deleteMutation = useMutation({
-        mutationFn: deleteBrand,
+        mutationFn: deleteCategory,
         onSuccess: (result) => {
           toast.success(result?.data?.message);
-          queryClient.invalidateQueries({ queryKey: ["brands"] });
+          queryClient.invalidateQueries({ queryKey: ["categories"] });
         },
         onError: (error) => {
           toast.error(error.message);
@@ -150,7 +138,7 @@ export const columns: ColumnDef<Brand>[] = [
       });
       const handleDelete = async () => {
         Swal.fire({
-          title: `Are you sure you want to delete "${brand.name}"`,
+          title: `Are you sure you want to delete "${category.name}"`,
           text: "You won't be able to revert this!",
           icon: "warning",
           showCancelButton: true,
@@ -159,7 +147,7 @@ export const columns: ColumnDef<Brand>[] = [
           confirmButtonText: "Yes, delete it!",
         }).then(async (result) => {
           if (result.isConfirmed) {
-            deleteMutation.mutate(brand._id);
+            deleteMutation.mutate(category._id);
           }
         });
       };
@@ -178,19 +166,12 @@ export const columns: ColumnDef<Brand>[] = [
                 Actions
               </DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(brand._id)}
+                onClick={() => navigator.clipboard.writeText(category._id)}
               >
                 <IconCopy />
                 Copy Brand ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-blue-400"
-                onSelect={() => setIsViewDialogOpen(true)}
-              >
-                <IconEye />
-                View details
-              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-yellow-600"
                 onSelect={() => setIsEditDialogOpen(true)}
@@ -207,15 +188,10 @@ export const columns: ColumnDef<Brand>[] = [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <BrandUpdate
-            brand={brand}
+          <CategoryUpdate
+            category={category}
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-          />
-          <BrandViewDetails
-            brand={brand}
-            open={isViewDialogOpen}
-            onOpenChange={setIsViewDialogOpen}
           />
         </>
       );

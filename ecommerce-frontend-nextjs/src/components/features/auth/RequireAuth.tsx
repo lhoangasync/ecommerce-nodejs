@@ -1,16 +1,14 @@
 "use client";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/auth-provider";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import { EUserRole } from "@/types/enums"; // enum: ADMIN | USER ...
+import { EUserRole } from "@/types/enums";
 
 type Props = {
   children: React.ReactNode;
   allowedRoles?: EUserRole[];
-  /** Nếu không đủ quyền thì chuyển tới trang nào (mặc định "/") */
   fallbackPath?: string;
-  /** Nếu chưa login thì chuyển tới trang nào (mặc định "/sign-in") */
   signInPath?: string;
 };
 
@@ -21,31 +19,40 @@ export default function RequireAuth({
   signInPath = "/sign-in",
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAuth();
 
   const hasRole =
     !allowedRoles || (user && allowedRoles.includes(user.role as EUserRole));
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading) return; // đợi SWR xong đã
 
-    // chưa đăng nhập -> về trang sign-in
+    // Chưa đăng nhập
     if (!isAuthenticated) {
-      router.replace(signInPath);
+      if (pathname !== signInPath) {
+        router.replace(signInPath);
+      }
       return;
     }
 
-    // đã đăng nhập nhưng không đủ quyền -> về fallback
+    // Đã đăng nhập nhưng sai quyền
     if (!hasRole) {
-      router.replace(fallbackPath);
-      return;
+      if (pathname !== fallbackPath) {
+        router.replace(fallbackPath);
+      }
     }
-  }, [isLoading, isAuthenticated, hasRole, router, signInPath, fallbackPath]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    hasRole,
+    pathname,
+    router,
+    signInPath,
+    fallbackPath,
+  ]);
 
   if (isLoading) return <LoadingSpinner />;
-
-  // đang điều hướng
-  if (!isAuthenticated || !hasRole) return null;
-
-  return <>{children}</>;
+  if (isAuthenticated && hasRole) return <>{children}</>;
+  return null; // đang chuyển hướng
 }

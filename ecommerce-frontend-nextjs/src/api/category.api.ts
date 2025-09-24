@@ -1,11 +1,12 @@
 "use server";
+
 import { createServerApi } from "@/lib/serverApi";
 import {
-  AddBrandReqBody,
-  Brand,
+  AddCategoryReqBody,
+  Category,
   IBackEndResponse,
   Paginated,
-  UpdateBrandReqBody,
+  UpdateCategoryReqBody,
 } from "@/types/backend";
 import { isAxiosError } from "axios";
 
@@ -15,7 +16,7 @@ type FetchApiResponse<T> = {
   error?: string;
 };
 
-export async function getAllBrands(
+export async function getAllCategories(
   page: number = 1,
   limit: number = 10,
   name?: string
@@ -30,27 +31,29 @@ export async function getAllBrands(
     params.append("name", name);
   }
 
-  // `params.toString()` sẽ tạo ra chuỗi như "page=1&limit=10" hoặc "page=1&limit=10&name=sony"
-  const endpoint = `/brands/all?${params.toString()}`;
+  // `params.toString()` sẽ tạo ra chuỗi như "page=1&limit=10" hoặc "page=1&limit=10&name=lipsticks"
+  const endpoint = `/categories/all?${params.toString()}`;
 
-  const { data } = await api.get<IBackEndResponse<Paginated<Brand>>>(endpoint);
+  const { data } = await api.get<IBackEndResponse<Paginated<Category>>>(
+    endpoint
+  );
 
   return data;
 }
 
-export async function addBrand(
-  body: AddBrandReqBody
-): Promise<FetchApiResponse<Brand>> {
+export async function addCategory(
+  body: AddCategoryReqBody
+): Promise<FetchApiResponse<Category>> {
   try {
     const api = await createServerApi();
-    const { data } = await api.post<IBackEndResponse<Brand>>(
-      `/brands/add`,
+    const { data } = await api.post<IBackEndResponse<Category>>(
+      `/categories/add`,
       body
     );
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding brand:", error);
+    console.error("Error adding category:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -62,48 +65,50 @@ export async function addBrand(
   }
 }
 
-export async function deleteBrand(
-  brand_id: string
+export async function deleteCategory(
+  category_id: string
 ): Promise<FetchApiResponse<null>> {
-  if (!brand_id) {
-    return { success: false, error: "Brand ID is required." };
+  if (!category_id) {
+    return { success: false, error: "Category ID is required." };
   }
   try {
     const api = await createServerApi();
 
     const { data } = await api.delete<IBackEndResponse<null>>(
-      `/brands/delete/${brand_id}`
+      `/categories/delete/${category_id}`
     );
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting brand with ID ${brand_id}:`, error);
+    console.error(`Error deleting category with ID ${category_id}:`, error);
 
-    let errorMessage = "An unknown error occurred while deleting the brand.";
+    let errorMessage = "An unknown error occurred while deleting the category.";
     if (isAxiosError(error) && error.response) {
-      errorMessage = error.response.data?.message || "Failed to delete brand.";
+      errorMessage =
+        error.response.data?.message || "Failed to delete category.";
     }
 
     return { success: false, error: errorMessage };
   }
 }
 
-export async function updateBrand(
-  brandId: string,
-  body: UpdateBrandReqBody
-): Promise<FetchApiResponse<Brand>> {
+export async function updateCategory(
+  categoryId: string,
+  body: UpdateCategoryReqBody
+): Promise<FetchApiResponse<Category>> {
   try {
     const api = await createServerApi();
-    const { data } = await api.patch<IBackEndResponse<Brand>>(
-      `/brands/update/${brandId}`,
+    const { data } = await api.patch<IBackEndResponse<Category>>(
+      `/categories/update/${categoryId}`,
       body
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating brand ${brandId}:`, error);
+    console.error(`Error updating brand ${categoryId}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
-      errorMessage = error.response.data?.message || "Failed to update brand.";
+      errorMessage =
+        error.response.data?.message || "Failed to update category.";
     }
     return { success: false, error: errorMessage };
   }

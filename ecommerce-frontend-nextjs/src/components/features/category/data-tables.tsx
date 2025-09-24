@@ -35,7 +35,7 @@ import {
   ChevronRightIcon,
   RotateCcw,
 } from "lucide-react";
-import BrandAdd from "./BrandAdd";
+import CategoryAdd from "./CategoryAdd";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -52,7 +52,7 @@ interface DataTableProps<TData, TValue> {
   isLoading: boolean;
 }
 
-export function BrandDataTable<TData, TValue>({
+export function CategoryDataTable<TData, TValue>({
   columns,
   data,
   pageCount,
@@ -86,14 +86,14 @@ export function BrandDataTable<TData, TValue>({
     <div className="space-y-3">
       <div className="flex justify-between items-center py-4">
         <Input
-          placeholder="Search brand name..."
+          placeholder="Search category name..."
           className="max-w-sm"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
         />
 
         <div className="flex justify-between items-center">
-          <BrandAdd />
+          <CategoryAdd />
           <Button
             isLoading={isLoading}
             disabled={isLoading}

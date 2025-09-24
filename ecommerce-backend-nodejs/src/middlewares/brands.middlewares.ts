@@ -45,18 +45,19 @@ const countrySchema: ParamSchema = {
 }
 
 const descSchema: ParamSchema = {
+  optional: true,
   isString: {
     errorMessage: BRANDS_MESSAGES.DESCRIPTION_MUSE_BE_A_STRING
   },
-  trim: true,
+  trim: true
 
-  isLength: {
-    options: {
-      min: 1,
-      max: 200
-    },
-    errorMessage: BRANDS_MESSAGES.DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_200
-  }
+  // isLength: {
+  //   options: {
+  //     min: 0,
+  //     max: 500
+  //   },
+  //   errorMessage: BRANDS_MESSAGES.DESCRIPTION_LENGTH_MUST_BE_FROM_1_TO_500
+  // }
 }
 
 const imageSchema: ParamSchema = {
@@ -67,7 +68,7 @@ const imageSchema: ParamSchema = {
   trim: true,
   isLength: {
     options: {
-      min: 1,
+      min: 0,
       max: 400
     },
     errorMessage: BRANDS_MESSAGES.IMAGE_URL_LENGTH
@@ -83,8 +84,8 @@ const brandIdSchema: ParamSchema = {
           status: HTTP_STATUS.NOT_FOUND
         })
       }
-      const user = await databaseService.brands.findOne({ _id: new ObjectId(value) })
-      if (user === null) {
+      const brand = await databaseService.brands.findOne({ _id: new ObjectId(value) })
+      if (brand === null) {
         throw new ErrorWithStatus({
           message: BRANDS_MESSAGES.BRAND_NOT_FOUND,
           status: HTTP_STATUS.NOT_FOUND

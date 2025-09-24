@@ -1,17 +1,33 @@
 // lib/serverApi.ts
+
+"use server";
 import axios from "axios";
 import { cookies } from "next/headers";
 
 export async function createServerApi() {
-  const cookieHeader = (await cookies()).toString();
+  const cookieStore = cookies();
+  // const allCookies = (await cookieStore).getAll();
+
+  // const cookieHeader = allCookies
+  //   .map((cookie) => `${cookie.name}=${cookie.value}`)
+  //   .join("; ");
+
+  const refreshToken = (await cookieStore).get("refresh_token_fe")?.value;
+
+  // Xây dựng chuỗi cookie thủ công
+  let cookieHeader = "";
+  if (refreshToken) cookieHeader += `refresh_token=${refreshToken}`;
+  console.log(">> cookieHeader", cookieHeader);
 
   const instance = axios.create({
     baseURL:
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
-    headers: { cookie: cookieHeader },
+    headers: {
+      Cookie: cookieHeader,
+    },
+    withCredentials: true,
   });
 
-  // (optional) refresh ở server
   let isRefreshing = false;
   let queue: Array<(t: string | null) => void> = [];
   const flush = (t: string | null) => {

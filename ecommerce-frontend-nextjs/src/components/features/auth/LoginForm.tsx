@@ -23,6 +23,8 @@ import { getMsg } from "@/utils/error-message";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
 import { useOAuth } from "@/hooks/useOAuth";
+import { saveRefreshTokenToCookie } from "@/lib/auth.action";
+import { revalidateTag } from "next/cache";
 const formSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
@@ -31,7 +33,7 @@ const formSchema = z.object({
 export default function LoginForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { refetch } = useAuth();
+  const { mutate } = useAuth();
   const { handleGoogleLogin, handleFacebookLogin } = useOAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,9 +47,22 @@ export default function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      await AuthAPI.login(values);
+      const response = await AuthAPI.login(values);
+      const refreshToken = response.data?.refresh_token;
+
+      // 2. Lưu refresh token vào cookie frontend
+      if (refreshToken) {
+        await saveRefreshTokenToCookie(refreshToken);
+      }
+
+      // 3. ✨ THAY ĐỔI QUAN TRỌNG:
+      // Thay vì refetch(), hãy gọi trực tiếp AuthAPI.me()
+      // và dùng kết quả đó để cập nhật SWR cache với mutate.
+      // Tại thời điểm này, accessToken đã được set, nên request /me sẽ thành công.
+      const meResponse = await AuthAPI.me();
+      await mutate(meResponse.data, { revalidate: false });
+
       toast.success("Login successfully!");
-      await refetch();
       router.replace("/");
     } catch (error) {
       const { msg } = getMsg(error);
