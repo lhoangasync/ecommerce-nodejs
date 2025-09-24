@@ -2,6 +2,7 @@ import { config } from 'dotenv'
 import { Collection, Db, MongoClient } from 'mongodb'
 import Brand from '~/models/schemas/Brand.schema'
 import Category from '~/models/schemas/Category.schema'
+import Product from '~/models/schemas/Product.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 config()
@@ -39,6 +40,9 @@ class DatabaseService {
 
   get categories(): Collection<Category> {
     return this.db.collection<Category>(process.env.DB_CATEGORIES_COLLECTION as string)
+  }
+  get products(): Collection<Product> {
+    return this.db.collection<Product>(process.env.DB_PRODUCTS_COLLECTION as string)
   }
 }
 
