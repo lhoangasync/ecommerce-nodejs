@@ -287,7 +287,7 @@ export function ProductDataTable<TData, TValue>({
 
           {searchQuery && (
             <Badge variant="secondary" className="gap-1">
-              Search: "{searchQuery}"
+              Search: {`"${searchQuery}"`}
               <button
                 onClick={() => setSearchQuery("")}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-full w-4 h-4 flex items-center justify-center text-xs"

@@ -195,7 +195,7 @@ export const columns: ColumnDef<Product>[] = [
     cell: ({ row }) => {
       const isAvailable = row.getValue("is_available") as boolean;
       return (
-        <Badge variant={isAvailable ? "default" : "secondary"}>
+        <Badge variant={isAvailable ? "available" : "secondary"}>
           {isAvailable ? "Available" : "Unavailable"}
         </Badge>
       );
