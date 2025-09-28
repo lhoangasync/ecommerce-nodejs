@@ -1,0 +1,13 @@
+.swiper-button-prev,
+.swiper-button-next {
+  color: #ec4899 !important; /* pink-500 */
+}
+
+.swiper-pagination-bullet {
+  background: #f9a8d4 !important; 
+  opacity: 1 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: #ec4899 !important; 
+}
