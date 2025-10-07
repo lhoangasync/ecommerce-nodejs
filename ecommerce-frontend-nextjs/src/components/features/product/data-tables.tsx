@@ -35,6 +35,10 @@ import {
   ChevronRightIcon,
   RotateCcw,
   Filter,
+  X,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,6 +48,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import ProductAdd from "./ProductAdd";
 
@@ -57,32 +74,21 @@ interface DataTableProps<TData, TValue> {
   setSearchQuery: (query: string) => void;
   onRefresh: () => void;
   isLoading: boolean;
-  // Additional filter props for cosmetics products
+  // Additional filter props
   availabilityFilter?: boolean | null;
   setAvailabilityFilter?: (value: boolean | null) => void;
-  skinTypeFilter?: string;
-  setSkinTypeFilter?: (value: string) => void;
+  brandFilter?: string;
+  setBrandFilter?: (value: string) => void;
+  categoryFilter?: string;
+  setCategoryFilter?: (value: string) => void;
   sortBy?: string;
   setSortBy?: (value: string) => void;
   order?: "asc" | "desc";
   setOrder?: (value: "asc" | "desc") => void;
+  // Options for dropdowns
+  brands?: Array<{ _id: string; name: string }>;
+  categories?: Array<{ _id: string; name: string }>;
 }
-
-const skinTypeOptions = [
-  { value: "all", label: "All Skin Types" },
-  { value: "dry", label: "Dry" },
-  { value: "oily", label: "Oily" },
-  { value: "combination", label: "Combination" },
-  { value: "sensitive", label: "Sensitive" },
-  { value: "normal", label: "Normal" },
-];
-
-const sortOptions = [
-  { value: "name", label: "Name" },
-  { value: "created_at", label: "Created Date" },
-  { value: "price", label: "Price" },
-  { value: "rating", label: "Rating" },
-];
 
 export function ProductDataTable<TData, TValue>({
   columns,
@@ -96,14 +102,22 @@ export function ProductDataTable<TData, TValue>({
   isLoading,
   availabilityFilter,
   setAvailabilityFilter,
-  skinTypeFilter,
-  setSkinTypeFilter,
+  brandFilter,
+  setBrandFilter,
+  categoryFilter,
+  setCategoryFilter,
   sortBy,
   setSortBy,
   order,
   setOrder,
+  brands = [],
+  categories = [],
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [brandOpen, setBrandOpen] = React.useState(false);
+  const [categoryOpen, setCategoryOpen] = React.useState(false);
+  const [brandSearch, setBrandSearch] = React.useState("");
+  const [categorySearch, setCategorySearch] = React.useState("");
 
   const table = useReactTable({
     data,
@@ -124,7 +138,8 @@ export function ProductDataTable<TData, TValue>({
   const clearAllFilters = () => {
     setSearchQuery("");
     setAvailabilityFilter?.(null);
-    setSkinTypeFilter?.("");
+    setBrandFilter?.("");
+    setCategoryFilter?.("");
     setSortBy?.("created_at");
     setOrder?.("desc");
   };
@@ -135,9 +150,81 @@ export function ProductDataTable<TData, TValue>({
     if (searchQuery) count++;
     if (availabilityFilter !== null && availabilityFilter !== undefined)
       count++;
-    if (skinTypeFilter) count++;
+    if (brandFilter) count++;
+    if (categoryFilter) count++;
     return count;
-  }, [searchQuery, availabilityFilter, skinTypeFilter]);
+  }, [searchQuery, availabilityFilter, brandFilter, categoryFilter]);
+
+  // Get brand name by ID
+  const getBrandName = (brandId: string) => {
+    return brands.find((b) => b._id === brandId)?.name || brandId;
+  };
+
+  // Get category name by ID
+  const getCategoryName = (categoryId: string) => {
+    return categories.find((c) => c._id === categoryId)?.name || categoryId;
+  };
+
+  // Filter brands based on search
+  const filteredBrands = React.useMemo(() => {
+    if (!brandSearch) return brands;
+    return brands.filter((brand) =>
+      brand.name.toLowerCase().includes(brandSearch.toLowerCase())
+    );
+  }, [brands, brandSearch]);
+
+  // Filter categories based on search
+  const filteredCategories = React.useMemo(() => {
+    if (!categorySearch) return categories;
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+  }, [categories, categorySearch]);
+
+  // Handle column header click for sorting
+  const handleSort = (columnId: string) => {
+    // Map column IDs to API sort fields
+    const sortFieldMap: Record<string, string> = {
+      name: "name",
+      created_at: "created_at",
+      price_range: "price",
+      rating: "rating",
+    };
+
+    const apiSortField = sortFieldMap[columnId];
+    if (!apiSortField) return;
+
+    if (sortBy === apiSortField) {
+      // Toggle order if same column
+      setOrder?.(order === "asc" ? "desc" : "asc");
+    } else {
+      // Set new sort column with default desc order
+      setSortBy?.(apiSortField);
+      setOrder?.("desc");
+    }
+  };
+
+  // Get sort icon for column
+  const getSortIcon = (columnId: string) => {
+    const sortFieldMap: Record<string, string> = {
+      name: "name",
+      created_at: "created_at",
+      price_range: "price",
+      rating: "rating",
+    };
+
+    const apiSortField = sortFieldMap[columnId];
+    if (!apiSortField) return null;
+
+    if (sortBy === apiSortField) {
+      return order === "asc" ? (
+        <ArrowUp className="ml-2 h-4 w-4" />
+      ) : (
+        <ArrowDown className="ml-2 h-4 w-4" />
+      );
+    }
+    return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />;
+  };
 
   return (
     <div className="space-y-4">
@@ -151,12 +238,108 @@ export function ProductDataTable<TData, TValue>({
             onChange={(event) => setSearchQuery(event.target.value)}
           />
 
+          {/* Brand Filter with Autocomplete */}
+          <Popover open={brandOpen} onOpenChange={setBrandOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-between">
+                {brandFilter ? getBrandName(brandFilter) : "Select brand..."}
+                {brandFilter ? (
+                  <X
+                    className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBrandFilter?.("");
+                    }}
+                  />
+                ) : (
+                  <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput
+                  placeholder="Search brand..."
+                  value={brandSearch}
+                  onValueChange={setBrandSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>No brand found.</CommandEmpty>
+                  <CommandGroup>
+                    {filteredBrands.map((brand) => (
+                      <CommandItem
+                        key={brand._id}
+                        value={brand.name}
+                        onSelect={() => {
+                          setBrandFilter?.(brand._id);
+                          setBrandOpen(false);
+                          setBrandSearch("");
+                        }}
+                      >
+                        {brand.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* Category Filter with Autocomplete */}
+          <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-between">
+                {categoryFilter
+                  ? getCategoryName(categoryFilter)
+                  : "Select category..."}
+                {categoryFilter ? (
+                  <X
+                    className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCategoryFilter?.("");
+                    }}
+                  />
+                ) : (
+                  <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput
+                  placeholder="Search category..."
+                  value={categorySearch}
+                  onValueChange={setCategorySearch}
+                />
+                <CommandList>
+                  <CommandEmpty>No category found.</CommandEmpty>
+                  <CommandGroup>
+                    {filteredCategories.map((category) => (
+                      <CommandItem
+                        key={category._id}
+                        value={category.name}
+                        onSelect={() => {
+                          setCategoryFilter?.(category._id);
+                          setCategoryOpen(false);
+                          setCategorySearch("");
+                        }}
+                      >
+                        {category.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
           {/* Filters Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="relative">
                 <Filter className="h-4 w-4 mr-2" />
-                Filters
+                More Filters
                 {activeFiltersCount > 0 && (
                   <Badge
                     variant="secondary"
@@ -168,7 +351,7 @@ export function ProductDataTable<TData, TValue>({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="start">
-              <DropdownMenuLabel>Filter Options</DropdownMenuLabel>
+              <DropdownMenuLabel>Additional Filters</DropdownMenuLabel>
               <DropdownMenuSeparator />
 
               {/* Availability Filter */}
@@ -199,28 +382,6 @@ export function ProductDataTable<TData, TValue>({
                 </Select>
               </div>
 
-              {/* Skin Type Filter */}
-              <div className="px-2 py-2">
-                <label className="text-sm font-medium">Skin Type</label>
-                <Select
-                  value={skinTypeFilter || "all"}
-                  onValueChange={(value) =>
-                    setSkinTypeFilter?.(value === "all" ? "" : value)
-                  }
-                >
-                  <SelectTrigger className="w-full mt-1">
-                    <SelectValue placeholder="Select skin type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skinTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <DropdownMenuSeparator />
 
               {/* Clear Filters */}
@@ -234,38 +395,6 @@ export function ProductDataTable<TData, TValue>({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Sort Controls */}
-          <div className="flex items-center gap-2">
-            <Select
-              value={sortBy || "created_at"}
-              onValueChange={(value) => setSortBy?.(value)}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={order || "desc"}
-              onValueChange={(value: "asc" | "desc") => setOrder?.(value)}
-            >
-              <SelectTrigger className="w-20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desc">↓</SelectItem>
-                <SelectItem value="asc">↑</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <ProductAdd />
 
           <Button
@@ -297,11 +426,11 @@ export function ProductDataTable<TData, TValue>({
             </Badge>
           )}
 
-          {availabilityFilter !== null && availabilityFilter !== undefined && (
+          {brandFilter && (
             <Badge variant="secondary" className="gap-1">
-              {availabilityFilter ? "Available" : "Unavailable"}
+              Brand: {getBrandName(brandFilter)}
               <button
-                onClick={() => setAvailabilityFilter?.(null)}
+                onClick={() => setBrandFilter?.("")}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
               >
                 ×
@@ -309,11 +438,23 @@ export function ProductDataTable<TData, TValue>({
             </Badge>
           )}
 
-          {skinTypeFilter && (
-            <Badge variant="secondary" className="gap-1 capitalize">
-              {skinTypeFilter} Skin
+          {categoryFilter && (
+            <Badge variant="secondary" className="gap-1">
+              Category: {getCategoryName(categoryFilter)}
               <button
-                onClick={() => setSkinTypeFilter?.("")}
+                onClick={() => setCategoryFilter?.("")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+              >
+                ×
+              </button>
+            </Badge>
+          )}
+
+          {availabilityFilter !== null && availabilityFilter !== undefined && (
+            <Badge variant="secondary" className="gap-1">
+              {availabilityFilter ? "Available" : "Unavailable"}
+              <button
+                onClick={() => setAvailabilityFilter?.(null)}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
               >
                 ×
@@ -340,12 +481,43 @@ export function ProductDataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
+                    {header.isPlaceholder ? null : (
+                      <div
+                        className={
+                          [
+                            "name",
+                            "created_at",
+                            "price_range",
+                            "rating",
+                          ].includes(header.id)
+                            ? "flex items-center cursor-pointer hover:text-primary select-none"
+                            : ""
+                        }
+                        onClick={() => {
+                          if (
+                            [
+                              "name",
+                              "created_at",
+                              "price_range",
+                              "rating",
+                            ].includes(header.id)
+                          ) {
+                            handleSort(header.id);
+                          }
+                        }}
+                      >
+                        {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                        {[
+                          "name",
+                          "created_at",
+                          "price_range",
+                          "rating",
+                        ].includes(header.id) && getSortIcon(header.id)}
+                      </div>
+                    )}
                   </TableHead>
                 ))}
               </TableRow>

@@ -50,11 +50,6 @@ const getTotalStock = (variants: any[]) => {
   );
 };
 
-const getAvailableVariantsCount = (variants: any[]) => {
-  if (!variants || variants.length === 0) return 0;
-  return variants.filter((v) => v.is_available && v.stock_quantity > 0).length;
-};
-
 export const columns: ColumnDef<Product>[] = [
   // Checkbox Column
   {
@@ -118,6 +113,20 @@ export const columns: ColumnDef<Product>[] = [
       const product = row.original;
       const priceRange = getPriceRange(product.variants);
 
+      const hasDiscount = product.variants?.some(
+        (v) => v.original_price && v.original_price > v.price
+      );
+
+      const maxDiscount = hasDiscount
+        ? Math.max(
+            ...product.variants
+              .filter((v) => v.original_price && v.original_price > v.price)
+              .map(
+                (v) => ((v.original_price! - v.price) / v.original_price!) * 100
+              )
+          )
+        : 0;
+
       if (priceRange.min === 0 && priceRange.max === 0) {
         return (
           <div className="text-muted-foreground italic text-sm">No pricing</div>
@@ -125,16 +134,23 @@ export const columns: ColumnDef<Product>[] = [
       }
 
       return (
-        <div className="font-semibold text-green-600">
-          {priceRange.min === priceRange.max ? (
-            formatPrice(priceRange.min)
-          ) : (
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">From</div>
-              <div>{formatPrice(priceRange.min)}</div>
-              <div className="text-xs text-muted-foreground">To</div>
-              <div>{formatPrice(priceRange.max)}</div>
-            </div>
+        <div className="space-y-1">
+          <div className="font-semibold text-green-600">
+            {priceRange.min === priceRange.max ? (
+              formatPrice(priceRange.min)
+            ) : (
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">From</div>
+                <div>{formatPrice(priceRange.min)}</div>
+                <div className="text-xs text-muted-foreground">To</div>
+                <div>{formatPrice(priceRange.max)}</div>
+              </div>
+            )}
+          </div>
+          {hasDiscount && (
+            <Badge variant="destructive" className="text-xs">
+              Up to -{Math.round(maxDiscount)}% OFF
+            </Badge>
           )}
         </div>
       );
@@ -166,28 +182,6 @@ export const columns: ColumnDef<Product>[] = [
     },
   },
 
-  // Variants Info
-  {
-    id: "variants_info",
-    header: "Variants",
-    cell: ({ row }) => {
-      const product = row.original;
-      const totalVariants = product.variants?.length || 0;
-      const availableVariants = getAvailableVariantsCount(product.variants);
-
-      return (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">
-            {totalVariants} variant{totalVariants !== 1 ? "s" : ""}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {availableVariants} available
-          </div>
-        </div>
-      );
-    },
-  },
-
   // Availability Status
   {
     accessorKey: "is_available",
@@ -202,82 +196,35 @@ export const columns: ColumnDef<Product>[] = [
     },
   },
 
-  // Brand & Category
+  // Brand
   {
-    id: "brand_category",
-    header: "Brand/Category",
+    id: "brand",
+    header: "Brand",
     cell: ({ row }) => {
       const product = row.original;
       return (
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-purple-600">
-            Brand: {product.brand?.name || "N/A"}
-          </div>
-          <div className="text-sm font-medium text-orange-600">
-            Cat: {product.category?.name || "N/A"}
-          </div>
+        <div className="text-sm font-medium text-purple-600">
+          {product.brand?.name || "N/A"}
         </div>
       );
     },
   },
 
-  // Skin Types
+  // Category
   {
-    id: "skin_types",
-    header: "Skin Types",
+    id: "category",
+    header: "Category",
     cell: ({ row }) => {
       const product = row.original;
-      const skinTypes = product.skin_type;
-
-      if (!skinTypes || skinTypes.length === 0) {
-        return <span className="text-muted-foreground italic">N/A</span>;
-      }
-
       return (
-        <div className="flex flex-wrap gap-1 max-w-[120px]">
-          {skinTypes.slice(0, 2).map((type, index) => (
-            <Badge key={index} variant="outline" className="text-xs capitalize">
-              {type}
-            </Badge>
-          ))}
-          {skinTypes.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{skinTypes.length - 2}
-            </Badge>
-          )}
+        <div className="text-sm font-medium text-orange-600">
+          {product.category?.name || "N/A"}
         </div>
       );
     },
   },
 
-  // Tags
-  {
-    accessorKey: "tags",
-    header: "Tags",
-    cell: ({ row }) => {
-      const tags = row.getValue("tags") as string[];
-      if (!tags || tags.length === 0) {
-        return <span className="text-muted-foreground italic">No tags</span>;
-      }
-
-      return (
-        <div className="flex flex-wrap gap-1 max-w-[150px]">
-          {tags.slice(0, 2).map((tag, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-          {tags.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{tags.length - 2}
-            </Badge>
-          )}
-        </div>
-      );
-    },
-  },
-
-  // Rating (if available)
+  // Rating
   {
     id: "rating",
     header: "Rating",
@@ -315,6 +262,24 @@ export const columns: ColumnDef<Product>[] = [
       const date = new Date(row.getValue("created_at"));
       return (
         <div className="text-emerald-600 text-sm">
+          {date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </div>
+      );
+    },
+  },
+
+  // Updated At
+  {
+    accessorKey: "updated_at",
+    header: "Updated",
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("updated_at"));
+      return (
+        <div className="text-blue-600 text-sm">
           {date.toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",

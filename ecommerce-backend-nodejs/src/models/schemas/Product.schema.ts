@@ -4,7 +4,8 @@ interface IVariant {
   id: string // unique variant identifier
   shade_color?: string // màu sắc: đỏ, cam, nude,...
   volume_size?: string // dung tích: 10ml, 30ml, 100ml,...
-  price: number // giá cho biến thể này
+  price: number // giá hiện tại (sau giảm giá)
+  original_price?: number // giá gốc trước khi giảm (optional)
   sku: string // mã hàng tồn kho riêng cho biến thể
   images?: string[] // hình ảnh variant
   stock_quantity: number // số lượng tồn kho
@@ -105,12 +106,36 @@ export default class Product {
     return Math.max(...this.variants.map((v) => v.price))
   }
 
+  getMinOriginalPrice(): number {
+    if (this.variants.length === 0) return 0
+    const originalPrices = this.variants.map((v) => v.original_price || v.price).filter((p) => p > 0)
+    return originalPrices.length > 0 ? Math.min(...originalPrices) : 0
+  }
+
+  getMaxOriginalPrice(): number {
+    if (this.variants.length === 0) return 0
+    const originalPrices = this.variants.map((v) => v.original_price || v.price).filter((p) => p > 0)
+    return originalPrices.length > 0 ? Math.max(...originalPrices) : 0
+  }
+
+  getMaxDiscount(): number {
+    if (this.variants.length === 0) return 0
+    const discounts = this.variants
+      .filter((v) => v.original_price && v.original_price > v.price)
+      .map((v) => ((v.original_price! - v.price) / v.original_price!) * 100)
+    return discounts.length > 0 ? Math.max(...discounts) : 0
+  }
+
   getTotalStock(): number {
     return this.variants.reduce((total, variant) => total + variant.stock_quantity, 0)
   }
 
   isInStock(): boolean {
     return this.variants.some((variant) => variant.stock_quantity > 0 && variant.is_available)
+  }
+
+  hasDiscount(): boolean {
+    return this.variants.some((v) => v.original_price && v.original_price > v.price)
   }
 }
 

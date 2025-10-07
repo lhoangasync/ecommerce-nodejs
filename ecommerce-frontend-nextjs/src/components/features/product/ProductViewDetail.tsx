@@ -115,7 +115,8 @@ export default function ProductViewDetails({
           </div>
 
           {/* Basic Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 items-start">
+            {" "}
             <DetailRow
               icon={<Package className="h-4 w-4 text-primary" />}
               label="Product Name"
@@ -186,8 +187,9 @@ export default function ProductViewDetails({
                 {product.variants.map((variant, index) => (
                   <div
                     key={variant.id || index}
-                    className="bg-muted/30 rounded-lg p-4"
+                    className="bg-muted/30 rounded-lg p-4 space-y-3"
                   >
+                    {/* Hàng đầu: màu & size */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {variant.shade_color && (
                         <DetailRow
@@ -203,11 +205,39 @@ export default function ProductViewDetails({
                           value={variant.volume_size}
                         />
                       )}
-                      <DetailRow
-                        icon={<DollarSign className="h-4 w-4 text-green-600" />}
-                        label="Price"
-                        value={formatPrice(variant.price)}
-                      />
+                    </div>
+
+                    {/* Hàng giá */}
+                    <div className="flex items-center flex-wrap gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Price
+                      </span>
+                      <span className="text-md font-semibold text-green-600">
+                        {formatPrice(variant.price)}
+                      </span>
+
+                      {variant.original_price &&
+                        variant.original_price > variant.price && (
+                          <>
+                            <span className="text-sm text-muted-foreground line-through">
+                              {formatPrice(variant.original_price)}
+                            </span>
+                            <Badge variant="destructive" className="text-xs">
+                              -
+                              {Math.round(
+                                ((variant.original_price - variant.price) /
+                                  variant.original_price) *
+                                  100
+                              )}
+                              %
+                            </Badge>
+                          </>
+                        )}
+                    </div>
+
+                    {/* Hàng stock, SKU, trạng thái */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <DetailRow
                         icon={<Warehouse className="h-4 w-4 text-blue-600" />}
                         label="Stock"
@@ -218,24 +248,26 @@ export default function ProductViewDetails({
                         label="SKU"
                         value={variant.sku || "N/A"}
                       />
-                      <div className="flex items-center gap-2">
-                        {variant.is_available && variant.stock_quantity > 0 ? (
-                          <Badge variant="default" className="bg-green-500">
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            In Stock
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            <XCircle className="mr-1 h-3 w-3" />
-                            Out of Stock
-                          </Badge>
-                        )}
-                      </div>
                     </div>
 
-                    {/* Variant Images */}
+                    {/* Trạng thái */}
+                    <div className="flex items-center">
+                      {variant.is_available && variant.stock_quantity > 0 ? (
+                        <Badge variant="default" className="bg-green-500">
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          In Stock
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          Out of Stock
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Ảnh variant */}
                     {variant.images && variant.images.length > 0 && (
-                      <div className="mt-4">
+                      <div className="mt-3">
                         <p className="text-sm font-medium text-muted-foreground mb-2">
                           Variant Images:
                         </p>
@@ -399,11 +431,21 @@ const DetailRow = ({
   value: string;
   icon?: React.ReactNode;
 }) => (
-  <div className="flex items-start gap-3">
-    {icon && <div className="mt-1">{icon}</div>}
-    <div className="flex flex-col">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <span className="text-md font-semibold text-foreground">{value}</span>
+  <div className="flex items-start gap-3 min-w-0">
+    {/* Icon cố định, căn chỉnh với dòng đầu tiên của text */}
+    {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
+
+    {/* Nội dung co giãn */}
+    <div className="flex flex-col min-w-0 gap-0.5">
+      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+        {label}
+      </span>
+      <span
+        className="text-sm font-semibold text-foreground truncate"
+        title={value}
+      >
+        {value}
+      </span>
     </div>
   </div>
 );

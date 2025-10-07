@@ -9,6 +9,8 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { getAllProducts } from "@/api/product.api";
+import { getAllBrands } from "@/api/brand.api";
+import { getAllCategories } from "@/api/category.api";
 import { columns } from "@/components/features/product/columns";
 import { ProductDataTable } from "@/components/features/product/data-tables";
 
@@ -26,7 +28,8 @@ export default function ProductsPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<boolean | null>(
     null
   );
-  const [skinTypeFilter, setSkinTypeFilter] = useState<string>("");
+  const [brandFilter, setBrandFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<
     "created_at" | "price" | "rating" | "name"
   >("created_at");
@@ -35,13 +38,31 @@ export default function ProductsPage() {
   // Debounced search query
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
+  // Fetch brands
+  const { data: brandsResponse } = useQuery({
+    queryKey: ["brands"],
+    queryFn: () => getAllBrands(1, 100),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch categories
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => getAllCategories(1, 100),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const brands = brandsResponse?.data?.items ?? [];
+  const categories = categoriesResponse?.data?.items ?? [];
+
   // Build query key with all filters
   const queryKey = [
     "products",
     pagination,
     debouncedSearchQuery,
     availabilityFilter,
-    skinTypeFilter,
+    brandFilter,
+    categoryFilter,
     sortBy,
     order,
   ];
@@ -59,11 +80,15 @@ export default function ProductsPage() {
         name: debouncedSearchQuery || undefined,
         is_available:
           availabilityFilter !== null ? availabilityFilter : undefined,
-        skin_type: skinTypeFilter || undefined,
+        brand_id: brandFilter || undefined,
+        category_id: categoryFilter || undefined,
         sort_by: sortBy,
         order: order,
       }),
     placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const products = response?.data?.items ?? [];
@@ -90,7 +115,14 @@ export default function ProductsPage() {
     if (pagination.pageIndex !== 0) {
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     }
-  }, [debouncedSearchQuery, availabilityFilter, skinTypeFilter, sortBy, order]);
+  }, [
+    debouncedSearchQuery,
+    availabilityFilter,
+    brandFilter,
+    categoryFilter,
+    sortBy,
+    order,
+  ]);
 
   if (isLoading) {
     return (
@@ -104,7 +136,10 @@ export default function ProductsPage() {
   // Dynamic card title based on search/filter state
   const getCardTitle = () => {
     const hasFilters =
-      debouncedSearchQuery || availabilityFilter !== null || skinTypeFilter;
+      debouncedSearchQuery ||
+      availabilityFilter !== null ||
+      brandFilter ||
+      categoryFilter;
     return hasFilters ? "Found Products" : "Total Products";
   };
 
@@ -113,7 +148,14 @@ export default function ProductsPage() {
     if (debouncedSearchQuery) filters.push(`search: "${debouncedSearchQuery}"`);
     if (availabilityFilter !== null)
       filters.push(`${availabilityFilter ? "available" : "unavailable"}`);
-    if (skinTypeFilter) filters.push(`${skinTypeFilter} skin`);
+    if (brandFilter) {
+      const brand = brands.find((b) => b._id === brandFilter);
+      if (brand) filters.push(`brand: ${brand.name}`);
+    }
+    if (categoryFilter) {
+      const category = categories.find((c) => c._id === categoryFilter);
+      if (category) filters.push(`category: ${category.name}`);
+    }
 
     return filters.length > 0
       ? `Filtered by: ${filters.join(", ")}`
@@ -155,12 +197,17 @@ export default function ProductsPage() {
         // Filter props
         availabilityFilter={availabilityFilter}
         setAvailabilityFilter={setAvailabilityFilter}
-        skinTypeFilter={skinTypeFilter}
-        setSkinTypeFilter={setSkinTypeFilter}
+        brandFilter={brandFilter}
+        setBrandFilter={setBrandFilter}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
         sortBy={sortBy}
         setSortBy={handleSetSortBy}
         order={order}
         setOrder={setOrder}
+        // Options for dropdowns
+        brands={brands}
+        categories={categories}
       />
     </div>
   );

@@ -5,6 +5,7 @@ export interface VariantReqBody {
   shade_color?: string
   volume_size?: string
   price: number
+  original_price?: number // Giá gốc trước khi giảm (optional)
   sku: string
   images?: string[]
   stock_quantity: number

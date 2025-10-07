@@ -146,6 +146,10 @@ export const PRODUCTS_MESSAGES = {
   VARIANT_STOCK_QUANTITY_MUST_BE_NON_NEGATIVE: 'Variant stock quantity must be non-negative',
   VARIANT_IS_AVAILABLE_REQUIRED: 'Variant availability status is required',
   VARIANT_IS_AVAILABLE_MUST_BE_BOOLEAN: 'Variant availability must be a boolean',
+  VARIANT_ORIGINAL_PRICE_MUST_BE_NUMBER: 'Variant original price must be a number',
+  VARIANT_ORIGINAL_PRICE_MUST_BE_POSITIVE: 'Variant original price must be positive',
+  VARIANT_ORIGINAL_PRICE_MUST_BE_GREATER_THAN_PRICE:
+    'Variant original price must be greater than or equal to current price',
   CANNOT_DELETE_LAST_VARIANT: 'Cannot delete the last variant. Product must have at least one variant',
   ADD_PRODUCT_SUCCESS: 'Product added successfully',
   GET_ALL_PRODUCTS_SUCCESS: 'Get all products successfully',

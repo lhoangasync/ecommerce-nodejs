@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogClose,
@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-// import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,11 +36,10 @@ import {
   Plus,
   XIcon,
   Package,
-  DollarSign,
   Tag,
   Image as ImageIcon,
-  Warehouse,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import { UploadButton } from "@/utils/uploadthing";
 import { toast } from "react-toastify";
@@ -53,16 +51,36 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAllBrands } from "@/api/brand.api";
 import { getAllCategories } from "@/api/category.api";
 
-const variantSchema = z.object({
-  id: z.string(),
-  shade_color: z.string().optional(),
-  volume_size: z.string().optional(),
-  price: z.number().min(0, "Price must be greater than 0"),
-  sku: z.string().min(1, "SKU is required"),
-  images: z.array(z.string()).optional(),
-  stock_quantity: z.number().min(0, "Stock quantity must be 0 or greater"),
-  is_available: z.boolean(),
-});
+const variantSchema = z
+  .object({
+    id: z.string(),
+    shade_color: z.string().optional(),
+    volume_size: z.string().optional(),
+    price: z.number().min(0, "Price must be greater than 0"),
+    original_price: z
+      .number()
+      .min(0, "Original price must be greater than 0")
+      .optional(),
+    sku: z.string().min(1, "SKU is required"),
+    images: z.array(z.string()).optional(),
+    stock_quantity: z.number().min(0, "Stock quantity must be 0 or greater"),
+    is_available: z.boolean(),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.original_price !== undefined &&
+        data.original_price < data.price
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Original price must be greater than or equal to current price",
+      path: ["original_price"],
+    }
+  );
 
 const formSchema = z.object({
   name: z
@@ -95,6 +113,7 @@ function ProductAdd() {
     {
       id: crypto.randomUUID(),
       price: 0,
+      original_price: undefined,
       sku: "",
       stock_quantity: 0,
       is_available: true,
@@ -121,6 +140,21 @@ function ProductAdd() {
       variants: variants,
     },
   });
+
+  // Auto-generate slug when name changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "name" && value.name) {
+        const generatedSlug = slugify(value.name, {
+          lower: true,
+          locale: "vi",
+          strict: true,
+        });
+        form.setValue("slug", generatedSlug);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Fetch brands and categories
   const { data: brandsResponse } = useQuery({
@@ -152,6 +186,20 @@ function ProductAdd() {
     },
   });
 
+  // Generate auto SKU
+  const generateSKU = (index: number) => {
+    const productName = form.getValues("name") || "PRODUCT";
+    const prefix = productName
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 3);
+    const timestamp = Date.now().toString().slice(-6);
+    const variantNumber = String(index + 1).padStart(2, "0");
+    return `${prefix}-${timestamp}-${variantNumber}`;
+  };
+
   async function onSubmit(values: ProductFormData) {
     const payload: AddProductReqBody = {
       name: values.name,
@@ -181,6 +229,7 @@ function ProductAdd() {
         {
           id: crypto.randomUUID(),
           price: 0,
+          original_price: undefined,
           sku: "",
           stock_quantity: 0,
           is_available: true,
@@ -215,6 +264,7 @@ function ProductAdd() {
     const newVariant: Variant = {
       id: crypto.randomUUID(),
       price: 0,
+      original_price: undefined,
       sku: "",
       stock_quantity: 0,
       is_available: true,
@@ -263,7 +313,7 @@ function ProductAdd() {
   };
 
   return (
-    <Dialog onOpenChange={handleModalClose}>
+    <Dialog open={open} onOpenChange={handleModalClose}>
       <DialogTrigger asChild>
         <Button type="button" className="bg-green-500 hover:bg-green-600">
           Add Product <Plus className="size-5 ml-2" />
@@ -312,7 +362,7 @@ function ProductAdd() {
                     <FormItem>
                       <div className="flex items-center gap-2">
                         <Tag className="size-4" />
-                        <FormLabel>Slug</FormLabel>
+                        <FormLabel>Slug </FormLabel>
                       </div>
                       <FormControl>
                         <Input placeholder="e.g., vitamin-c-serum" {...field} />
@@ -474,18 +524,20 @@ function ProductAdd() {
                         {imageUrls.length > 0 && (
                           <div className="grid grid-cols-4 gap-4">
                             {imageUrls.map((url, index) => (
-                              <div key={index} className="relative">
+                              <div
+                                key={index}
+                                className="relative w-[100px] h-[100px]"
+                              >
                                 <Image
                                   alt={`Product image ${index + 1}`}
                                   src={url}
-                                  width={100}
-                                  height={100}
+                                  fill
                                   className="rounded-sm object-cover"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveImage(index)}
-                                  className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-full"
+                                  className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
                                   aria-label="Remove image"
                                 >
                                   <XIcon className="w-4 h-4" />
@@ -600,19 +652,33 @@ function ProductAdd() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      {/* SKU */}
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      {/* SKU with Auto-generate button */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
                           SKU
                         </label>
-                        <Input
-                          placeholder="e.g., VS-50ML-001"
-                          value={variant.sku}
-                          onChange={(e) =>
-                            updateVariant(index, "sku", e.target.value)
-                          }
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Auto-generate"
+                            value={variant.sku}
+                            onChange={(e) =>
+                              updateVariant(index, "sku", e.target.value)
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const autoSKU = generateSKU(index);
+                              updateVariant(index, "sku", autoSKU);
+                            }}
+                            title="Auto-generate SKU"
+                          >
+                            <Wand2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Price */}
@@ -632,6 +698,39 @@ function ProductAdd() {
                             )
                           }
                         />
+                      </div>
+
+                      {/* Original Price */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Original Price
+                          <span className="text-xs text-muted-foreground ml-1">
+                            (Optional)
+                          </span>
+                        </label>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          value={variant.original_price || ""}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? parseFloat(e.target.value)
+                              : undefined;
+                            updateVariant(index, "original_price", value);
+                          }}
+                        />
+                        {variant.original_price &&
+                          variant.original_price > variant.price && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Discount:{" "}
+                              {Math.round(
+                                ((variant.original_price - variant.price) /
+                                  variant.original_price) *
+                                  100
+                              )}
+                              %
+                            </p>
+                          )}
                       </div>
 
                       {/* Stock Quantity */}

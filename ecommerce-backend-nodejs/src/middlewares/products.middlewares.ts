@@ -239,6 +239,19 @@ const variantsSchema: ParamSchema = {
           throw new Error(PRODUCTS_MESSAGES.VARIANT_PRICE_MUST_BE_POSITIVE)
         }
 
+        // Validate original_price if provided
+        if (variant.original_price !== undefined && variant.original_price !== null) {
+          if (typeof variant.original_price !== 'number') {
+            throw new Error(PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_NUMBER)
+          }
+          if (variant.original_price <= 0) {
+            throw new Error(PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_POSITIVE)
+          }
+          if (variant.original_price < variant.price) {
+            throw new Error(PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_GREATER_THAN_PRICE)
+          }
+        }
+
         if (!variant.sku || typeof variant.sku !== 'string') {
           throw new Error(PRODUCTS_MESSAGES.VARIANT_SKU_REQUIRED)
         }
@@ -288,6 +301,34 @@ const variantsSchema: ParamSchema = {
         throw new Error(PRODUCTS_MESSAGES.VARIANT_SKUS_MUST_BE_UNIQUE)
       }
 
+      return true
+    }
+  }
+}
+const originalPriceSchema: ParamSchema = {
+  optional: true,
+  isNumeric: {
+    errorMessage: PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_NUMBER
+  },
+  custom: {
+    options: (value, { req }) => {
+      if (value !== undefined && value !== null && value !== '') {
+        const originalPrice = Number(value)
+
+        // Kiểm tra giá gốc phải dương
+        if (originalPrice <= 0) {
+          throw new Error(PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_POSITIVE)
+        }
+
+        // Kiểm tra giá gốc phải >= giá hiện tại (nếu có price trong request)
+        const price = req.body.price
+        if (price !== undefined) {
+          const currentPrice = Number(price)
+          if (originalPrice < currentPrice) {
+            throw new Error(PRODUCTS_MESSAGES.VARIANT_ORIGINAL_PRICE_MUST_BE_GREATER_THAN_PRICE)
+          }
+        }
+      }
       return true
     }
   }
@@ -481,6 +522,7 @@ export const addVariantValidator = validate(
           }
         }
       },
+      original_price: originalPriceSchema,
       sku: {
         notEmpty: {
           errorMessage: PRODUCTS_MESSAGES.VARIANT_SKU_REQUIRED
@@ -563,6 +605,7 @@ export const updateVariantValidator = validate(
           errorMessage: PRODUCTS_MESSAGES.VARIANT_VOLUME_SIZE_LENGTH_MAX_50
         }
       },
+      original_price: originalPriceSchema,
       price: {
         optional: true,
         isNumeric: {
