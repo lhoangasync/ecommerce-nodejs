@@ -1,73 +1,127 @@
 import Image from "next/image";
+import { Product } from "@/types/backend";
 
 interface ProductCardProps {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  originalPrice?: string | null;
-  image: string;
-  badge?: string | null;
+  product: Product;
 }
 
-export default function ProductCard({
-  name,
-  description,
-  price,
-  originalPrice,
-  image,
-  badge,
-}: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
+  const prices = product.variants.map((v) => v.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+
+  const hasDiscount = product.variants.some((v) => v.original_price);
+  const originalPrices = product.variants
+    .filter((v) => v.original_price)
+    .map((v) => v.original_price!);
+  const maxOriginalPrice =
+    originalPrices.length > 0 ? Math.max(...originalPrices) : null;
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(price);
+  };
+
+  const priceDisplay =
+    minPrice === maxPrice
+      ? formatPrice(minPrice)
+      : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+
+  const imageUrl =
+    product.images?.[0] ||
+    product.variants.find((v) => v.images && v.images.length > 0)
+      ?.images?.[0] ||
+    "/images/placeholder.jpg";
+
+  let badge = null;
+  if (hasDiscount) badge = "SALE";
+  else if (product.created_at) {
+    const createdDate = new Date(product.created_at);
+    const daysSinceCreation =
+      (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceCreation <= 30) badge = "NEW";
+  }
+
+  const hasStock = product.variants.some((v) => v.stock_quantity > 0);
+
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+  const cleanDescription = product.description
+    ? stripHtml(product.description)
+    : "";
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100">
-      <div className="flex h-48">
-        {/* Product Image */}
-        <div className="relative w-48 flex-shrink-0">
-          <Image
-            src={image}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 192px"
-          />
-          {badge && (
-            <div className="absolute top-3 right-3 bg-orange-400 text-white text-xs font-semibold px-2 py-1 rounded-full">
-              {badge}
-            </div>
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 w-full h-full flex flex-col">
+      {/* Product Image */}
+      <div className="relative w-full h-64 bg-gray-50 flex-shrink-0">
+        <Image
+          src={imageUrl}
+          alt={product.name}
+          fill
+          className="object-contain p-4"
+          sizes="(max-width: 768px) 100vw, 340px"
+        />
+        {badge && (
+          <div className="absolute top-3 right-3 bg-orange-400 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
+            {badge}
+          </div>
+        )}
+        {!hasStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+            <span className="text-white font-bold text-base bg-black bg-opacity-60 px-4 py-2 rounded-lg">
+              Out of Stock
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Product Info */}
+      <div className="p-4 flex flex-col flex-1 min-h-[240px]">
+        <h3 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 h-[3rem] mb-2">
+          {product.name}
+        </h3>
+
+        <p className="text-sm text-gray-500 line-clamp-2 h-[2.5rem] mb-2">
+          {cleanDescription || "\u00A0"}
+        </p>
+
+        <div className="h-5 mb-3">
+          {product.brand?.name && (
+            <p className="text-xs text-gray-400 uppercase tracking-wider">
+              {product.brand.name}
+            </p>
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="flex-1 p-4 flex flex-col justify-between">
-          <div>
-            <h3 className="font-semibold text-gray-800 text-sm leading-tight mb-2">
-              {name}
-            </h3>
-            <p className="text-xs text-gray-600 uppercase tracking-wide mb-3">
-              {description}
-            </p>
-          </div>
+        <div className="flex-1"></div>
 
-          <div className="space-y-3">
-            {/* Price Section */}
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-gray-800">{price}</span>
-              {originalPrice && (
-                <span className="text-sm text-gray-400 line-through">
-                  {originalPrice}
-                </span>
-              )}
-            </div>
-
-            {/* Add to Cart Button */}
-            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm">
-              <div className="flex items-center justify-center gap-2">
-                <span>🛒</span>
-                <span>Add To Cart</span>
-              </div>
-            </button>
-          </div>
+        <div className="flex items-center gap-2 mb-3 h-7">
+          <span className="text-lg font-bold text-gray-900">
+            {priceDisplay}
+          </span>
+          {maxOriginalPrice && (
+            <span className="text-sm text-gray-400 line-through">
+              {formatPrice(maxOriginalPrice)}
+            </span>
+          )}
         </div>
+
+        <button
+          disabled={!hasStock}
+          className={`w-full font-medium py-2.5 px-4 rounded-xl transition-all duration-200 text-sm ${
+            hasStock
+              ? "bg-gray-100 hover:bg-gray-200 text-gray-800 hover:shadow-md active:scale-95"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-base">🛒</span>
+            <span className="font-semibold">
+              {hasStock ? "Add to Cart" : "Out of Stock"}
+            </span>
+          </div>
+        </button>
       </div>
     </div>
   );
