@@ -71,7 +71,7 @@ export async function getFeaturedProducts(limit: number = 10) {
 
   const params = new URLSearchParams();
   params.append("limit", String(limit));
-
+  params.append("populate", "brand,category");
   const endpoint = `/products/featured?${params.toString()}`;
 
   const { data } = await api.get<IBackEndResponse<Product[]>>(endpoint);

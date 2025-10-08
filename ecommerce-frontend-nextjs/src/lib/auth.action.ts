@@ -26,3 +26,12 @@ export async function deleteRefreshTokenCookie() {
     return { success: false, error: "Could not log out." };
   }
 }
+export async function checkRefreshTokenExists() {
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get("refresh_token_fe");
+    return { exists: !!refreshToken };
+  } catch (error) {
+    return { exists: false };
+  }
+}

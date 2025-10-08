@@ -454,51 +454,129 @@ class ProductsService {
   }
 
   async getProductsByBrand(brand_id: string, limit: number = 10) {
-    return await databaseService.products
-      .find({
-        brand_id: new ObjectId(brand_id),
-        variants: {
-          $elemMatch: {
-            is_available: true,
-            stock_quantity: { $gt: 0 }
+    const pipeline = [
+      {
+        $match: {
+          brand_id: new ObjectId(brand_id),
+          variants: {
+            $elemMatch: {
+              is_available: true,
+              stock_quantity: { $gt: 0 }
+            }
           }
         }
-      })
-      .limit(limit)
-      .sort({ created_at: -1 })
-      .toArray()
+      },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: 'brand_id',
+          foreignField: '_id',
+          as: 'brand'
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category_id',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $addFields: {
+          brand: { $arrayElemAt: ['$brand', 0] },
+          category: { $arrayElemAt: ['$category', 0] }
+        }
+      },
+      { $sort: { created_at: -1 } },
+      { $limit: limit }
+    ]
+
+    return await databaseService.products.aggregate(pipeline).toArray()
   }
 
   async getProductsByCategory(category_id: string, limit: number = 10) {
-    return await databaseService.products
-      .find({
-        category_id: new ObjectId(category_id),
-        variants: {
-          $elemMatch: {
-            is_available: true,
-            stock_quantity: { $gt: 0 }
+    const pipeline = [
+      {
+        $match: {
+          category_id: new ObjectId(category_id),
+          variants: {
+            $elemMatch: {
+              is_available: true,
+              stock_quantity: { $gt: 0 }
+            }
           }
         }
-      })
-      .limit(limit)
-      .sort({ created_at: -1 })
-      .toArray()
+      },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: 'brand_id',
+          foreignField: '_id',
+          as: 'brand'
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category_id',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $addFields: {
+          brand: { $arrayElemAt: ['$brand', 0] },
+          category: { $arrayElemAt: ['$category', 0] }
+        }
+      },
+      { $sort: { created_at: -1 } },
+      { $limit: limit }
+    ]
+
+    return await databaseService.products.aggregate(pipeline).toArray()
   }
 
   async getFeaturedProducts(limit: number = 10) {
-    return await databaseService.products
-      .find({
-        rating: { $gte: 4.0 },
-        variants: {
-          $elemMatch: {
-            is_available: true,
-            stock_quantity: { $gt: 0 }
+    const pipeline = [
+      {
+        $match: {
+          rating: { $gte: 4.0 },
+          variants: {
+            $elemMatch: {
+              is_available: true,
+              stock_quantity: { $gt: 0 }
+            }
           }
         }
-      })
-      .limit(limit)
-      .sort({ rating: -1, review_count: -1 })
-      .toArray()
+      },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: 'brand_id',
+          foreignField: '_id',
+          as: 'brand'
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category_id',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $addFields: {
+          brand: { $arrayElemAt: ['$brand', 0] },
+          category: { $arrayElemAt: ['$category', 0] }
+        }
+      },
+      { $sort: { rating: -1, review_count: -1 } },
+      { $limit: limit }
+    ]
+
+    return await databaseService.products.aggregate(pipeline).toArray()
   }
 
   // Helper method to get variant by ID
