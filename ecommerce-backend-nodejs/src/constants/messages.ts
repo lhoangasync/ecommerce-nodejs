@@ -165,3 +165,14 @@ export const PRODUCTS_MESSAGES = {
   BRAND_NOT_FOUND: 'Brand not found',
   CATEGORY_NOT_FOUND: 'Category not found'
 } as const
+
+export const CART_MESSAGES = {
+  ADD_TO_CART_SUCCESS: 'Item added to cart successfully',
+  GET_CART_SUCCESS: 'Cart retrieved successfully',
+  UPDATE_CART_SUCCESS: 'Cart item updated successfully',
+  REMOVE_FROM_CART_SUCCESS: 'Item removed from cart successfully',
+  CLEAR_CART_SUCCESS: 'Cart cleared successfully',
+  CART_EMPTY: 'Cart is empty',
+  PRODUCT_NOT_IN_CART: 'Product not found in cart',
+  CART_MIGRATED_SUCCESS: 'Cart migrated to database successfully'
+} as const
