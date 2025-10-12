@@ -9,12 +9,13 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
-
+import { useRouter } from "next/navigation";
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
   const prices = product.variants.map((v) => v.price);
@@ -315,6 +316,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Add to Cart Button */}
         <button
+          onClick={() => router.push(`/products/${product.slug}`)}
           disabled={!hasStock}
           className={`w-full font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 text-sm relative overflow-hidden group/btn ${
             hasStock

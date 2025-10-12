@@ -107,15 +107,30 @@ export async function getProductsByCategory(
 
   return data;
 }
+// src/api/product.api.ts
 
-export async function getProductById(product_id: string) {
+export async function getProductById(
+  product_id: string
+): Promise<IBackEndResponse<Product>> {
   const api = await createServerApi();
 
-  const { data } = await api.get<IBackEndResponse<Product>>(
-    `/products/${product_id}`
-  );
+  try {
+    // Đảm bảo sử dụng GET method
+    const { data } = await api.get<IBackEndResponse<Product>>(
+      `/products/${product_id}`
+    );
 
-  return data;
+    console.log("API Response:", {
+      status: data.status,
+      productName: data.data?.name,
+      hasVariants: data.data?.variants?.length,
+    });
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    throw error;
+  }
 }
 
 export async function getProductPriceRange(product_id: string) {

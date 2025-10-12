@@ -333,23 +333,40 @@ const originalPriceSchema: ParamSchema = {
     }
   }
 }
-
 const productIdSchema: ParamSchema = {
   custom: {
     options: async (value: string) => {
-      if (!ObjectId.isValid(value)) {
-        throw new ErrorWithStatus({
-          message: PRODUCTS_MESSAGES.INVALID_PRODUCT_ID,
-          status: HTTP_STATUS.NOT_FOUND
-        })
+      // Kiểm tra xem có phải ObjectId không
+      const isObjectId = ObjectId.isValid(value) && /^[0-9a-fA-F]{24}$/.test(value)
+
+      if (isObjectId) {
+        // Nếu là ObjectId, kiểm tra tồn tại bằng _id
+        const product = await databaseService.products.findOne({ _id: new ObjectId(value) })
+        if (!product) {
+          throw new ErrorWithStatus({
+            message: PRODUCTS_MESSAGES.PRODUCT_NOT_FOUND,
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+      } else {
+        // Nếu là slug, kiểm tra tồn tại bằng slug
+        // Validate slug format
+        if (!REGEX_SLUG.test(value)) {
+          throw new ErrorWithStatus({
+            message: PRODUCTS_MESSAGES.SLUG_INVALID,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+
+        const product = await databaseService.products.findOne({ slug: value })
+        if (!product) {
+          throw new ErrorWithStatus({
+            message: PRODUCTS_MESSAGES.PRODUCT_NOT_FOUND,
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
       }
-      const product = await databaseService.products.findOne({ _id: new ObjectId(value) })
-      if (!product) {
-        throw new ErrorWithStatus({
-          message: PRODUCTS_MESSAGES.PRODUCT_NOT_FOUND,
-          status: HTTP_STATUS.NOT_FOUND
-        })
-      }
+
       return true
     }
   }

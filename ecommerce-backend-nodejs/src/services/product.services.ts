@@ -213,65 +213,61 @@ class ProductsService {
       totalPages
     }
   }
+  async getProductById(identifier: string) {
+    // Kiểm tra xem identifier có phải là ObjectId hợp lệ không
+    // ObjectId phải là chuỗi 24 ký tự hex VÀ phải valid theo MongoDB
+    const isObjectId = ObjectId.isValid(identifier) && /^[0-9a-fA-F]{24}$/.test(identifier)
 
-  async getProductById(product_id: string) {
-    const pipeline = [
-      { $match: { _id: new ObjectId(product_id) } },
-      {
-        $addFields: {
-          min_price: { $min: '$variants.price' },
-          max_price: { $max: '$variants.price' },
-          total_stock: { $sum: '$variants.stock_quantity' },
-          is_in_stock: {
-            $gt: [
-              {
-                $size: {
-                  $filter: {
-                    input: '$variants',
-                    cond: {
-                      $and: [{ $eq: ['$$this.is_available', true] }, { $gt: ['$$this.stock_quantity', 0] }]
-                    }
-                  }
-                }
-              },
-              0
-            ]
+    const matchCondition = isObjectId ? { _id: new ObjectId(identifier) } : { slug: identifier }
+
+    console.log('getProductById - identifier:', identifier)
+    console.log('getProductById - isObjectId:', isObjectId)
+    console.log('getProductById - matchCondition:', matchCondition)
+
+    const product = await databaseService.products
+      .aggregate([
+        {
+          $match: matchCondition
+        },
+        {
+          $lookup: {
+            from: 'brands',
+            localField: 'brand_id',
+            foreignField: '_id',
+            as: 'brand'
+          }
+        },
+        {
+          $unwind: {
+            path: '$brand',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category_id',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
+        {
+          $unwind: {
+            path: '$category',
+            preserveNullAndEmptyArrays: true
           }
         }
-      },
-      {
-        $lookup: {
-          from: 'brands',
-          localField: 'brand_id',
-          foreignField: '_id',
-          as: 'brand'
-        }
-      },
-      {
-        $lookup: {
-          from: 'categories',
-          localField: 'category_id',
-          foreignField: '_id',
-          as: 'category'
-        }
-      },
-      {
-        $addFields: {
-          brand: { $arrayElemAt: ['$brand', 0] },
-          category: { $arrayElemAt: ['$category', 0] }
-        }
-      }
-    ]
+      ])
+      .toArray()
 
-    const result = await databaseService.products.aggregate(pipeline).toArray()
-    const product = result[0]
-
-    if (!product) {
+    if (product.length === 0) {
+      console.log('Product not found with identifier:', identifier)
       return {
         message: PRODUCTS_MESSAGES.PRODUCT_NOT_FOUND
       }
     }
-    return product
+
+    return product[0]
   }
 
   async updateProduct(product_id: string, payload: UpdateProductReqBody) {
