@@ -6,12 +6,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Product, Variant } from "@/types/backend";
 import { getProductById } from "@/api/product.api";
+import { addToCart } from "@/api/cart.api";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Thumbs, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import { toast } from "react-toastify";
 
 interface ProductDetailProps {
   productSlug?: string;
@@ -31,6 +33,7 @@ export default function ProductDetail({
   const [quantity, setQuantity] = useState(1);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "comments">("details");
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -104,35 +107,100 @@ export default function ProductDetail({
 
   const productImages =
     allImages.length > 0 ? allImages : ["/images/placeholder.jpg"];
+  const handleAddToCart = async () => {
+    if (!selectedVariant || !product || addingToCart) return;
+    setAddingToCart(true);
+    try {
+      const result = await addToCart({
+        product_id: product._id,
+        variant_id: selectedVariant.id,
+        quantity: quantity,
+      });
+      if (result.success) {
+        setAddedToCart(true);
 
-  const handleAddToCart = () => {
-    if (!selectedVariant) return;
+        const variantInfo =
+          selectedVariant.shade_color ||
+          selectedVariant.volume_size ||
+          "Mặc định";
 
-    const cartItem = {
-      productId: product?._id,
-      variantId: selectedVariant.id,
-      quantity,
-      price: selectedVariant.price,
-      name: product?.name,
-      image: productImages[0],
-    };
+        // ⭐ Ưu tiên ảnh của variant, nếu không có mới lấy ảnh product
+        const productImage =
+          selectedVariant.images && selectedVariant.images.length > 0
+            ? selectedVariant.images[0]
+            : product.images && product.images.length > 0
+            ? product.images[0]
+            : "/images/placeholder.jpg";
 
-    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existingItem = existingCart.find(
-      (item: any) =>
-        item.productId === cartItem.productId &&
-        item.variantId === cartItem.variantId
-    );
+        toast.success(
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                <Image
+                  src={productImage}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg
+                    className="w-5 h-5 text-green-500 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <p className="font-semibold text-sm">Đã thêm vào giỏ hàng!</p>
+                </div>
+                <p className="text-sm text-gray-700 line-clamp-2">
+                  {product.name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {variantInfo} × {quantity}
+                </p>
+                <p className="text-sm font-semibold text-pink-600 mt-1">
+                  {formatPrice(selectedVariant.price * quantity)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push("/cart")}
+              className="w-full bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
+            >
+              Xem giỏ hàng
+            </button>
+          </div>,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            icon: false,
+            className: "!p-3",
+          }
+        );
 
-    if (existingItem) {
-      existingItem.quantity += cartItem.quantity;
-    } else {
-      existingCart.push(cartItem);
+        setTimeout(() => setAddedToCart(false), 2000);
+      } else {
+        toast.error(result.error || "Không thể thêm vào giỏ hàng");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Đã xảy ra lỗi khi thêm vào giỏ hàng");
+    } finally {
+      setAddingToCart(false);
     }
-
-    localStorage.setItem("cart", JSON.stringify(existingCart));
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const handleAddComment = () => {
@@ -439,6 +507,7 @@ export default function ProductDetail({
                 </p>
               </div>
             )}
+
             {product.variants.length > 0 && (
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">
@@ -504,6 +573,7 @@ export default function ProductDetail({
                 </div>
               </div>
             )}
+
             {selectedVariant && (
               <div
                 className={`p-4 rounded-lg ${
@@ -554,22 +624,50 @@ export default function ProductDetail({
 
                   <button
                     onClick={handleAddToCart}
-                    className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                    disabled={addingToCart}
+                    className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:scale-100 flex items-center justify-center gap-2"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    Thêm vào giỏ
+                    {addingToCart ? (
+                      <>
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Đang thêm...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        Thêm vào giỏ
+                      </>
+                    )}
                   </button>
                 </div>
               )}

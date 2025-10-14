@@ -13,35 +13,51 @@ import {
   sessionIdValidator,
   updateCartItemValidator
 } from '~/middlewares/carts.middlewares'
-import { accessTokenValidator, verifiedUserValidator } from '~/middlewares/users.middlewares'
+import {
+  accessTokenValidator,
+  verifiedUserValidator,
+  optionalAccessTokenValidator // ✅ Import middleware mới
+} from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const cartsRouter = Router()
 
-// Get cart (works for both authenticated and guest users)
-cartsRouter.get('/', sessionIdValidator, wrapRequestHandler(getCartController))
+// ✅ Thêm optionalAccessTokenValidator cho TẤT CẢ routes
+cartsRouter.get(
+  '/',
+  optionalAccessTokenValidator, // ✅ Thêm dòng này
+  sessionIdValidator,
+  wrapRequestHandler(getCartController)
+)
 
-// Add item to cart
-cartsRouter.post('/', addToCartValidator, wrapRequestHandler(addToCartController))
+cartsRouter.post(
+  '/',
+  optionalAccessTokenValidator, // ✅ Thêm dòng này
+  addToCartValidator,
+  wrapRequestHandler(addToCartController)
+)
 
-// Update cart item quantity
 cartsRouter.patch(
   '/:product_id/variants/:variant_id',
+  optionalAccessTokenValidator, // ✅ Thêm dòng này
   updateCartItemValidator,
   wrapRequestHandler(updateCartItemController)
 )
 
-// Remove item from cart
 cartsRouter.delete(
   '/:product_id/variants/:variant_id',
+  optionalAccessTokenValidator, // ✅ Thêm dòng này
   removeFromCartValidator,
   wrapRequestHandler(removeFromCartController)
 )
 
-// Clear cart
-cartsRouter.delete('/', wrapRequestHandler(clearCartController))
+cartsRouter.delete(
+  '/',
+  optionalAccessTokenValidator, // ✅ Thêm dòng này
+  wrapRequestHandler(clearCartController)
+)
 
-// Migrate guest cart to user cart (after login)
+// Migrate giữ nguyên (vẫn dùng accessTokenValidator bắt buộc)
 cartsRouter.post(
   '/migrate',
   accessTokenValidator,

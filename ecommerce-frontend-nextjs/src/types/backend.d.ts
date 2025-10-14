@@ -235,3 +235,60 @@ export interface GetVariantResponse {
   product: Product;
   variant: Variant;
 }
+
+/* CART */
+export interface CartItem {
+  product_id: string;
+  variant_id: string;
+  quantity: number;
+  price: number;
+  added_at?: string;
+  // Populated fields (optional, from backend)
+  product?: Product;
+  variant?: Variant;
+}
+
+export interface Cart {
+  _id: string;
+  user_id?: string;
+  items: CartItem[];
+  session_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AddToCartReqBody {
+  product_id: string;
+  variant_id: string;
+  quantity: number;
+}
+
+export interface UpdateCartItemReqBody {
+  quantity: number;
+}
+
+export interface UpdateCartItemReqParams {
+  product_id: string;
+  variant_id: string;
+}
+
+export interface RemoveFromCartReqParams {
+  product_id: string;
+  variant_id: string;
+}
+
+export interface GetCartReqQuery {
+  session_id?: string;
+}
+
+export interface MigrateCartReqBody {
+  session_id: string;
+}
+
+// Cart helper types
+export interface CartSummary {
+  total_items: number;
+  subtotal: number;
+  total: number;
+  currency: string;
+}

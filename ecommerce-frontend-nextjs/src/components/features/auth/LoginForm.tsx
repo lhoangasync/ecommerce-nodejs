@@ -23,8 +23,12 @@ import { getMsg } from "@/utils/error-message";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/auth-provider";
 import { useOAuth } from "@/hooks/useOAuth";
-import { saveRefreshTokenToCookie } from "@/lib/auth.action";
-import { revalidateTag } from "next/cache";
+import {
+  saveRefreshTokenToCookie,
+  getCartSessionId,
+  deleteCartSessionCookie,
+} from "@/lib/auth.action";
+import { migrateCart } from "@/api/cart.api";
 const formSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
@@ -47,20 +51,38 @@ export default function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
+      // ⭐ 1. Lấy cart session ID TRƯỚC KHI LOGIN
+      const guestSessionId = await getCartSessionId();
+
       const response = await AuthAPI.login(values);
       const refreshToken = response.data?.refresh_token;
 
-      // 2. Lưu refresh token vào cookie frontend
+      // 2. Lưu refresh token vào cookie
       if (refreshToken) {
         await saveRefreshTokenToCookie(refreshToken);
       }
 
-      // 3. ✨ THAY ĐỔI QUAN TRỌNG:
-      // Thay vì refetch(), hãy gọi trực tiếp AuthAPI.me()
-      // và dùng kết quả đó để cập nhật SWR cache với mutate.
-      // Tại thời điểm này, accessToken đã được set, nên request /me sẽ thành công.
+      // 3. Gọi API /me
       const meResponse = await AuthAPI.me();
       await mutate(meResponse.data, { revalidate: false });
+
+      // ⭐ 4. MIGRATE CART nếu có guest session
+      if (guestSessionId) {
+        try {
+          const migrateResult = await migrateCart({
+            session_id: guestSessionId,
+          });
+
+          if (migrateResult.success) {
+            console.log("Cart migrated successfully!");
+            // Xóa cookie cart_session_id cũ
+            await deleteCartSessionCookie();
+          }
+        } catch (migrateError) {
+          console.error("Cart migration failed:", migrateError);
+          // Không block login flow nếu migrate fail
+        }
+      }
 
       toast.success("Login successfully!");
       router.replace("/");

@@ -589,3 +589,34 @@ export const verifyForgotPasswordTokenMiddleware = async (req: Request, res: Res
     })
   }
 }
+export const optionalAccessTokenValidator = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader) {
+    // Không có token → skip, để controller xử lý với session_id
+    return next()
+  }
+
+  try {
+    const access_token = authHeader.replace('Bearer ', '')
+
+    if (!access_token) {
+      return next()
+    }
+
+    // Verify token
+    const decoded_authorization = await verifyToken({
+      token: access_token,
+      secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+    })
+
+    // Attach user info vào request
+    req.decoded_authorization = decoded_authorization
+
+    return next()
+  } catch (error) {
+    // Token invalid → ignore, fallback to session_id
+    console.log('Invalid access token, using session_id instead')
+    return next()
+  }
+}

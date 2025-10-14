@@ -39,6 +39,20 @@ const nextConfig: NextConfig = {
         hostname: "platform-lookaside.fbsbx.com",
         pathname: "/**",
       },
+      // ⭐ Thêm cho VNPay
+      {
+        protocol: "https",
+        hostname: "cdn.haitrieu.com",
+        port: "",
+        pathname: "/**",
+      },
+      // ⭐ Thêm cho MoMo
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

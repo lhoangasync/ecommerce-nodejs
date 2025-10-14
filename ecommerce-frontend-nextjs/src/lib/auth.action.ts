@@ -35,3 +35,23 @@ export async function checkRefreshTokenExists() {
     return { exists: false };
   }
 }
+export async function getCartSessionId() {
+  try {
+    const cookieStore = await cookies();
+    const cartSession = cookieStore.get("cart_session_id");
+    return cartSession?.value || null;
+  } catch (error) {
+    console.error("Failed to get cart session:", error);
+    return null;
+  }
+}
+
+export async function deleteCartSessionCookie() {
+  try {
+    (await cookies()).delete("cart_session_id");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete cart session cookie:", error);
+    return { success: false };
+  }
+}
