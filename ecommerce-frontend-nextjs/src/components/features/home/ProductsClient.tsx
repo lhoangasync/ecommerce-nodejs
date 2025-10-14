@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import ProductCard from "./ProductCard";
 import ProductFilters from "./ProductFilters";
 import { Product, PaginationMeta, GetProductsQuery } from "@/types/backend";
@@ -80,12 +81,12 @@ export default function ProductsClient({
       <nav className="mb-6">
         <ol className="flex items-center gap-2 text-sm">
           <li>
-            <a
+            <Link
               href="/"
               className="text-gray-500 hover:text-pink-500 transition-colors"
             >
               Trang chủ
-            </a>
+            </Link>
           </li>
           <li className="text-gray-400">/</li>
           <li className="text-gray-900 font-medium">Sản phẩm</li>
