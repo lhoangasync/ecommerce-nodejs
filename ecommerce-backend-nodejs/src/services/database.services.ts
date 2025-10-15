@@ -3,6 +3,8 @@ import { Collection, Db, MongoClient } from 'mongodb'
 import Brand from '~/models/schemas/Brand.schema'
 import { Cart } from '~/models/schemas/Cart.schema'
 import Category from '~/models/schemas/Category.schema'
+import { Order } from '~/models/schemas/Order.schema'
+import { Payment } from '~/models/schemas/Payment.schema'
 import Product from '~/models/schemas/Product.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
@@ -46,6 +48,13 @@ class DatabaseService {
   }
   get products(): Collection<Product> {
     return this.db.collection<Product>(process.env.DB_PRODUCTS_COLLECTION as string)
+  }
+
+  get orders(): Collection<Order> {
+    return this.db.collection<Order>(process.env.DB_ORDERS_COLLECTION as string)
+  }
+  get payments(): Collection<Payment> {
+    return this.db.collection<Payment>(process.env.DB_PAYMENTS_COLLECTION as string)
   }
 }
 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { Cart } from "@/types/backend";
@@ -14,12 +13,61 @@ import {
 } from "@/api/cart.api";
 import CartSummary from "./CartSummary";
 import CartItem from "./CartItem";
+import { AuthAPI } from "@/api/auth.api";
+import {
+  checkRefreshTokenExists,
+  deleteRefreshTokenCookie,
+} from "@/lib/auth.action";
 
 export default function CartPage() {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // ✅ Kiểm tra trạng thái đăng nhập và fetch user profile
+  useEffect(() => {
+    const checkAuthAndFetchUser = async () => {
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        const { exists: hasRefreshToken } = await checkRefreshTokenExists();
+
+        const hasAnyToken = !!(accessToken || hasRefreshToken);
+
+        if (hasAnyToken) {
+          await fetchUserProfile();
+        } else {
+          toast.error("Vui lòng đăng nhập để xem giỏ hàng");
+          router.push("/sign-in");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        toast.error("Vui lòng đăng nhập để tiếp tục");
+        router.push("/sign-in");
+      }
+    };
+
+    checkAuthAndFetchUser();
+  }, [router]);
+
+  // ✅ Fetch user profile với error handling
+  const fetchUserProfile = async () => {
+    try {
+      const response = await AuthAPI.me();
+      setUserProfile(response.data);
+    } catch (error: any) {
+      console.error("Failed to fetch user profile:", error);
+
+      // Nếu lỗi 401, token không hợp lệ
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        await deleteRefreshTokenCookie();
+        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
+        router.push("/sign-in");
+      }
+    }
+  };
 
   useEffect(() => {
     loadCart();
@@ -29,6 +77,7 @@ export default function CartPage() {
     try {
       setLoading(true);
       const response = await getCart();
+      console.log("Cart loaded:", response);
       if (response.data) {
         setCart(response.data);
       }
@@ -125,6 +174,36 @@ export default function CartPage() {
   const subtotal = calculateSubtotal();
   const shipping = subtotal > 500000 ? 0 : 30000; // Free ship if > 500k
   const total = subtotal + shipping;
+
+  // Prepare cart items for checkout
+  const cartItems =
+    cart?.items.map((item) => {
+      // Handle both populated object and string ID
+      const productId =
+        typeof item.product_id === "object"
+          ? (item.product_id as any)?._id
+          : item.product_id;
+
+      const variantId =
+        typeof item.variant_id === "object"
+          ? (item.variant_id as any)?._id
+          : item.variant_id;
+
+      return {
+        product_id: productId || "",
+        variant_id: variantId || "",
+        quantity: item.quantity,
+        price: item.price,
+      };
+    }) || [];
+
+  // User info for checkout - Using REAL user data from AuthAPI.me()
+  const userInfo = {
+    name: userProfile?.name || "",
+    email: userProfile?.email || "",
+    phone: userProfile?.phone || "",
+    address: userProfile?.address || "",
+  };
 
   if (loading) {
     return (
@@ -285,6 +364,9 @@ export default function CartPage() {
                 total={total}
                 formatPrice={formatPrice}
                 itemCount={cart.items.length}
+                cartItems={cartItems}
+                userId={userProfile?._id || ""}
+                userInfo={userInfo}
               />
             </div>
           </div>

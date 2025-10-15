@@ -176,3 +176,25 @@ export const CART_MESSAGES = {
   PRODUCT_NOT_IN_CART: 'Product not found in cart',
   CART_MIGRATED_SUCCESS: 'Cart migrated to database successfully'
 } as const
+
+export const PAYMENT_MESSAGES = {
+  PAYMENT_CREATED_SUCCESS: 'Payment created successfully',
+  PAYMENT_NOT_FOUND: 'Payment not found',
+  PAYMENT_ALREADY_COMPLETED: 'Payment already completed',
+  PAYMENT_EXPIRED: 'Payment has expired',
+  PAYMENT_FAILED: 'Payment failed',
+  PAYMENT_VERIFIED_SUCCESS: 'Payment verified successfully',
+  INVALID_SIGNATURE: 'Invalid payment signature',
+  REFUND_SUCCESS: 'Refund processed successfully',
+  CANNOT_REFUND: 'Cannot refund this payment'
+} as const
+
+export const ORDER_MESSAGES = {
+  ORDER_CREATED_SUCCESS: 'Order created successfully',
+  ORDER_NOT_FOUND: 'Order not found',
+  ORDER_ALREADY_CANCELLED: 'Order already cancelled',
+  CANNOT_CANCEL_ORDER: 'Cannot cancel order at this stage',
+  CART_EMPTY: 'Cart is empty',
+  OUT_OF_STOCK: 'Product is out of stock',
+  ORDER_STATUS_UPDATED: 'Order status updated successfully'
+} as const

@@ -292,3 +292,285 @@ export interface CartSummary {
   total: number;
   currency: string;
 }
+
+/* ORDER */
+export interface OrderItem {
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  product_image?: string;
+  variant_id: string;
+  variant_shade_color?: string;
+  variant_volume_size?: string;
+  variant_sku: string;
+  variant_image?: string;
+  quantity: number;
+  unit_price: number;
+  original_price?: number;
+  subtotal: number;
+}
+
+export interface ShippingAddress {
+  full_name: string;
+  phone_number: string;
+  address: string;
+  ward?: string;
+  district?: string;
+  city: string;
+  country?: string;
+}
+
+export interface Order {
+  _id: string;
+  user_id: string;
+  order_code: string;
+  items: OrderItem[];
+  subtotal: number;
+  shipping_fee: number;
+  discount_amount?: number;
+  total_amount: number;
+  shipping_address: ShippingAddress;
+  note?: string;
+  status:
+    | "pending"
+    | "confirmed"
+    | "processing"
+    | "shipping"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
+  payment_method: "cod" | "momo" | "vnpay" | "bank_transfer";
+  payment_status: "pending" | "paid" | "failed" | "refunded";
+  paid_at?: string;
+  confirmed_at?: string;
+  shipping_at?: string;
+  delivered_at?: string;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateOrderReqBody {
+  shipping_address: ShippingAddress;
+  note?: string;
+  payment_method: "cod" | "momo" | "vnpay" | "bank_transfer";
+  shipping_fee?: number;
+  discount_code?: string;
+}
+
+export interface UpdateOrderStatusReqBody {
+  status:
+    | "confirmed"
+    | "processing"
+    | "shipping"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
+  cancellation_reason?: string;
+  tracking_number?: string;
+}
+
+export interface CancelOrderReqBody {
+  reason: string;
+}
+
+export interface GetOrdersReqQuery {
+  status?:
+    | "pending"
+    | "confirmed"
+    | "processing"
+    | "shipping"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
+  payment_status?: "pending" | "paid" | "failed" | "refunded";
+  payment_method?: "cod" | "momo" | "vnpay" | "bank_transfer";
+  from_date?: string;
+  to_date?: string;
+  search?: string;
+  page?: string;
+  limit?: string;
+  sort?: "created_at" | "-created_at" | "total_amount" | "-total_amount";
+}
+
+export interface GetOrderDetailReqParams {
+  order_id: string;
+}
+
+/* PAYMENT */
+export interface PaymentMetadata {
+  partnerCode?: string;
+  orderId?: string;
+  requestId?: string;
+  vnp_TxnRef?: string;
+  vnp_TransactionNo?: string;
+  vnp_BankCode?: string;
+  vnp_CardType?: string;
+  payUrl?: string;
+  qrCodeUrl?: string;
+  deeplink?: string;
+}
+
+export interface Payment {
+  _id: string;
+  order_id: string;
+  order_code: string;
+  user_id: string;
+  payment_method: "cod" | "momo" | "vnpay" | "bank_transfer";
+  amount: number;
+  currency: string;
+  status:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "refunded";
+  transaction_id?: string;
+  payment_gateway_response?: any;
+  metadata?: PaymentMetadata;
+  error_code?: string;
+  error_message?: string;
+  initiated_at?: string;
+  completed_at?: string;
+  failed_at?: string;
+  expired_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePaymentReqBody {
+  order_id: string;
+  payment_method: "momo" | "vnpay" | "bank_transfer";
+  return_url?: string;
+  cancel_url?: string;
+  language?: "vi" | "en";
+}
+
+export interface VerifyPaymentReqBody {
+  order_id: string;
+  transaction_id?: string;
+  payment_method: "momo" | "vnpay";
+}
+
+export interface RefundPaymentReqBody {
+  payment_id: string;
+  amount?: number;
+  reason?: string;
+}
+
+export interface GetPaymentsReqQuery {
+  order_id?: string;
+  status?:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "refunded";
+  payment_method?: "cod" | "momo" | "vnpay" | "bank_transfer";
+  from_date?: string;
+  to_date?: string;
+  page?: string;
+  limit?: string;
+}
+
+/* MOMO CALLBACK */
+export interface MomoCallbackReqBody {
+  partnerCode: string;
+  orderId: string;
+  requestId: string;
+  amount: number;
+  orderInfo: string;
+  orderType: string;
+  transId: number;
+  resultCode: number;
+  message: string;
+  payType: string;
+  responseTime: number;
+  extraData: string;
+  signature: string;
+}
+
+export interface MomoIpnResponse {
+  partnerCode: string;
+  orderId: string;
+  requestId: string;
+  amount: number;
+  orderInfo: string;
+  orderType: string;
+  transId: number;
+  resultCode: number;
+  message: string;
+  payType: string;
+  responseTime: number;
+  extraData: string;
+  signature: string;
+}
+
+/* MOMO RETURN (for frontend processing) */
+export interface MomoReturnReqQuery {
+  partnerCode: string;
+  orderId: string;
+  requestId: string;
+  amount: string;
+  orderInfo: string;
+  orderType: string;
+  transId: string;
+  resultCode: string;
+  message: string;
+  payType: string;
+  responseTime: string;
+  extraData: string;
+  signature: string;
+}
+
+/* VNPAY RETURN */
+export interface VnpayReturnReqQuery {
+  vnp_Amount: string;
+  vnp_BankCode: string;
+  vnp_BankTranNo?: string;
+  vnp_CardType?: string;
+  vnp_OrderInfo: string;
+  vnp_PayDate: string;
+  vnp_ResponseCode: string;
+  vnp_TmnCode: string;
+  vnp_TransactionNo: string;
+  vnp_TransactionStatus: string;
+  vnp_TxnRef: string;
+  vnp_SecureHash: string;
+  [key: string]: string | undefined;
+}
+
+export interface VnpayIpnResponse {
+  RspCode: string;
+  Message: string;
+}
+
+/* PAYMENT RESPONSE TYPES */
+export interface PaymentUrlResponse {
+  payment_id: string;
+  payment_url: string;
+  qr_code_url?: string;
+  deeplink?: string;
+  expires_at: string;
+}
+
+export interface PaymentStatusResponse {
+  payment_id: string;
+  order_id: string;
+  order_code: string;
+  status:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "refunded";
+  amount: number;
+  payment_method: string;
+  transaction_id?: string;
+  created_at: string;
+  completed_at?: string;
+}

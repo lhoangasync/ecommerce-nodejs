@@ -51,8 +51,15 @@ export default function CartItem({
     return null;
   }
 
-  const productId = displayProduct._id;
-  const variantId = displayVariant._id || displayVariant.id;
+  // ✅ FIX: Lấy ID từ item gốc thay vì displayProduct/displayVariant
+  const productId =
+    typeof item.product_id === "object" ? item.product_id._id : item.product_id;
+
+  const variantId =
+    typeof item.variant_id === "object"
+      ? item.variant_id._id || item.variant_id.id
+      : item.variant_id;
+
   const updateKey = `${productId}-${variantId}`;
   const isUpdating = updating === updateKey;
 

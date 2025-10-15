@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { createOrder } from "@/api/order.api";
+import { CreateOrderReqBody } from "@/types/backend";
 
 interface CartSummaryProps {
   subtotal: number;
@@ -11,6 +13,19 @@ interface CartSummaryProps {
   total: number;
   formatPrice: (price: number) => string;
   itemCount: number;
+  cartItems: Array<{
+    product_id: string;
+    variant_id: string;
+    quantity: number;
+    price: number;
+  }>;
+  userId: string;
+  userInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
 }
 
 type PaymentMethod = "vnpay" | "momo" | "cod";
@@ -22,6 +37,9 @@ export default function CartSummary({
   total: initialTotal,
   formatPrice,
   itemCount,
+  cartItems,
+  userId,
+  userInfo,
 }: CartSummaryProps) {
   const router = useRouter();
 
@@ -29,6 +47,7 @@ export default function CartSummary({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("standard");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Coupon
   const [couponCode, setCouponCode] = useState("");
@@ -45,7 +64,7 @@ export default function CartSummary({
       : appliedCoupon.value
     : 0;
 
-  // Fixed: Recalculate total based on selected shipping method and coupon
+  // Recalculate total
   const total = Math.max(0, subtotal - discount + shippingFee);
 
   const handleApplyCoupon = async () => {
@@ -53,7 +72,7 @@ export default function CartSummary({
 
     setApplyingCoupon(true);
     try {
-      // TODO: Call API to validate coupon
+      // TODO: Call real API to validate coupon
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Mock coupon validation
@@ -84,6 +103,78 @@ export default function CartSummary({
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode("");
+  };
+
+  const handleCheckout = async () => {
+    if (isProcessing) return;
+
+    setIsProcessing(true);
+
+    try {
+      console.log("=== CHECKOUT DEBUG ===");
+      console.log("User Info:", userInfo);
+      console.log("Payment Method:", paymentMethod);
+      console.log("Shipping Method:", shippingMethod);
+      console.log("Shipping Fee:", shippingFee);
+      console.log("Applied Coupon:", appliedCoupon);
+      console.log("Cart Items:", cartItems);
+
+      // Prepare order data
+      const orderData: CreateOrderReqBody = {
+        shipping_address: {
+          full_name: userInfo.name,
+          phone_number: userInfo.phone,
+          address: userInfo.address,
+          city: "Ho Chi Minh City",
+          district: "",
+          ward: "",
+        },
+        note: "",
+        payment_method: paymentMethod,
+        shipping_fee: shippingFee,
+        discount_code: appliedCoupon?.code,
+      };
+
+      console.log("Order Data to send:", orderData);
+
+      // Call API to create order
+      const response = await createOrder(orderData);
+      console.log("API Response:", response);
+
+      if (!response.success || !response.data) {
+        console.error("Order creation failed:", response.error);
+        alert(response.error || "Có lỗi xảy ra khi tạo đơn hàng");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Backend trả về: { order: Order, payment_url?: string }
+      const { order, payment_url } = response.data.data;
+      console.log("Order created:", order);
+      console.log("Payment URL:", payment_url);
+
+      // Handle payment redirect
+      if (paymentMethod === "momo" || paymentMethod === "vnpay") {
+        if (payment_url) {
+          console.log("Redirecting to payment gateway:", payment_url);
+          // Redirect to payment gateway
+          window.location.href = payment_url;
+        } else {
+          console.error("No payment URL returned from backend");
+          alert("Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.");
+          // Redirect to order page, user can retry payment later
+          router.push(`/orders/${order._id}?payment_status=failed`);
+        }
+      } else if (paymentMethod === "cod") {
+        console.log("COD payment, redirecting to order page");
+        // Redirect to order success page
+        router.push(`/orders/${order._id}?payment_status=pending`);
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Có lỗi xảy ra trong quá trình thanh toán");
+      setIsProcessing(false);
+    }
   };
 
   const paymentMethods = [
@@ -147,11 +238,12 @@ export default function CartSummary({
             <button
               key={method.id}
               onClick={() => setPaymentMethod(method.id)}
+              disabled={isProcessing}
               className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                 paymentMethod === method.id
                   ? "border-pink-500 bg-pink-50"
                   : "border-gray-200 hover:border-pink-300"
-              }`}
+              } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white">
                 {method.logo ? (
@@ -220,11 +312,12 @@ export default function CartSummary({
         <div className="space-y-3">
           <button
             onClick={() => setShippingMethod("standard")}
+            disabled={isProcessing}
             className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
               shippingMethod === "standard"
                 ? "border-pink-500 bg-pink-50"
                 : "border-gray-200 hover:border-pink-300"
-            }`}
+            } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <div className="flex items-center gap-3">
               <svg
@@ -256,11 +349,12 @@ export default function CartSummary({
 
           <button
             onClick={() => setShippingMethod("express")}
+            disabled={isProcessing}
             className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
               shippingMethod === "express"
                 ? "border-pink-500 bg-pink-50"
                 : "border-gray-200 hover:border-pink-300"
-            }`}
+            } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <div className="flex items-center gap-3">
               <svg
@@ -338,7 +432,8 @@ export default function CartSummary({
             </div>
             <button
               onClick={handleRemoveCoupon}
-              className="text-red-500 hover:text-red-600 transition-colors"
+              disabled={isProcessing}
+              className="text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
             >
               <svg
                 className="w-5 h-5"
@@ -362,12 +457,12 @@ export default function CartSummary({
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
               placeholder="Nhập mã giảm giá"
-              className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
-              disabled={applyingCoupon}
+              disabled={applyingCoupon || isProcessing}
+              className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50"
             />
             <button
               onClick={handleApplyCoupon}
-              disabled={applyingCoupon || !couponCode.trim()}
+              disabled={applyingCoupon || !couponCode.trim() || isProcessing}
               className="px-6 py-3 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
             >
               {applyingCoupon ? (
@@ -397,7 +492,6 @@ export default function CartSummary({
           </div>
         )}
 
-        {/* Suggestion */}
         <div className="mt-3 text-xs text-gray-500">
           💡 Thử mã:{" "}
           <span className="font-semibold text-pink-600">DISCOUNT10</span> hoặc{" "}
@@ -441,23 +535,51 @@ export default function CartSummary({
 
         {/* Checkout Button */}
         <button
-          onClick={() => router.push("/checkout")}
-          className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mb-3"
+          onClick={handleCheckout}
+          disabled={isProcessing || itemCount === 0}
+          className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          <span>Thanh toán</span>
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
-            />
-          </svg>
+          {isProcessing ? (
+            <>
+              <svg
+                className="w-5 h-5 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <span>Đang xử lý...</span>
+            </>
+          ) : (
+            <>
+              <span>Thanh toán</span>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </>
+          )}
         </button>
 
         {/* Continue Shopping */}
