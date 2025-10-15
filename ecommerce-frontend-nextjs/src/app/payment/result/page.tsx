@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { handleVNPayReturn, handleMoMoReturn } from "@/api/payment.api";
@@ -22,7 +23,7 @@ interface MomoReturnParams {
   signature: string;
 }
 
-export default function PaymentResultPage() {
+function PaymentResultContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "failed">(
     "loading"
@@ -285,5 +286,22 @@ export default function PaymentResultPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-4"></div>
+            <h2 className="text-2xl font-bold text-gray-800">Đang tải...</h2>
+          </div>
+        </div>
+      }
+    >
+      <PaymentResultContent />
+    </Suspense>
   );
 }
