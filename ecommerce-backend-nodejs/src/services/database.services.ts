@@ -7,6 +7,7 @@ import { Order } from '~/models/schemas/Order.schema'
 import { Payment } from '~/models/schemas/Payment.schema'
 import Product from '~/models/schemas/Product.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import Review from '~/models/schemas/Review.schema'
 import User from '~/models/schemas/User.schema'
 config()
 
@@ -55,6 +56,9 @@ class DatabaseService {
   }
   get payments(): Collection<Payment> {
     return this.db.collection<Payment>(process.env.DB_PAYMENTS_COLLECTION as string)
+  }
+  get reviews(): Collection<Review> {
+    return this.db.collection<Review>(process.env.DB_REVIEWS_COLLECTION as string)
   }
 }
 

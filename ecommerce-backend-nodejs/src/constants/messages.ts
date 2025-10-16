@@ -198,3 +198,48 @@ export const ORDER_MESSAGES = {
   OUT_OF_STOCK: 'Product is out of stock',
   ORDER_STATUS_UPDATED: 'Order status updated successfully'
 } as const
+
+export const REVIEWS_MESSAGES = {
+  // Validation messages
+  INVALID_RATING: 'Rating must be between 1 and 5',
+  RATING_REQUIRED: 'Rating is required',
+  PRODUCT_ID_REQUIRED: 'Product ID is required',
+  INVALID_PRODUCT_ID: 'Invalid product ID',
+  INVALID_USER_ID: 'Invalid user ID',
+  INVALID_ORDER_ID: 'Invalid order ID',
+  INVALID_REVIEW_ID: 'Invalid review ID',
+  COMMENT_MUST_BE_STRING: 'Comment must be a string',
+  COMMENT_LENGTH: 'Comment must be between 1 and 2000 characters',
+  VARIANT_ID_MUST_BE_STRING: 'Variant ID must be a string',
+  IMAGES_MUST_BE_ARRAY: 'Images must be an array',
+  IMAGES_MUST_BE_STRINGS: 'All image URLs must be strings',
+  MAX_IMAGES: 'Maximum 5 images allowed',
+  IS_VERIFIED_MUST_BE_BOOLEAN: 'is_verified_purchase must be a boolean',
+  INVALID_STATUS: 'Invalid review status',
+  INVALID_PAGE: 'Page must be greater than 0',
+  INVALID_LIMIT: 'Limit must be between 1 and 100',
+  INVALID_SORT_BY: 'sort_by must be one of: created_at, rating, helpful_count',
+  INVALID_ORDER: 'order must be asc or desc',
+  MESSAGE_REQUIRED: 'Message is required',
+  MESSAGE_MUST_BE_STRING: 'Message must be a string',
+  MESSAGE_LENGTH: 'Message must be between 1 and 1000 characters',
+
+  // Error messages
+  ALREADY_REVIEWED: 'You have already reviewed this product',
+  REVIEW_NOT_FOUND: 'Review not found',
+  PRODUCT_NOT_FOUND: 'Product not found',
+  REVIEW_NOT_FOUND_OR_UNAUTHORIZED: 'Review not found or you are not authorized to modify it',
+
+  // Success messages
+  CREATE_REVIEW_SUCCESS: 'Review created successfully',
+  UPDATE_REVIEW_SUCCESS: 'Review updated successfully',
+  DELETE_REVIEW_SUCCESS: 'Review deleted successfully',
+  APPROVE_REVIEW_SUCCESS: 'Review approved successfully',
+  REJECT_REVIEW_SUCCESS: 'Review rejected successfully',
+  MARK_HELPFUL_SUCCESS: 'Marked as helpful successfully',
+  REPORT_REVIEW_SUCCESS: 'Review reported successfully',
+  ADD_SELLER_RESPONSE_SUCCESS: 'Seller response added successfully',
+  GET_REVIEWS_SUCCESS: 'Get reviews successfully',
+  GET_REVIEW_SUCCESS: 'Get review successfully',
+  GET_RATING_STATS_SUCCESS: 'Get rating statistics successfully'
+} as const

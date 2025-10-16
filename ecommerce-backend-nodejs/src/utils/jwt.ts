@@ -33,3 +33,17 @@ export const verifyToken = ({ token, secretOrPublicKey }: { token: string; secre
     })
   })
 }
+export const verifyAccessToken = (token: string) => {
+  return verifyToken({
+    token,
+    secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+  })
+}
+
+// Wrapper cho refresh token (nếu cần)
+export const verifyRefreshToken = (token: string) => {
+  return verifyToken({
+    token,
+    secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+  })
+}

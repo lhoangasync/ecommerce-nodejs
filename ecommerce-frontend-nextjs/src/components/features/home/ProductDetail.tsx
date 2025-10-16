@@ -3,10 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Product, Variant } from "@/types/backend";
+import { useState, useEffect, useRef } from "react";
+import { Product, Variant, Review, RatingStats } from "@/types/backend";
 import { getProductById } from "@/api/product.api";
 import { addToCart } from "@/api/cart.api";
+import {
+  getReviews,
+  getRatingStats,
+  createReview,
+  markReviewHelpful,
+} from "@/api/review.api";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Thumbs, EffectFade } from "swiper/modules";
 import "swiper/css";
@@ -14,7 +20,11 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { toast } from "react-toastify";
-
+import { useSocket } from "@/hooks/useSocket";
+import ProductRating from "./ProductRating";
+import ReviewForm from "./ReviewForm";
+import ReviewList from "./ReviewList";
+import ReviewFilters from "./ReviewFilters";
 interface ProductDetailProps {
   productSlug?: string;
 }
@@ -34,10 +44,87 @@ export default function ProductDetail({
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [addedToCart, setAddedToCart] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [activeTab, setActiveTab] = useState<"details" | "comments">("details");
-  const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState("");
-  const [rating, setRating] = useState(5);
+  const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
+
+  // Review states
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filterRating, setFilterRating] = useState<string>("");
+  const [sortBy, setSortBy] = useState<
+    "created_at" | "rating" | "helpful_count"
+  >("created_at");
+
+  // New review form
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewComment, setNewReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const { socket, isConnected } = useSocket();
+  const hasJoinedRoom = useRef(false);
+
+  useEffect(() => {
+    if (!socket || !isConnected || !product?._id || hasJoinedRoom.current)
+      return;
+
+    console.log("🚪 Joining product room:", product._id);
+    socket.emit("join:product", product._id);
+    hasJoinedRoom.current = true;
+
+    socket.on("users:count", (count: number) => {
+      console.log("👥 Active users:", count);
+    });
+
+    socket.on("review:new", (review: any) => {
+      console.log("✨ New review:", review);
+      setReviews((prev) => [review, ...prev]);
+      if (product._id) loadRatingStats(product._id);
+    });
+
+    socket.on("review:updated", (data: any) => {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r._id === data.review_id
+            ? { ...r, helpful_count: data.helpful_count }
+            : r
+        )
+      );
+    });
+
+    socket.on("review:deleted", (data: { review_id: string }) => {
+      setReviews((prev) => prev.filter((r) => r._id !== data.review_id));
+    });
+
+    socket.on("rating:updated", (stats: any) => {
+      setRatingStats(stats);
+    });
+
+    socket.on("review:response", (data: any) => {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r._id === data.review_id
+            ? { ...r, seller_response: data.response }
+            : r
+        )
+      );
+    });
+
+    return () => {
+      if (socket && product._id) {
+        console.log("👋 Leaving room:", product._id);
+        socket.emit("leave:product", product._id);
+        socket.off("users:count");
+        socket.off("review:new");
+        socket.off("review:updated");
+        socket.off("review:deleted");
+        socket.off("rating:updated");
+        socket.off("review:response");
+        hasJoinedRoom.current = false;
+      }
+    };
+  }, [socket, isConnected, product?._id]);
 
   useEffect(() => {
     async function loadProduct() {
@@ -50,24 +137,12 @@ export default function ProductDetail({
           if (response.data.variants && response.data.variants.length > 0) {
             setSelectedVariant(response.data.variants[0]);
           }
-          setComments([
-            {
-              id: 1,
-              author: "Nguyễn Hoa",
-              rating: 5,
-              text: "Sản phẩm rất tốt, mình rất hài lòng!",
-              date: "2 ngày trước",
-              verified: true,
-            },
-            {
-              id: 2,
-              author: "Trần Hà",
-              rating: 4,
-              text: "Chất lượng ổn, giao hàng nhanh.",
-              date: "5 ngày trước",
-              verified: true,
-            },
-          ]);
+
+          // Load rating stats and reviews
+          if (response.data._id) {
+            loadRatingStats(response.data._id);
+            loadReviews(response.data._id);
+          }
         } else {
           setError(response.message || "Không thể tải sản phẩm");
         }
@@ -83,6 +158,119 @@ export default function ProductDetail({
       loadProduct();
     }
   }, [slug]);
+
+  const loadRatingStats = async (productId: string) => {
+    try {
+      const response = await getRatingStats(productId);
+      if (response.status === 200 && response.data) {
+        setRatingStats(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading rating stats:", error);
+    }
+  };
+
+  const loadReviews = async (productId: string, page = 1) => {
+    try {
+      setLoadingReviews(true);
+      const response = await getReviews({
+        product_id: productId,
+        page: String(page),
+        limit: "10",
+        rating: filterRating,
+        sort_by: sortBy,
+        order: "desc",
+        status: "approved",
+      });
+      console.log("Reviews response:", response);
+      if (response.status === 200 && response.data) {
+        // Check if data is paginated (has items and meta)
+        if ("items" in response.data && "meta" in response.data) {
+          setReviews(response.data.items);
+          console.log("Total items:", response.data.items);
+          setTotalReviews(response.data.meta.totalItems);
+          setTotalPages(response.data.meta.totalPages);
+        } else {
+          // Fallback if data structure is different
+          console.warn("Unexpected response structure:", response.data);
+          setReviews([]);
+          setTotalReviews(0);
+          setTotalPages(0);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+      setReviews([]);
+      setTotalReviews(0);
+      setTotalPages(0);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    if (product?._id) {
+      setReviewPage(1); // Reset to page 1 when filters change
+      loadReviews(product._id, 1);
+    }
+  }, [filterRating, sortBy]);
+
+  useEffect(() => {
+    if (product?._id) {
+      loadReviews(product._id, reviewPage);
+    }
+  }, [reviewPage]);
+
+  const handleSubmitReview = async () => {
+    if (!product || !newReviewComment.trim()) {
+      toast.error("Vui lòng nhập nội dung đánh giá");
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      const result = await createReview({
+        product_id: product._id,
+        variant_id: selectedVariant?.id,
+        rating: newReviewRating,
+        comment: newReviewComment,
+      });
+
+      if (result.success) {
+        toast.success("Đánh giá của bạn đã được gửi và đang chờ duyệt!");
+        setNewReviewComment("");
+        setNewReviewRating(5);
+
+        // Reload reviews and stats
+        loadReviews(product._id, 1);
+        loadRatingStats(product._id);
+        setReviewPage(1);
+      } else {
+        toast.error(result.error || "Không thể gửi đánh giá");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error("Đã xảy ra lỗi khi gửi đánh giá");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleMarkHelpful = async (reviewId: string) => {
+    try {
+      const result = await markReviewHelpful(reviewId);
+      if (result.success) {
+        toast.success("Cảm ơn phản hồi của bạn!");
+        // Reload reviews to get updated helpful count
+        if (product?._id) {
+          loadReviews(product._id, reviewPage);
+        }
+      }
+    } catch (error) {
+      console.error("Error marking review as helpful:", error);
+      toast.error("Không thể đánh dấu hữu ích");
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -107,6 +295,7 @@ export default function ProductDetail({
 
   const productImages =
     allImages.length > 0 ? allImages : ["/images/placeholder.jpg"];
+
   const handleAddToCart = async () => {
     if (!selectedVariant || !product || addingToCart) return;
     setAddingToCart(true);
@@ -124,7 +313,6 @@ export default function ProductDetail({
           selectedVariant.volume_size ||
           "Mặc định";
 
-        // ⭐ Ưu tiên ảnh của variant, nếu không có mới lấy ảnh product
         const productImage =
           selectedVariant.images && selectedVariant.images.length > 0
             ? selectedVariant.images[0]
@@ -203,23 +391,6 @@ export default function ProductDetail({
     }
   };
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-
-    const newCommentObj = {
-      id: comments.length + 1,
-      author: "Bạn",
-      rating: rating,
-      text: newComment,
-      date: "vừa xong",
-      verified: false,
-    };
-
-    setComments([newCommentObj, ...comments]);
-    setNewComment("");
-    setRating(5);
-  };
-
   const handleQuantityChange = (delta: number) => {
     const newQty = quantity + delta;
     if (newQty > 0 && newQty <= (selectedVariant?.stock_quantity || 0)) {
@@ -239,10 +410,23 @@ export default function ProductDetail({
       )
     : 0;
 
-  const avgRating = product?.rating || 0;
-  const reviewCount = product?.review_count || 0;
+  const avgRating = ratingStats?.average_rating || 0;
+  const reviewCount = ratingStats?.total_reviews || 0;
   const fullStars = Math.floor(avgRating);
   const hasHalfStar = avgRating % 1 >= 0.5;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Hôm nay";
+    if (diffDays === 1) return "Hôm qua";
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
 
   if (loading) {
     return (
@@ -728,14 +912,14 @@ export default function ProductDetail({
               Chi tiết sản phẩm
             </button>
             <button
-              onClick={() => setActiveTab("comments")}
+              onClick={() => setActiveTab("reviews")}
               className={`pb-4 font-semibold transition-colors ${
-                activeTab === "comments"
+                activeTab === "reviews"
                   ? "text-pink-600 border-b-2 border-pink-600"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Bình luận ({comments.length})
+              Đánh giá ({reviewCount})
             </button>
           </div>
 
@@ -770,106 +954,34 @@ export default function ProductDetail({
             </div>
           )}
 
-          {activeTab === "comments" && (
+          {activeTab === "reviews" && (
             <div className="space-y-8">
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-bold text-gray-900 mb-4">Viết bình luận</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Đánh giá
-                    </label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((r) => (
-                        <button
-                          key={r}
-                          onClick={() => setRating(r)}
-                          className="transition-transform hover:scale-110"
-                        >
-                          <svg
-                            className={`w-8 h-8 ${
-                              r <= rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "fill-gray-300 text-gray-300"
-                            }`}
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bình luận của bạn
-                    </label>
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 resize-none"
-                      rows={4}
-                    />
-                  </div>
-                  <button
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                    className="w-full bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 text-white font-semibold py-2 rounded-lg transition-colors"
-                  >
-                    Gửi bình luận
-                  </button>
-                </div>
-              </div>
+              <ProductRating
+                productId={product._id}
+                onFilterChange={setFilterRating}
+                activeFilter={filterRating}
+              />
 
-              <div className="space-y-4">
-                {comments.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">
-                    Chưa có bình luận nào. Hãy là người đầu tiên!
-                  </p>
-                ) : (
-                  comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="bg-white rounded-lg p-5 border border-gray-200"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900">
-                              {comment.author}
-                            </p>
-                            {comment.verified && (
-                              <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
-                                Đã mua
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {comment.date}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < comment.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "fill-gray-300 text-gray-300"
-                            }`}
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <p className="text-gray-700">{comment.text}</p>
-                    </div>
-                  ))
-                )}
-              </div>
+              <ReviewFilters
+                filterRating={filterRating}
+                onFilterChange={setFilterRating}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+              />
+
+              <ReviewForm
+                onSubmit={handleSubmitReview}
+                isSubmitting={submittingReview}
+              />
+
+              <ReviewList
+                reviews={reviews}
+                isLoading={loadingReviews}
+                onMarkHelpful={handleMarkHelpful}
+                currentPage={reviewPage}
+                totalPages={totalPages}
+                onPageChange={setReviewPage}
+              />
             </div>
           )}
         </div>

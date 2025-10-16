@@ -4,12 +4,17 @@ import apiRouter from './routes/app.routes'
 import databaseService from './services/database.services'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import { createServer } from 'http'
+
 import { config } from 'dotenv'
+import WebSocketService from './services/websocket.services'
 config()
 
 databaseService.connect()
 
 const app = express()
+const httpServer = createServer(app)
+
 const port = 4000
 
 app.set('trust proxy', 1)
@@ -33,6 +38,12 @@ app.use(express.json())
 app.use('/api', apiRouter)
 app.use(defaultErrorHandler)
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`)
+// Initialize WebSocket service
+const wsService = new WebSocketService(httpServer)
+export { wsService }
+
+// Single listen call on httpServer (handles both HTTP and WebSocket)
+httpServer.listen(port, () => {
+  console.log(`Server running on port ${port}`)
+  console.log(`WebSocket server ready`)
 })
