@@ -42,6 +42,10 @@ export interface IOrder {
   discount_amount?: number // Số tiền giảm giá (voucher/promotion)
   total_amount: number // Tổng cộng
 
+  // Coupon (nếu có áp dụng)
+  coupon_code?: string
+  coupon_id?: ObjectId
+
   // Shipping
   shipping_address: IShippingAddress
   note?: string
@@ -78,6 +82,10 @@ export class Order {
   discount_amount: number
   total_amount: number
 
+  // Coupon fields
+  coupon_code?: string
+  coupon_id?: ObjectId
+
   shipping_address: IShippingAddress
   note?: string
 
@@ -108,6 +116,10 @@ export class Order {
     this.shipping_fee = order.shipping_fee || 0
     this.discount_amount = order.discount_amount || 0
     this.total_amount = order.total_amount
+
+    // Coupon fields
+    this.coupon_code = order.coupon_code
+    this.coupon_id = order.coupon_id
 
     this.shipping_address = order.shipping_address
     this.note = order.note

@@ -310,7 +310,7 @@ export interface OrderItem {
   subtotal: number;
 }
 
-export interface ShippingAddress {
+export interface IShippingAddress {
   full_name: string;
   phone_number: string;
   address: string;
@@ -329,7 +329,7 @@ export interface Order {
   shipping_fee: number;
   discount_amount?: number;
   total_amount: number;
-  shipping_address: ShippingAddress;
+  shipping_address: IShippingAddress;
   note?: string;
   status:
     | "pending"
@@ -352,11 +352,11 @@ export interface Order {
 }
 
 export interface CreateOrderReqBody {
-  shipping_address: ShippingAddress;
+  shipping_address: IShippingAddress;
   note?: string;
   payment_method: "cod" | "momo" | "vnpay" | "bank_transfer";
   shipping_fee?: number;
-  discount_code?: string;
+  coupon_code?: string;
 }
 
 export interface UpdateOrderStatusReqBody {

@@ -54,31 +54,59 @@ export default function CartSummary({
 }: CartSummaryProps) {
   const router = useRouter();
 
-  // Payment & Shipping
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [shippingMethod, setShippingMethod] =
     useState<ShippingMethod>("standard");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Coupon states
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [showCouponModal, setShowCouponModal] = useState(false);
 
-  // Auto coupons - with populated coupon data
   const [userAutoCoupons, setUserAutoCoupons] = useState<
     (UserCouponRedemption & { coupon: Coupon })[]
   >([]);
   const [loadingAutoCoupons, setLoadingAutoCoupons] = useState(false);
 
-  // Calculate shipping based on method
   const shippingFee = shippingMethod === "express" ? 50000 : initialShipping;
 
-  // Recalculate total with coupon discount
+  useEffect(() => {
+    if (selectedCoupon) {
+      let discount = 0;
+
+      if (
+        selectedCoupon.min_order_value &&
+        subtotal < selectedCoupon.min_order_value
+      ) {
+        toast.error(
+          `Đơn hàng tối thiểu ${formatPrice(
+            selectedCoupon.min_order_value
+          )} để áp dụng mã này`
+        );
+        setSelectedCoupon(null);
+        setCouponCode("");
+        setCouponDiscount(0);
+        return;
+      }
+
+      if (selectedCoupon.discount_type === "percentage") {
+        discount = (subtotal * selectedCoupon.discount_value) / 100;
+        if (selectedCoupon.max_discount_amount) {
+          discount = Math.min(discount, selectedCoupon.max_discount_amount);
+        }
+      } else {
+        discount = selectedCoupon.discount_value;
+      }
+
+      setCouponDiscount(discount);
+    } else {
+      setCouponDiscount(0);
+    }
+  }, [selectedCoupon, subtotal, formatPrice]);
+
   const total = Math.max(0, subtotal - couponDiscount + shippingFee);
 
-  // Load user's auto coupons
   useEffect(() => {
     async function loadUserAutoCoupons() {
       if (!userId) return;
@@ -88,11 +116,9 @@ export default function CartSummary({
         const response = await getUserAutoCoupons();
 
         if (response.status === 200 && response.data) {
-          // Type assertion - backend should populate coupon data
           setUserAutoCoupons(
             response.data as (UserCouponRedemption & { coupon: Coupon })[]
           );
-          console.log("Loaded user auto coupons:", response.data);
         }
       } catch (error) {
         console.error("Error loading user auto coupons:", error);
@@ -104,15 +130,15 @@ export default function CartSummary({
     loadUserAutoCoupons();
   }, [userId]);
 
-  // Apply coupon from modal
-  const handleApplyCouponFromModal = (code: string) => {
-    setCouponCode(code);
+  const handleApplyCouponFromModal = (coupon: Coupon) => {
+    setCouponCode(coupon.code);
+    setSelectedCoupon(coupon);
     setShowCouponModal(false);
-    toast.info(`Đã chọn mã ${code}. Mã sẽ được áp dụng khi thanh toán.`);
+    toast.success(`Đã áp dụng mã ${coupon.code}`);
   };
 
   const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
+    setSelectedCoupon(null);
     setCouponDiscount(0);
     setCouponCode("");
     toast.info("Đã xóa mã giảm giá");
@@ -124,15 +150,6 @@ export default function CartSummary({
     setIsProcessing(true);
 
     try {
-      console.log("=== CHECKOUT DEBUG ===");
-      console.log("User Info:", userInfo);
-      console.log("Payment Method:", paymentMethod);
-      console.log("Shipping Method:", shippingMethod);
-      console.log("Shipping Fee:", shippingFee);
-      console.log("Coupon Code:", couponCode);
-      console.log("Cart Items:", cartItems);
-
-      // Prepare order data
       const orderData: CreateOrderReqBody = {
         shipping_address: {
           full_name: userInfo.name,
@@ -145,41 +162,29 @@ export default function CartSummary({
         note: "",
         payment_method: paymentMethod,
         shipping_fee: shippingFee,
-        discount_code: couponCode || undefined,
+        coupon_code: couponCode || undefined,
       };
 
-      console.log("Order Data to send:", orderData);
-
-      // Call API to create order
       const response = await createOrder(orderData);
-      console.log("API Response:", response);
 
       if (!response.success || !response.data) {
-        console.error("Order creation failed:", response.error);
         toast.error(response.error || "Có lỗi xảy ra khi tạo đơn hàng");
         setIsProcessing(false);
         return;
       }
 
-      // Backend returns: { order: Order, payment_url?: string }
       const { order, payment_url } = response.data.data;
-      console.log("Order created:", order);
-      console.log("Payment URL:", payment_url);
 
-      // Handle payment redirect
       if (paymentMethod === "momo" || paymentMethod === "vnpay") {
         if (payment_url) {
-          console.log("Redirecting to payment gateway:", payment_url);
           window.location.href = payment_url;
         } else {
-          console.error("No payment URL returned from backend");
           toast.error(
             "Không thể tạo liên kết thanh toán. Vui lòng thử lại sau."
           );
           router.push(`/orders/${order._id}?payment_status=failed`);
         }
       } else if (paymentMethod === "cod") {
-        console.log("COD payment, redirecting to order page");
         toast.success("Đặt hàng thành công!");
         router.push(`/orders/${order._id}?payment_status=pending`);
       }
@@ -421,29 +426,55 @@ export default function CartSummary({
             Mã giảm giá
           </h3>
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="Nhập mã giảm giá"
-              disabled={isProcessing}
-              className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 uppercase"
-            />
-          </div>
-
-          {couponCode && (
-            <button
-              onClick={handleRemoveCoupon}
-              disabled={isProcessing}
-              className="mt-2 text-sm text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
-            >
-              Xóa mã
-            </button>
+          {selectedCoupon ? (
+            <div className="p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="font-bold text-green-700">
+                    {selectedCoupon.code}
+                  </div>
+                  <div className="text-sm text-green-600 mt-1">
+                    {selectedCoupon.description}
+                  </div>
+                  <div className="text-sm font-semibold text-green-700 mt-2">
+                    Giảm {formatPrice(couponDiscount)}
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveCoupon}
+                  disabled={isProcessing}
+                  className="text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Nhập mã giảm giá"
+                disabled={isProcessing}
+                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 uppercase"
+              />
+            </div>
           )}
 
-          {/* My Coupons Button */}
-          {userAutoCoupons.length > 0 && (
+          {userAutoCoupons.length > 0 && !selectedCoupon && (
             <button
               onClick={() => setShowCouponModal(true)}
               disabled={isProcessing}
@@ -479,19 +510,19 @@ export default function CartSummary({
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
 
-            {couponCode && (
-              <div className="flex justify-between text-green-600">
-                <span>Mã giảm giá ({couponCode})</span>
-                <span className="font-semibold text-sm">
-                  Áp dụng khi thanh toán
-                </span>
-              </div>
-            )}
-
             <div className="flex justify-between text-gray-600">
               <span>Phí vận chuyển</span>
               <span className="font-semibold">{formatPrice(shippingFee)}</span>
             </div>
+
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Giảm giá</span>
+                <span className="font-semibold">
+                  -{formatPrice(couponDiscount)}
+                </span>
+              </div>
+            )}
 
             <div className="border-t pt-3">
               <div className="flex justify-between items-center">
@@ -505,7 +536,6 @@ export default function CartSummary({
             </div>
           </div>
 
-          {/* Checkout Button */}
           <button
             onClick={handleCheckout}
             disabled={isProcessing || itemCount === 0}
@@ -554,7 +584,6 @@ export default function CartSummary({
             )}
           </button>
 
-          {/* Continue Shopping */}
           <Link
             href="/products"
             className="w-full border-2 border-gray-200 hover:border-pink-300 text-gray-700 hover:text-pink-600 font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
@@ -689,45 +718,91 @@ export default function CartSummary({
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {userAutoCoupons.map((redemption) => (
-                    <button
-                      key={redemption._id}
-                      onClick={() =>
-                        handleApplyCouponFromModal(redemption.coupon.code)
-                      }
-                      className="w-full p-4 border-2 border-gray-200 hover:border-pink-300 rounded-xl text-left transition-all"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-bold text-gray-900">
-                            {redemption.coupon.code}
+                  {userAutoCoupons.map((redemption) => {
+                    const coupon = redemption.coupon;
+                    const isExpired = new Date(coupon.end_date) < new Date();
+                    const isMinOrderNotMet =
+                      coupon.min_order_value &&
+                      subtotal < coupon.min_order_value;
+
+                    return (
+                      <button
+                        key={redemption._id}
+                        onClick={() => handleApplyCouponFromModal(coupon)}
+                        disabled={isExpired || !!isMinOrderNotMet}
+                        className={`w-full p-4 border-2 rounded-xl text-left transition-all ${
+                          isExpired || isMinOrderNotMet
+                            ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+                            : "border-gray-200 hover:border-pink-300 hover:bg-pink-50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-gray-900">
+                                {coupon.code}
+                              </div>
+                              {isExpired && (
+                                <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">
+                                  Hết hạn
+                                </span>
+                              )}
+                              {isMinOrderNotMet && !isExpired && (
+                                <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full">
+                                  Chưa đủ điều kiện
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {coupon.description}
+                            </div>
+                            {coupon.discount_type === "percentage" ? (
+                              <div className="text-sm font-semibold text-pink-600 mt-1">
+                                Giảm {coupon.discount_value}%
+                                {coupon.max_discount_amount && (
+                                  <span className="text-gray-500 text-xs ml-1">
+                                    (tối đa{" "}
+                                    {formatPrice(coupon.max_discount_amount)})
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm font-semibold text-pink-600 mt-1">
+                                Giảm {formatPrice(coupon.discount_value)}
+                              </div>
+                            )}
+                            {coupon.min_order_value && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Đơn tối thiểu:{" "}
+                                {formatPrice(coupon.min_order_value)}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-500 mt-1">
+                              HSD:{" "}
+                              {new Date(coupon.end_date).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {redemption.coupon.description}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-2">
-                            HSD:{" "}
-                            {new Date(
-                              redemption.coupon.end_date
-                            ).toLocaleDateString("vi-VN")}
-                          </div>
+                          {!isExpired && !isMinOrderNotMet && (
+                            <svg
+                              className="w-5 h-5 text-pink-500 flex-shrink-0 ml-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          )}
                         </div>
-                        <svg
-                          className="w-5 h-5 text-pink-500 flex-shrink-0 ml-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

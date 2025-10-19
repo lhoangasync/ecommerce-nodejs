@@ -26,7 +26,13 @@ export default function CartPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  // ✅ Kiểm tra trạng thái đăng nhập và fetch user profile
+  // Helper function to safely extract ID from either string or object
+  const extractId = (value: any): string => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    return value._id || value.id || "";
+  };
+
   useEffect(() => {
     const checkAuthAndFetchUser = async () => {
       try {
@@ -51,7 +57,6 @@ export default function CartPage() {
     checkAuthAndFetchUser();
   }, [router]);
 
-  // ✅ Fetch user profile với error handling
   const fetchUserProfile = async () => {
     try {
       const response = await AuthAPI.me();
@@ -59,7 +64,6 @@ export default function CartPage() {
     } catch (error: any) {
       console.error("Failed to fetch user profile:", error);
 
-      // Nếu lỗi 401, token không hợp lệ
       if (error?.response?.status === 401) {
         localStorage.removeItem("access_token");
         await deleteRefreshTokenCookie();
@@ -172,32 +176,22 @@ export default function CartPage() {
   };
 
   const subtotal = calculateSubtotal();
-  const shipping = subtotal > 500000 ? 0 : 30000; // Free ship if > 500k
+  const shipping = subtotal > 500000 ? 0 : 30000;
   const total = subtotal + shipping;
 
-  // Prepare cart items for checkout
   const cartItems =
     cart?.items.map((item) => {
-      // Handle both populated object and string ID
-      const productId =
-        typeof item.product_id === "object"
-          ? (item.product_id as any)?._id
-          : item.product_id;
-
-      const variantId =
-        typeof item.variant_id === "object"
-          ? (item.variant_id as any)?._id
-          : item.variant_id;
+      const productId = extractId(item.product_id);
+      const variantId = extractId(item.variant_id);
 
       return {
-        product_id: productId || "",
-        variant_id: variantId || "",
+        product_id: productId,
+        variant_id: variantId,
         quantity: item.quantity,
         price: item.price,
       };
     }) || [];
 
-  // User info for checkout - Using REAL user data from AuthAPI.me()
   const userInfo = {
     name: userProfile?.name || "",
     email: userProfile?.email || "",
@@ -240,7 +234,6 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-pink-50">
-      {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-2 text-sm">
@@ -257,7 +250,6 @@ export default function CartPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -293,7 +285,6 @@ export default function CartPage() {
         </div>
 
         {isEmpty ? (
-          // Empty Cart
           <div className="bg-white rounded-2xl p-12 text-center shadow-lg">
             <div className="max-w-md mx-auto">
               <svg
@@ -338,25 +329,27 @@ export default function CartPage() {
             </div>
           </div>
         ) : (
-          // Cart with items
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item) => (
-                <CartItem
-                  key={`${(item.product_id as any)?._id}-${
-                    (item.variant_id as any)?._id
-                  }`}
-                  item={item}
-                  onUpdateQuantity={handleUpdateQuantity}
-                  onRemove={handleRemoveItem}
-                  updating={updating}
-                  formatPrice={formatPrice}
-                />
-              ))}
+              {cart.items.map((item) => {
+                // Generate unique key using the helper function
+                const productId = extractId(item.product_id);
+                const variantId = extractId(item.variant_id);
+                const uniqueKey = `${productId}-${variantId}`;
+
+                return (
+                  <CartItem
+                    key={uniqueKey}
+                    item={item}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemove={handleRemoveItem}
+                    updating={updating}
+                    formatPrice={formatPrice}
+                  />
+                );
+              })}
             </div>
 
-            {/* Cart Summary */}
             <div className="lg:col-span-1">
               <CartSummary
                 subtotal={subtotal}

@@ -47,18 +47,18 @@ const formSchema = z.object({
     "first_order",
     "birthday",
   ]),
-  required_order_count: z.number().optional(),
+  required_order_count: z.number().optional().nullable(),
   order_status: z.array(z.enum(["paid", "delivered"])).optional(),
-  required_total_spent: z.number().optional(),
+  required_total_spent: z.number().optional().nullable(),
   code_prefix: z.string().min(1, "Code prefix is required"),
   discount_type: z.enum(["percentage", "fixed_amount"]),
   discount_value: z.number().min(0, "Discount value must be positive"),
-  min_order_value: z.number().optional(),
-  max_discount_amount: z.number().optional(),
+  min_order_value: z.number().optional().nullable(),
+  max_discount_amount: z.number().optional().nullable(),
   usage_limit_per_user: z.number().min(1, "Must be at least 1"),
   valid_days: z.number().min(1, "Must be at least 1 day"),
   is_active: z.boolean().default(true),
-  max_redemptions: z.number().optional(),
+  max_redemptions: z.number().optional().nullable(),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -135,20 +135,20 @@ function AutoCouponUpdate({ rule }: AutoCouponUpdateProps) {
     const payload: UpdateAutoCouponRuleReqBody = {
       name: values.name,
       description: values.description,
-      required_order_count: values.required_order_count,
+      required_order_count: values.required_order_count ?? undefined,
       order_status: values.order_status,
-      required_total_spent: values.required_total_spent,
+      required_total_spent: values.required_total_spent ?? undefined,
       coupon_config: {
         code_prefix: values.code_prefix,
         discount_type: values.discount_type,
         discount_value: values.discount_value,
-        min_order_value: values.min_order_value,
-        max_discount_amount: values.max_discount_amount,
+        min_order_value: values.min_order_value ?? undefined,
+        max_discount_amount: values.max_discount_amount ?? undefined,
         usage_limit_per_user: values.usage_limit_per_user,
         valid_days: values.valid_days,
       },
       is_active: values.is_active,
-      max_redemptions: values.max_redemptions,
+      max_redemptions: values.max_redemptions ?? undefined,
     };
     updateMutation.mutate(payload);
   }
@@ -207,29 +207,21 @@ function AutoCouponUpdate({ rule }: AutoCouponUpdateProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Trigger Type *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        disabled
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select trigger" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="first_order">
-                            First Order
-                          </SelectItem>
-                          <SelectItem value="order_count">
-                            Order Count
-                          </SelectItem>
-                          <SelectItem value="total_spent">
-                            Total Spent
-                          </SelectItem>
-                          <SelectItem value="birthday">Birthday</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input
+                          value={
+                            field.value === "first_order"
+                              ? "First Order"
+                              : field.value === "order_count"
+                              ? "Order Count"
+                              : field.value === "total_spent"
+                              ? "Total Spent"
+                              : "Birthday"
+                          }
+                          readOnly
+                          className="bg-gray-50 cursor-not-allowed"
+                        />
+                      </FormControl>
                       <FormDescription>
                         Trigger type cannot be changed
                       </FormDescription>

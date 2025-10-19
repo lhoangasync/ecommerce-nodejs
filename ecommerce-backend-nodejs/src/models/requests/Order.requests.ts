@@ -18,7 +18,7 @@ export interface CreateOrderReqBody {
 
   // Optional: nếu frontend tự tính
   shipping_fee?: number
-  discount_code?: string // Voucher code
+  coupon_code?: string
 }
 
 export interface UpdateOrderStatusReqBody {

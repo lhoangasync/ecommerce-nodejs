@@ -4,6 +4,7 @@ import { ORDER_MESSAGES } from '~/constants/messages'
 import { Order, IOrder, IOrderItem } from '~/models/schemas/Order.schema'
 import { CreateOrderReqBody, GetOrdersReqQuery } from '~/models/requests/Order.requests'
 import autoCouponService from './autoCoupon.services'
+
 class OrderService {
   /**
    * Tạo đơn hàng mới từ giỏ hàng
@@ -12,6 +13,7 @@ class OrderService {
     const cartCollection = databaseService.carts
     const ordersCollection = databaseService.orders
     const productsCollection = databaseService.products
+    const couponsCollection = databaseService.coupons
 
     // 1. Lấy giỏ hàng của user
     const userCart = await cartCollection.findOne({
@@ -27,7 +29,6 @@ class OrderService {
     let subtotal = 0
 
     for (const cartItem of userCart.items) {
-      // Lấy thông tin product
       const product = await productsCollection.findOne({
         _id: new ObjectId(cartItem.product_id)
       })
@@ -36,30 +37,25 @@ class OrderService {
         throw new Error(`Product ${cartItem.product_id} not found`)
       }
 
-      // Tìm variant
       const variant = product.variants.find((v: any) => v.id === cartItem.variant_id)
 
       if (!variant) {
         throw new Error(`Variant ${cartItem.variant_id} not found in product ${product.name}`)
       }
 
-      // Kiểm tra stock
       if (variant.stock_quantity < cartItem.quantity) {
         throw new Error(`Not enough stock for ${product.name}`)
       }
 
-      // Tính toán giá
       const unitPrice = variant.price
       const originalPrice = variant.original_price || variant.price
       const itemSubtotal = unitPrice * cartItem.quantity
 
-      // Tạo order item
       const orderItem: IOrderItem = {
         product_id: new ObjectId(cartItem.product_id),
         product_name: product.name,
         product_slug: product.slug,
         product_image: product.images?.[0],
-
         variant_id: cartItem.variant_id,
         variant_shade_color: variant.shade_color,
         variant_volume_size: variant.volume_size,
@@ -79,37 +75,174 @@ class OrderService {
       throw new Error(ORDER_MESSAGES.CART_EMPTY)
     }
 
-    // 3. Tính toán tổng tiền
-    const shippingFee = orderData.shipping_fee || 30000 // Default 30k
-    const discountAmount = 0 // TODO: Apply discount code logic
+    // 3. Áp dụng coupon nếu có
+    let discountAmount = 0
+    let appliedCoupon = null
+
+    if (orderData.coupon_code) {
+      const now = new Date()
+
+      // Tìm coupon theo code
+      const coupon = await couponsCollection.findOne({
+        code: orderData.coupon_code.toUpperCase(),
+        is_active: true,
+        start_date: { $lte: now },
+        end_date: { $gte: now }
+      })
+
+      if (!coupon) {
+        throw new Error('Mã giảm giá không hợp lệ hoặc đã hết hạn')
+      }
+
+      // 1. Kiểm tra usage limit tổng
+      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+        throw new Error('Mã giảm giá đã hết lượt sử dụng')
+      }
+
+      // 2. Kiểm tra usage per user
+      if (coupon.usage_limit_per_user) {
+        const userUsageCount = await databaseService.user_coupon_usages.countDocuments({
+          user_id: new ObjectId(userId),
+          coupon_id: coupon._id
+        })
+
+        if (userUsageCount >= coupon.usage_limit_per_user) {
+          throw new Error('Bạn đã hết lượt sử dụng mã giảm giá này')
+        }
+      }
+
+      // 3. Kiểm tra applicable_users (nếu có giới hạn user cụ thể)
+      if (coupon.applicable_users && coupon.applicable_users.length > 0) {
+        const isApplicable = coupon.applicable_users.some((id: ObjectId) => id.toString() === userId)
+        if (!isApplicable) {
+          throw new Error('Mã giảm giá này không dành cho bạn')
+        }
+      }
+
+      // 4. Kiểm tra excluded_users
+      if (coupon.excluded_users && coupon.excluded_users.length > 0) {
+        const isExcluded = coupon.excluded_users.some((id: ObjectId) => id.toString() === userId)
+        if (isExcluded) {
+          throw new Error('Bạn không được sử dụng mã giảm giá này')
+        }
+      }
+
+      // 5. Kiểm tra giá trị đơn hàng tối thiểu
+      if (coupon.min_order_value && subtotal < coupon.min_order_value) {
+        throw new Error(`Đơn hàng tối thiểu ${coupon.min_order_value.toLocaleString('vi-VN')}₫ để áp dụng mã này`)
+      }
+
+      // 6. Kiểm tra sản phẩm (nếu có giới hạn)
+      if (coupon.applicable_products && coupon.applicable_products.length > 0) {
+        const hasApplicableProduct = orderItems.some((item) =>
+          coupon.applicable_products!.some((id: ObjectId) => id.toString() === item.product_id.toString())
+        )
+        if (!hasApplicableProduct) {
+          throw new Error('Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng')
+        }
+      }
+
+      // 7. Kiểm tra categories (nếu có giới hạn)
+      if (coupon.applicable_categories && coupon.applicable_categories.length > 0) {
+        const productIds = orderItems.map((item) => item.product_id)
+        const products = await productsCollection
+          .find({
+            _id: { $in: productIds }
+          })
+          .toArray()
+
+        const hasApplicableCategory = products.some((product) =>
+          coupon.applicable_categories!.some((id: ObjectId) => id.toString() === product.category_id.toString())
+        )
+        if (!hasApplicableCategory) {
+          throw new Error('Mã giảm giá không áp dụng cho danh mục sản phẩm này')
+        }
+      }
+
+      // 8. Kiểm tra brands (nếu có giới hạn)
+      if (coupon.applicable_brands && coupon.applicable_brands.length > 0) {
+        const productIds = orderItems.map((item) => item.product_id)
+        const products = await productsCollection
+          .find({
+            _id: { $in: productIds }
+          })
+          .toArray()
+
+        const hasApplicableBrand = products.some((product) =>
+          coupon.applicable_brands!.some((id: ObjectId) => id.toString() === product.brand_id.toString())
+        )
+        if (!hasApplicableBrand) {
+          throw new Error('Mã giảm giá không áp dụng cho thương hiệu này')
+        }
+      }
+
+      // 9. Tính discount
+      if (coupon.discount_type === 'percentage') {
+        discountAmount = (subtotal * coupon.discount_value) / 100
+        if (coupon.max_discount_amount) {
+          discountAmount = Math.min(discountAmount, coupon.max_discount_amount)
+        }
+      } else {
+        // fixed_amount
+        discountAmount = Math.min(coupon.discount_value, subtotal)
+      }
+
+      appliedCoupon = coupon
+    }
+
+    // 4. Tính toán tổng tiền
+    const shippingFee = orderData.shipping_fee || 30000
     const totalAmount = subtotal + shippingFee - discountAmount
 
-    // 4. Tạo order
+    // 5. Tạo order
     const orderPayload: IOrder = {
       user_id: new ObjectId(userId),
-      order_code: '', // Will be generated in constructor
+      order_code: '',
       items: orderItems,
-
       subtotal,
       shipping_fee: shippingFee,
       discount_amount: discountAmount,
       total_amount: totalAmount,
-
       shipping_address: orderData.shipping_address,
       note: orderData.note,
-
       status: 'pending',
-
       payment_method: orderData.payment_method,
-      payment_status: orderData.payment_method === 'cod' ? 'pending' : 'pending'
+      payment_status: orderData.payment_method === 'cod' ? 'pending' : 'pending',
+      // Lưu thông tin coupon đã dùng (nếu cần)
+      ...(appliedCoupon && {
+        coupon_code: appliedCoupon.code,
+        coupon_id: appliedCoupon._id
+      })
     }
 
     const order = new Order(orderPayload)
 
-    // 5. Lưu order vào DB
+    // 6. Lưu order vào DB
     const result = await ordersCollection.insertOne(order)
 
-    // 6. Giảm stock của các variants
+    // 7. Tăng usage_count và lưu tracking
+    if (appliedCoupon) {
+      // Tăng usage_count
+      await couponsCollection.updateOne(
+        { _id: appliedCoupon._id },
+        {
+          $inc: { usage_count: 1 },
+          $set: { updated_at: new Date() }
+        }
+      )
+
+      // Lưu vào UserCouponUsage để tracking per user
+      await databaseService.user_coupon_usages.insertOne({
+        _id: new ObjectId(),
+        user_id: new ObjectId(userId),
+        coupon_id: appliedCoupon._id,
+        order_id: result.insertedId,
+        discount_amount: discountAmount,
+        used_at: new Date()
+      })
+    }
+
+    // 8. Giảm stock của các variants
     for (const item of orderItems) {
       await productsCollection.updateOne(
         {
@@ -124,7 +257,7 @@ class OrderService {
       )
     }
 
-    // 7. Xóa giỏ hàng
+    // 9. Xóa giỏ hàng
     await cartCollection.updateOne({ user_id: new ObjectId(userId) }, { $set: { items: [] } })
 
     return { ...order, _id: result.insertedId }
@@ -160,7 +293,6 @@ class OrderService {
     const limit = parseInt(query.limit || '10')
     const skip = (page - 1) * limit
 
-    // Build filter
     const filter: any = { user_id: new ObjectId(userId) }
 
     if (query.status) {
@@ -192,7 +324,6 @@ class OrderService {
       ]
     }
 
-    // Build sort
     let sort: any = { created_at: -1 }
     if (query.sort) {
       const sortField = query.sort.startsWith('-') ? query.sort.slice(1) : query.sort
@@ -200,7 +331,6 @@ class OrderService {
       sort = { [sortField]: sortOrder }
     }
 
-    // Execute query
     const orders = await ordersCollection.find(filter).sort(sort).skip(skip).limit(limit).toArray()
 
     const total = await ordersCollection.countDocuments(filter)
@@ -226,7 +356,6 @@ class OrderService {
     const limit = parseInt(query.limit || '20')
     const skip = (page - 1) * limit
 
-    // Build filter (same as getOrdersByUser but without user_id)
     const filter: any = {}
 
     if (query.status) filter.status = query.status
@@ -289,7 +418,6 @@ class OrderService {
 
     const orderInstance = new Order(order)
 
-    // Validate và update status (giữ nguyên logic cũ)
     if (status === 'confirmed' && !orderInstance.canConfirm()) {
       throw new Error('Cannot confirm this order')
     }
@@ -316,7 +444,6 @@ class OrderService {
 
       case 'delivered':
         orderInstance.deliver()
-        // ✨ Tự động check coupon khi giao hàng thành công (COD)
         if (orderInstance.payment_method === 'cod') {
           await this.checkAndGenerateAutoCoupon(orderId)
         }
@@ -328,6 +455,8 @@ class OrderService {
         }
         orderInstance.cancel(options?.cancellation_reason)
         await this.restoreStock(orderId)
+        // Hoàn lại coupon nếu đã dùng
+        await this.restoreCoupon(orderId)
         break
 
       case 'refunded':
@@ -351,7 +480,6 @@ class OrderService {
 
   /**
    * Hook: Tự động kiểm tra và tạo coupon sau khi order được thanh toán
-   * Gọi hàm này sau khi cập nhật payment_status = 'paid'
    */
   async checkAndGenerateAutoCoupon(orderId: string) {
     try {
@@ -361,15 +489,14 @@ class OrderService {
 
       if (!order) return
 
-      // Chỉ kiểm tra khi order đã thanh toán
       if (order.payment_status === 'paid') {
         await autoCouponService.checkAndCreateCoupon(order.user_id)
       }
     } catch (error) {
       console.error('Error checking auto coupon:', error)
-      // Không throw error để không ảnh hưởng đến flow chính
     }
   }
+
   /**
    * Cập nhật updatePaymentStatus để tự động check coupon
    */
@@ -395,7 +522,6 @@ class OrderService {
       throw new Error(ORDER_MESSAGES.ORDER_NOT_FOUND)
     }
 
-    // ✨ Tự động kiểm tra và tạo coupon khi thanh toán thành công
     if (paymentStatus === 'paid') {
       await this.checkAndGenerateAutoCoupon(orderId)
     }
@@ -424,13 +550,11 @@ class OrderService {
       throw new Error(ORDER_MESSAGES.CANNOT_CANCEL_ORDER)
     }
 
-    // Cancel order
     orderInstance.cancel(reason)
 
-    // Hoàn lại stock
     await this.restoreStock(orderId)
+    await this.restoreCoupon(orderId)
 
-    // Save to DB
     const result = await ordersCollection.findOneAndUpdate(
       { _id: new ObjectId(orderId) },
       { $set: orderInstance },
@@ -463,6 +587,31 @@ class OrderService {
         }
       )
     }
+  }
+
+  /**
+   * Hoàn lại coupon khi hủy đơn
+   */
+  private async restoreCoupon(orderId: string) {
+    const order = await databaseService.orders.findOne({
+      _id: new ObjectId(orderId)
+    })
+
+    if (!order || !order.coupon_id) return
+
+    // Giảm usage_count
+    await databaseService.coupons.updateOne(
+      { _id: new ObjectId(order.coupon_id) },
+      {
+        $inc: { usage_count: -1 },
+        $set: { updated_at: new Date() }
+      }
+    )
+
+    // Xóa record tracking
+    await databaseService.user_coupon_usages.deleteOne({
+      order_id: new ObjectId(orderId)
+    })
   }
 
   /**
