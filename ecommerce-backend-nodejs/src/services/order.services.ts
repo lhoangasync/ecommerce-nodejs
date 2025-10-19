@@ -3,6 +3,7 @@ import databaseService from './database.services'
 import { ORDER_MESSAGES } from '~/constants/messages'
 import { Order, IOrder, IOrderItem } from '~/models/schemas/Order.schema'
 import { CreateOrderReqBody, GetOrdersReqQuery } from '~/models/requests/Order.requests'
+import autoCouponService from './autocoupon.services'
 
 class OrderService {
   /**
@@ -270,10 +271,7 @@ class OrderService {
   }
 
   /**
-   * Cập nhật trạng thái đơn hàng (Admin)
-   */
-  /**
-   * Cập nhật trạng thái đơn hàng (Admin)
+   * Cập nhật updateOrderStatus để tự động check coupon khi delivered (cho COD)
    */
   async updateOrderStatus(
     orderId: string,
@@ -290,22 +288,19 @@ class OrderService {
       throw new Error(ORDER_MESSAGES.ORDER_NOT_FOUND)
     }
 
-    // Tạo Order instance để dùng helper methods
     const orderInstance = new Order(order)
 
-    // Validate status transition
+    // Validate và update status (giữ nguyên logic cũ)
     if (status === 'confirmed' && !orderInstance.canConfirm()) {
       throw new Error('Cannot confirm this order')
     }
 
-    // Update using helper methods
     switch (status) {
       case 'confirmed':
         orderInstance.confirm()
         break
 
       case 'processing':
-        // Chỉ cho phép từ confirmed
         if (orderInstance.status !== 'confirmed') {
           throw new Error('Order must be confirmed before processing')
         }
@@ -315,7 +310,6 @@ class OrderService {
 
       case 'shipping':
         orderInstance.startShipping()
-        // Lưu tracking number nếu có
         if (options?.tracking_number) {
           ;(orderInstance as any).tracking_number = options.tracking_number
         }
@@ -323,6 +317,10 @@ class OrderService {
 
       case 'delivered':
         orderInstance.deliver()
+        // ✨ Tự động check coupon khi giao hàng thành công (COD)
+        if (orderInstance.payment_method === 'cod') {
+          await this.checkAndGenerateAutoCoupon(orderId)
+        }
         break
 
       case 'cancelled':
@@ -330,12 +328,10 @@ class OrderService {
           throw new Error('Cannot cancel this order')
         }
         orderInstance.cancel(options?.cancellation_reason)
-        // Hoàn lại stock
         await this.restoreStock(orderId)
         break
 
       case 'refunded':
-        // Chỉ cho phép refund từ cancelled hoặc delivered
         if (!['cancelled', 'delivered'].includes(orderInstance.status)) {
           throw new Error('Order must be cancelled or delivered before refund')
         }
@@ -345,7 +341,6 @@ class OrderService {
         break
     }
 
-    // Save to DB
     const result = await ordersCollection.findOneAndUpdate(
       { _id: new ObjectId(orderId) },
       { $set: orderInstance },
@@ -354,8 +349,30 @@ class OrderService {
 
     return result
   }
+
   /**
-   * Cập nhật trạng thái thanh toán
+   * Hook: Tự động kiểm tra và tạo coupon sau khi order được thanh toán
+   * Gọi hàm này sau khi cập nhật payment_status = 'paid'
+   */
+  async checkAndGenerateAutoCoupon(orderId: string) {
+    try {
+      const order = await databaseService.orders.findOne({
+        _id: new ObjectId(orderId)
+      })
+
+      if (!order) return
+
+      // Chỉ kiểm tra khi order đã thanh toán
+      if (order.payment_status === 'paid') {
+        await autoCouponService.checkAndCreateCoupon(order.user_id)
+      }
+    } catch (error) {
+      console.error('Error checking auto coupon:', error)
+      // Không throw error để không ảnh hưởng đến flow chính
+    }
+  }
+  /**
+   * Cập nhật updatePaymentStatus để tự động check coupon
    */
   async updatePaymentStatus(orderId: string, paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded') {
     const ordersCollection = databaseService.orders
@@ -377,6 +394,11 @@ class OrderService {
 
     if (!result) {
       throw new Error(ORDER_MESSAGES.ORDER_NOT_FOUND)
+    }
+
+    // ✨ Tự động kiểm tra và tạo coupon khi thanh toán thành công
+    if (paymentStatus === 'paid') {
+      await this.checkAndGenerateAutoCoupon(orderId)
     }
 
     return result

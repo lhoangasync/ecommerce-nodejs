@@ -688,3 +688,167 @@ export interface RatingStats {
   };
   verifiedPurchaseCount?: number;
 }
+/* COUPON */
+export interface Coupon {
+  _id: string;
+  code: string;
+  description?: string;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: number;
+  min_order_value?: number;
+  max_discount_amount?: number;
+  usage_limit?: number;
+  usage_count: number;
+  usage_limit_per_user?: number;
+  applicable_products?: string[];
+  applicable_categories?: string[];
+  applicable_brands?: string[];
+  applicable_users?: string[];
+  excluded_users?: string[];
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserCouponUsage {
+  _id: string;
+  user_id: string;
+  coupon_id: string;
+  order_id: string;
+  discount_amount: number;
+  used_at: string;
+}
+
+/* AUTO COUPON RULE */
+export interface AutoCouponRuleConfig {
+  code_prefix: string;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: number;
+  min_order_value?: number;
+  max_discount_amount?: number;
+  usage_limit_per_user: number;
+  valid_days: number;
+  applicable_products?: string[];
+  applicable_categories?: string[];
+  applicable_brands?: string[];
+}
+
+export interface AutoCouponRule {
+  _id: string;
+  name: string;
+  description?: string;
+  trigger_type: "order_count" | "total_spent" | "first_order" | "birthday";
+  required_order_count?: number;
+  order_status?: ("paid" | "delivered")[];
+  required_total_spent?: number;
+  coupon_config: AutoCouponRuleConfig;
+  is_active: boolean;
+  max_redemptions?: number;
+  redemption_count: number;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserCouponRedemption {
+  _id: string;
+  user_id: string;
+  rule_id: string;
+  coupon_id: string;
+  triggered_at: string;
+  trigger_type: "order_count" | "total_spent" | "first_order" | "birthday";
+  trigger_value?: number;
+}
+
+export interface CreateCouponReqBody {
+  code: string;
+  description?: string;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: number;
+  min_order_value?: number;
+  max_discount_amount?: number;
+  usage_limit?: number;
+  usage_limit_per_user?: number;
+  applicable_products?: string[];
+  applicable_categories?: string[];
+  applicable_brands?: string[];
+  applicable_users?: string[];
+  excluded_users?: string[];
+  start_date: string;
+  end_date: string;
+  is_active?: boolean;
+}
+
+export interface UpdateCouponReqBody {
+  description?: string;
+  discount_type?: "percentage" | "fixed_amount";
+  discount_value?: number;
+  min_order_value?: number;
+  max_discount_amount?: number;
+  usage_limit?: number;
+  usage_limit_per_user?: number;
+  applicable_products?: string[];
+  applicable_categories?: string[];
+  applicable_brands?: string[];
+  applicable_users?: string[];
+  excluded_users?: string[];
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+}
+
+export interface ValidateCouponReqBody {
+  code: string;
+  order_value: number;
+  product_ids?: string[];
+  category_ids?: string[];
+  brand_ids?: string[];
+}
+
+export interface ValidateCouponResponse {
+  is_valid: boolean;
+  coupon?: Coupon;
+  discount_amount?: number;
+  error_message?: string;
+}
+
+export interface CreateAutoCouponRuleReqBody {
+  name: string;
+  description?: string;
+  trigger_type: "order_count" | "total_spent" | "first_order" | "birthday";
+  required_order_count?: number;
+  order_status?: ("paid" | "delivered")[];
+  required_total_spent?: number;
+  coupon_config: AutoCouponRuleConfig;
+  is_active?: boolean;
+  max_redemptions?: number;
+}
+
+export interface UpdateAutoCouponRuleReqBody {
+  name?: string;
+  description?: string;
+  required_order_count?: number;
+  order_status?: ("paid" | "delivered")[];
+  required_total_spent?: number;
+  coupon_config?: AutoCouponRuleConfig;
+  is_active?: boolean;
+  max_redemptions?: number;
+}
+
+export interface GetCouponsReqQuery {
+  code?: string;
+  discount_type?: "percentage" | "fixed_amount";
+  is_active?: string;
+  page?: string;
+  limit?: string;
+}
+
+export interface GetAutoCouponRulesReqQuery {
+  trigger_type?: "order_count" | "total_spent" | "first_order" | "birthday";
+  is_active?: string;
+  page?: string;
+  limit?: string;
+}

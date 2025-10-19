@@ -1,3 +1,4 @@
+// models/schemas/Coupon.schema.ts
 import { ObjectId } from 'mongodb'
 
 export interface ICoupon {

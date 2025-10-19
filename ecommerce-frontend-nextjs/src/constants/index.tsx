@@ -36,7 +36,7 @@ export const menuItems: TMenuItem[] = [
     icon: <IconOrder className="size-6" />,
   },
   {
-    url: "/manage/coupon",
+    url: "/manage/auto-coupon",
     title: "Discount Management",
     icon: <IconCoupon className="size-6" />,
   },

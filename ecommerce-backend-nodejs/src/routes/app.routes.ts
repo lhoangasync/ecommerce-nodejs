@@ -7,6 +7,7 @@ import cartsRouter from './cart.routes'
 import ordersRouter from './order.routes'
 import paymentsRouter from './payment.routes'
 import reviewsRouter from './review.routes'
+import autoCouponRouter from './autoCoupon.routes'
 
 const apiRouter = Router()
 
@@ -18,4 +19,5 @@ apiRouter.use('/carts', cartsRouter)
 apiRouter.use('/orders', ordersRouter)
 apiRouter.use('/payments', paymentsRouter)
 apiRouter.use('/reviews', reviewsRouter)
+apiRouter.use('/auto-coupons', autoCouponRouter)
 export default apiRouter

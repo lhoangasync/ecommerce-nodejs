@@ -1,8 +1,10 @@
 import { config } from 'dotenv'
 import { Collection, Db, MongoClient } from 'mongodb'
+import { AutoCouponRule, UserCouponRedemption } from '~/models/schemas/AutoCoupon.schema'
 import Brand from '~/models/schemas/Brand.schema'
 import { Cart } from '~/models/schemas/Cart.schema'
 import Category from '~/models/schemas/Category.schema'
+import { Coupon, UserCouponUsage } from '~/models/schemas/Coupon.schema'
 import { Order } from '~/models/schemas/Order.schema'
 import { Payment } from '~/models/schemas/Payment.schema'
 import Product from '~/models/schemas/Product.schema'
@@ -59,6 +61,22 @@ class DatabaseService {
   }
   get reviews(): Collection<Review> {
     return this.db.collection<Review>(process.env.DB_REVIEWS_COLLECTION as string)
+  }
+  get coupons(): Collection<Coupon> {
+    return this.db.collection(process.env.DB_COUPONS_COLLECTION as string)
+  }
+
+  get user_coupon_usages(): Collection<UserCouponUsage> {
+    return this.db.collection(process.env.DB_USER_COUPON_USAGES_COLLECTION as string)
+  }
+
+  // Auto Coupon collections
+  get auto_coupon_rules(): Collection<AutoCouponRule> {
+    return this.db.collection(process.env.DB_AUTO_COUPON_RULES_COLLECTION as string)
+  }
+
+  get user_coupon_redemptions(): Collection<UserCouponRedemption> {
+    return this.db.collection(process.env.DB_USER_COUPON_REDEMPTIONS_COLLECTION as string)
   }
 }
 

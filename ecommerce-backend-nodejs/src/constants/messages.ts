@@ -243,3 +243,39 @@ export const REVIEWS_MESSAGES = {
   GET_REVIEW_SUCCESS: 'Get review successfully',
   GET_RATING_STATS_SUCCESS: 'Get rating statistics successfully'
 } as const
+
+export const AUTO_COUPON_MESSAGES = {
+  // Validation
+  NAME_IS_REQUIRED: 'Rule name is required',
+  NAME_MUST_BE_STRING: 'Rule name must be a string',
+  NAME_LENGTH: 'Rule name must be between 1 and 100 characters',
+  TRIGGER_TYPE_INVALID: 'Trigger type must be one of: order_count, total_spent, first_order, birthday',
+  REQUIRED_ORDER_COUNT_INVALID: 'Required order count must be a positive number',
+  REQUIRED_TOTAL_SPENT_INVALID: 'Required total spent must be a positive number',
+  CODE_PREFIX_REQUIRED: 'Coupon code prefix is required',
+  CODE_PREFIX_MUST_BE_STRING: 'Code prefix must be a string',
+  CODE_PREFIX_LENGTH: 'Code prefix must be between 2 and 20 characters',
+  DISCOUNT_TYPE_INVALID: 'Discount type must be percentage or fixed_amount',
+  DISCOUNT_VALUE_REQUIRED: 'Discount value is required',
+  DISCOUNT_VALUE_INVALID: 'Discount value must be a positive number',
+  VALID_DAYS_REQUIRED: 'Valid days is required',
+  VALID_DAYS_INVALID: 'Valid days must be a positive number between 1 and 365',
+  USAGE_LIMIT_PER_USER_REQUIRED: 'Usage limit per user is required',
+  USAGE_LIMIT_PER_USER_INVALID: 'Usage limit per user must be a positive number',
+  INVALID_RULE_ID: 'Invalid rule ID',
+
+  // Success
+  CREATE_RULE_SUCCESS: 'Auto coupon rule created successfully',
+  GET_RULES_SUCCESS: 'Get auto coupon rules successfully',
+  GET_RULE_SUCCESS: 'Get auto coupon rule successfully',
+  UPDATE_RULE_SUCCESS: 'Auto coupon rule updated successfully',
+  DELETE_RULE_SUCCESS: 'Auto coupon rule deleted successfully',
+  COUPON_AUTO_GENERATED: 'Congratulations! You have received a new coupon',
+  GET_USER_AUTO_COUPONS_SUCCESS: 'Get user auto coupons successfully',
+
+  // Error
+  RULE_NOT_FOUND: 'Auto coupon rule not found',
+  RULE_NOT_ACTIVE: 'This rule is not active',
+  ALREADY_REDEEMED: 'You have already received this reward',
+  MAX_REDEMPTIONS_REACHED: 'This reward has reached maximum redemptions'
+} as const
