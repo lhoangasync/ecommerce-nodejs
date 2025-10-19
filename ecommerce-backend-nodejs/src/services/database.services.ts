@@ -4,6 +4,7 @@ import { AutoCouponRule, UserCouponRedemption } from '~/models/schemas/AutoCoupo
 import Brand from '~/models/schemas/Brand.schema'
 import { Cart } from '~/models/schemas/Cart.schema'
 import Category from '~/models/schemas/Category.schema'
+import ChatHistory from '~/models/schemas/ChatHistory.schema'
 import { Coupon, UserCouponUsage } from '~/models/schemas/Coupon.schema'
 import { Order } from '~/models/schemas/Order.schema'
 import { Payment } from '~/models/schemas/Payment.schema'
@@ -77,6 +78,9 @@ class DatabaseService {
 
   get user_coupon_redemptions(): Collection<UserCouponRedemption> {
     return this.db.collection(process.env.DB_USER_COUPON_REDEMPTIONS_COLLECTION as string)
+  }
+  get chatHistory(): Collection<ChatHistory> {
+    return this.db.collection(process.env.DB_CHAT_HISTORY as string)
   }
 }
 

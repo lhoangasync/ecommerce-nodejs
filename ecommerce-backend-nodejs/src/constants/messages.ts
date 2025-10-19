@@ -279,3 +279,32 @@ export const AUTO_COUPON_MESSAGES = {
   ALREADY_REDEEMED: 'You have already received this reward',
   MAX_REDEMPTIONS_REACHED: 'This reward has reached maximum redemptions'
 } as const
+
+export const CHATBOT_MESSAGES = {
+  // Validation
+  MESSAGE_REQUIRED: 'Message is required',
+  MESSAGE_MUST_BE_STRING: 'Message must be a string',
+  MESSAGE_LENGTH: 'Message must be between 1 and 1000 characters',
+  INVALID_SESSION_ID: 'Invalid session ID',
+  PRODUCT_IDS_REQUIRED: 'Product IDs are required',
+  PRODUCT_IDS_MUST_BE_ARRAY: 'Product IDs must be an array',
+  MIN_PRODUCTS_TO_COMPARE: 'At least 2 product IDs are required to compare',
+  MAX_PRODUCTS_TO_COMPARE: 'Maximum 5 products can be compared at once',
+  INVALID_PRODUCT_ID: 'Invalid product ID',
+
+  // Success
+  CHAT_RESPONSE_SUCCESS: 'Chat response generated successfully',
+  GET_CHAT_HISTORY_SUCCESS: 'Get chat history successfully',
+  GET_CHAT_SESSION_SUCCESS: 'Get chat session successfully',
+  GET_SUGGESTIONS_SUCCESS: 'Get quick suggestions successfully',
+  INGREDIENTS_EXPLAINED_SUCCESS: 'Ingredients explained successfully',
+  ROUTINE_CREATED_SUCCESS: 'Skincare routine created successfully',
+  PRODUCTS_COMPARED_SUCCESS: 'Products compared successfully',
+
+  // Error
+  CHAT_SESSION_NOT_FOUND: 'Chat session not found',
+  PRODUCT_NOT_FOUND: 'Product not found',
+  NO_INGREDIENTS_INFO: 'No ingredients information available for this product',
+  GEMINI_API_ERROR: 'AI service temporarily unavailable',
+  CHAT_GENERATION_FAILED: 'Failed to generate chat response'
+} as const

@@ -852,3 +852,42 @@ export interface GetAutoCouponRulesReqQuery {
   page?: string;
   limit?: string;
 }
+/* CHAT */
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+export interface ChatHistory {
+  _id: string;
+  user_id: string;
+  messages: ChatMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SendMessageReqBody {
+  message: string;
+  session_id?: string;
+}
+
+export interface GetChatHistoryReqQuery {
+  page?: string;
+  limit?: string;
+}
+
+export interface ClearChatHistoryReqParams {
+  chat_id: string;
+}
+export interface ChatbotResponse {
+  session_id: string;
+  bot_message: string;
+  recommendations?: Array<{
+    product: Product;
+    score: number;
+    reasons: string[];
+  }>;
+  analysis?: any;
+  gemini_analysis?: any;
+}

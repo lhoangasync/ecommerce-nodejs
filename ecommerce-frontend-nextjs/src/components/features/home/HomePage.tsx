@@ -7,6 +7,7 @@ import ProductGrid from "./ProductGrid";
 import { manrope } from "@/utils/font";
 import CategoriesSection from "./CategoriesSection";
 import BrandsSection from "./BrandSection";
+
 import { useRouter } from "next/navigation";
 import { AuthAPI } from "@/api/auth.api";
 import { useState, useEffect, useRef } from "react";
@@ -14,6 +15,7 @@ import {
   checkRefreshTokenExists,
   deleteRefreshTokenCookie,
 } from "@/lib/auth.action";
+import ChatbotWidget from "./ChatBotWidget";
 
 export default function HomePage() {
   const router = useRouter();
@@ -494,6 +496,7 @@ export default function HomePage() {
       </section>
 
       <BrandsSection />
+      <ChatbotWidget />
 
       <style jsx>{`
         @keyframes scroll {
