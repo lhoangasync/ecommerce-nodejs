@@ -4,7 +4,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { AUTO_COUPON_MESSAGES } from '~/constants/messages'
 import { CreateAutoCouponRuleReqBody, RuleIdParams } from '~/models/requests/AutoCoupon.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
-import autoCouponService from '~/services/autocoupon.services'
+import autoCouponService from '~/services/autoCoupon.services'
 
 export const createAutoCouponRuleController = async (
   req: Request<ParamsDictionary, any, CreateAutoCouponRuleReqBody>,
