@@ -419,16 +419,16 @@ class ReviewsService {
       .toArray()
 
     // Format: { 5: 10, 4: 5, 3: 2, 2: 1, 1: 0 }
-    const ratingDistribution: any = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+    const distribution: any = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
     let totalReviews = 0
 
     stats.forEach((stat) => {
-      ratingDistribution[stat._id] = stat.count
+      distribution[stat._id] = stat.count
       totalReviews += stat.count
     })
 
     return {
-      distribution: ratingDistribution,
+      distribution: distribution,
       totalReviews,
       averageRating: await this.getAverageRating(product_id)
     }

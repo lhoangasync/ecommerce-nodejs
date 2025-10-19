@@ -131,10 +131,10 @@ export async function getRatingStats(
       status: 200,
       message: "No rating stats available",
       data: {
-        average_rating: 0,
-        total_reviews: 0,
-        rating_distribution: {},
-        verified_purchase_count: 0,
+        averageRating: 0,
+        totalReviews: 0,
+        distribution: {},
+        verifiedPurchaseCount: 0,
       },
     };
   }

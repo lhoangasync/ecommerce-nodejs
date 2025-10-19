@@ -680,10 +680,11 @@ export interface GetReviewsQuery {
 }
 
 export interface RatingStats {
-  average_rating: number;
-  total_reviews: number;
-  rating_distribution: {
+  averageRating: number;
+  totalReviews: number;
+  distribution?: {
+    // Changed from rating_distribution, made optional
     [key: number]: number;
   };
-  verified_purchase_count: number;
+  verifiedPurchaseCount?: number;
 }

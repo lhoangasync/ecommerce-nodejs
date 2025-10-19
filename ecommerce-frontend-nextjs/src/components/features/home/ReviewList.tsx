@@ -1,23 +1,36 @@
 import Image from "next/image";
-import { Review } from "@/types/backend";
-
+import { Review, UserProfile } from "@/types/backend";
+import { Check, XCircle } from "lucide-react";
 interface ReviewListProps {
   reviews: Review[];
   isLoading?: boolean;
+  currentUser?: UserProfile;
   onMarkHelpful: (reviewId: string) => void;
+  onApprove?: (reviewId: string) => void;
+  onReject?: (reviewId: string) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-export default function ReviewList({
+export function ReviewList({
   reviews,
   isLoading = false,
+  currentUser,
   onMarkHelpful,
+  onApprove,
+  onReject,
   currentPage,
   totalPages,
   onPageChange,
 }: ReviewListProps) {
+  const isAdmin = currentUser?.role === 1; // Assuming role 1 is admin
+  console.log("=== ReviewList Debug ===");
+  console.log("currentUser:", currentUser);
+  console.log("isAdmin:", isAdmin);
+  console.log("reviews:", reviews);
+  console.log("reviews.length:", reviews.length);
+  console.log("isLoading:", isLoading);
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -29,6 +42,40 @@ export default function ReviewList({
     if (diffDays < 7) return `${diffDays} ngày trước`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
     return date.toLocaleDateString("vi-VN");
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Chờ duyệt
+          </span>
+        );
+      case "approved":
+        return (
+          <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            Đã duyệt
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
+            <XCircle className="w-3 h-3" />
+            Đã từ chối
+          </span>
+        );
+      default:
+        return null;
+    }
   };
 
   if (isLoading) {
@@ -86,11 +133,17 @@ export default function ReviewList({
       {reviews.map((review) => (
         <div
           key={review._id}
-          className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow"
+          className={`bg-white rounded-lg p-6 border-2 transition-all ${
+            review.status === "pending"
+              ? "border-yellow-200 bg-yellow-50/30"
+              : review.status === "rejected"
+              ? "border-red-200 bg-red-50/30 opacity-75"
+              : "border-gray-200 hover:shadow-md"
+          }`}
         >
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <p className="font-semibold text-gray-900">
                   {review.user?.name || "Người dùng"}
                 </p>
@@ -110,6 +163,7 @@ export default function ReviewList({
                     Đã mua hàng
                   </span>
                 )}
+                {isAdmin && getStatusBadge(review.status)}
               </div>
               <p className="text-xs text-gray-500">
                 {formatDate(review.created_at)}
@@ -117,6 +171,7 @@ export default function ReviewList({
             </div>
           </div>
 
+          {/* Rating Stars */}
           <div className="flex gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
               <svg
@@ -133,18 +188,20 @@ export default function ReviewList({
             ))}
           </div>
 
+          {/* Comment */}
           {review.comment && (
             <p className="text-gray-700 mb-4 whitespace-pre-wrap">
               {review.comment}
             </p>
           )}
 
+          {/* Review Images */}
           {review.images && review.images.length > 0 && (
             <div className="flex gap-2 mb-4 flex-wrap">
               {review.images.map((img, idx) => (
                 <div
                   key={idx}
-                  className="relative w-20 h-20 rounded-lg overflow-hidden"
+                  className="relative w-20 h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
                 >
                   <Image
                     src={img}
@@ -158,6 +215,7 @@ export default function ReviewList({
             </div>
           )}
 
+          {/* Seller Response */}
           {review.seller_response && (
             <div className="mt-4 bg-pink-50 rounded-lg p-4 border-l-4 border-pink-500">
               <div className="flex items-center gap-2 mb-2">
@@ -183,7 +241,9 @@ export default function ReviewList({
             </div>
           )}
 
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+          {/* Actions */}
+          <div className="flex items-center gap-4 mt-4 pt-4 border-t flex-wrap">
+            {/* Helpful Button - visible to all */}
             <button
               onClick={() => onMarkHelpful(review._id)}
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-pink-600 transition-colors"
@@ -203,10 +263,35 @@ export default function ReviewList({
               </svg>
               <span>Hữu ích ({review.helpful_count || 0})</span>
             </button>
+
+            {/* Admin Actions - only visible to admin */}
+            {isAdmin && review.status === "pending" && (
+              <>
+                {onApprove && (
+                  <button
+                    onClick={() => onApprove(review._id)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                    Duyệt
+                  </button>
+                )}
+                {onReject && (
+                  <button
+                    onClick={() => onReject(review._id)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Từ chối
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       ))}
 
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button

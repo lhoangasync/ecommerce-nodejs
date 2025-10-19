@@ -7,6 +7,8 @@ import { useState, useEffect, useRef } from "react";
 import { Product, Variant, Review, RatingStats } from "@/types/backend";
 import { getProductById } from "@/api/product.api";
 import { addToCart } from "@/api/cart.api";
+import { UserProfile } from "@/types/backend";
+
 import {
   getReviews,
   getRatingStats,
@@ -22,9 +24,11 @@ import "swiper/css/effect-fade";
 import { toast } from "react-toastify";
 import { useSocket } from "@/hooks/useSocket";
 import ProductRating from "./ProductRating";
-import ReviewForm from "./ReviewForm";
-import ReviewList from "./ReviewList";
-import ReviewFilters from "./ReviewFilters";
+
+import { AuthAPI } from "@/api/auth.api";
+import { ReviewFilters } from "./ReviewFilters";
+import { ReviewForm } from "./ReviewForm";
+import { ReviewList } from "./ReviewList";
 interface ProductDetailProps {
   productSlug?: string;
 }
@@ -45,7 +49,9 @@ export default function ProductDetail({
   const [addedToCart, setAddedToCart] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
-
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  console.log("Current User in ProductDetail:", currentUser);
+  const isAdmin = currentUser?.role === 1;
   // Review states
   const [reviews, setReviews] = useState<Review[]>([]);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
@@ -57,7 +63,7 @@ export default function ProductDetail({
   const [sortBy, setSortBy] = useState<
     "created_at" | "rating" | "helpful_count"
   >("created_at");
-
+  const [statusFilter, setStatusFilter] = useState<string>("");
   // New review form
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState("");
@@ -127,6 +133,21 @@ export default function ProductDetail({
   }, [socket, isConnected, product?._id]);
 
   useEffect(() => {
+    async function loadCurrentUser() {
+      try {
+        const response = await AuthAPI.me();
+        if (response.status === 200 && response.data) {
+          setCurrentUser(response.data);
+        }
+      } catch (error) {
+        console.error("Error loading current user:", error);
+      }
+    }
+
+    loadCurrentUser();
+  }, []);
+
+  useEffect(() => {
     async function loadProduct() {
       try {
         setLoading(true);
@@ -138,10 +159,10 @@ export default function ProductDetail({
             setSelectedVariant(response.data.variants[0]);
           }
 
-          // Load rating stats and reviews
+          // Load rating stats
           if (response.data._id) {
             loadRatingStats(response.data._id);
-            loadReviews(response.data._id);
+            // Reviews sẽ được load bởi useEffect khi currentUser ready
           }
         } else {
           setError(response.message || "Không thể tải sản phẩm");
@@ -170,9 +191,17 @@ export default function ProductDetail({
     }
   };
 
-  const loadReviews = async (productId: string, page = 1) => {
+  const loadReviews = async (productId: string, page = 1, isAdmin = false) => {
     try {
       setLoadingReviews(true);
+
+      console.log(
+        "Loading reviews with isAdmin:",
+        isAdmin,
+        "currentUser:",
+        currentUser
+      );
+
       const response = await getReviews({
         product_id: productId,
         page: String(page),
@@ -180,18 +209,20 @@ export default function ProductDetail({
         rating: filterRating,
         sort_by: sortBy,
         order: "desc",
-        status: "approved",
+        // Nếu là admin, KHÔNG thêm status filter
+        // Nếu không phải admin, thêm status: "approved"
+        ...(!isAdmin ? { status: "approved" } : {}),
       });
+
       console.log("Reviews response:", response);
+
       if (response.status === 200 && response.data) {
-        // Check if data is paginated (has items and meta)
         if ("items" in response.data && "meta" in response.data) {
           setReviews(response.data.items);
           console.log("Total items:", response.data.items);
           setTotalReviews(response.data.meta.totalItems);
           setTotalPages(response.data.meta.totalPages);
         } else {
-          // Fallback if data structure is different
           console.warn("Unexpected response structure:", response.data);
           setReviews([]);
           setTotalReviews(0);
@@ -208,21 +239,33 @@ export default function ProductDetail({
     }
   };
 
+  // Debug log để kiểm tra
   useEffect(() => {
-    if (product?._id) {
+    console.log("Current user changed:", currentUser);
+    console.log("Is admin:", currentUser?.role === 1);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (product?._id && currentUser !== undefined) {
+      const isAdminUser = currentUser?.role === 1;
       setReviewPage(1); // Reset to page 1 when filters change
-      loadReviews(product._id, 1);
+      loadReviews(product._id, 1, isAdminUser);
     }
-  }, [filterRating, sortBy]);
+  }, [filterRating, sortBy, currentUser, product?._id]);
 
   useEffect(() => {
-    if (product?._id) {
-      loadReviews(product._id, reviewPage);
+    if (product?._id && currentUser !== undefined) {
+      const isAdminUser = currentUser?.role === 1;
+      loadReviews(product._id, reviewPage, isAdminUser);
     }
-  }, [reviewPage]);
+  }, [reviewPage, product?._id, currentUser]);
 
-  const handleSubmitReview = async () => {
-    if (!product || !newReviewComment.trim()) {
+  const handleSubmitReview = async (
+    rating: number,
+    comment: string,
+    images: string[]
+  ) => {
+    if (!product || !comment.trim()) {
       toast.error("Vui lòng nhập nội dung đánh giá");
       return;
     }
@@ -232,17 +275,17 @@ export default function ProductDetail({
       const result = await createReview({
         product_id: product._id,
         variant_id: selectedVariant?.id,
-        rating: newReviewRating,
-        comment: newReviewComment,
+        rating: rating,
+        comment: comment,
+        images: images,
       });
 
       if (result.success) {
         toast.success("Đánh giá của bạn đã được gửi và đang chờ duyệt!");
-        setNewReviewComment("");
-        setNewReviewRating(5);
 
         // Reload reviews and stats
-        loadReviews(product._id, 1);
+        const isAdminUser = currentUser?.role === 1;
+        loadReviews(product._id, 1, isAdminUser);
         loadRatingStats(product._id);
         setReviewPage(1);
       } else {
@@ -263,12 +306,53 @@ export default function ProductDetail({
         toast.success("Cảm ơn phản hồi của bạn!");
         // Reload reviews to get updated helpful count
         if (product?._id) {
-          loadReviews(product._id, reviewPage);
+          const isAdminUser = currentUser?.role === 1;
+          loadReviews(product._id, reviewPage, isAdminUser);
         }
       }
     } catch (error) {
       console.error("Error marking review as helpful:", error);
       toast.error("Không thể đánh dấu hữu ích");
+    }
+  };
+
+  const handleApproveReview = async (reviewId: string) => {
+    try {
+      const { approveReview } = await import("@/api/review.api");
+      const result = await approveReview(reviewId);
+      if (result.success) {
+        toast.success("Đã duyệt đánh giá!");
+        if (product?._id) {
+          const isAdminUser = currentUser?.role === 1;
+          loadReviews(product._id, reviewPage, isAdminUser);
+          loadRatingStats(product._id);
+        }
+      } else {
+        toast.error(result.error || "Không thể duyệt đánh giá");
+      }
+    } catch (error) {
+      console.error("Error approving review:", error);
+      toast.error("Đã xảy ra lỗi khi duyệt đánh giá");
+    }
+  };
+
+  const handleRejectReview = async (reviewId: string) => {
+    try {
+      const { rejectReview } = await import("@/api/review.api");
+      const result = await rejectReview(reviewId);
+      if (result.success) {
+        toast.success("Đã từ chối đánh giá!");
+        if (product?._id) {
+          const isAdminUser = currentUser?.role === 1;
+          loadReviews(product._id, reviewPage, isAdminUser);
+          loadRatingStats(product._id);
+        }
+      } else {
+        toast.error(result.error || "Không thể từ chối đánh giá");
+      }
+    } catch (error) {
+      console.error("Error rejecting review:", error);
+      toast.error("Đã xảy ra lỗi khi từ chối đánh giá");
     }
   };
 
@@ -409,9 +493,9 @@ export default function ProductDetail({
           100
       )
     : 0;
-
-  const avgRating = ratingStats?.average_rating || 0;
-  const reviewCount = ratingStats?.total_reviews || 0;
+  console.log("Rating Stats:", ratingStats);
+  const avgRating = ratingStats?.averageRating || 0;
+  const reviewCount = ratingStats?.totalReviews || 0;
   const fullStars = Math.floor(avgRating);
   const hasHalfStar = avgRating % 1 >= 0.5;
 
@@ -965,19 +1049,25 @@ export default function ProductDetail({
               <ReviewFilters
                 filterRating={filterRating}
                 onFilterChange={setFilterRating}
+                currentUser={currentUser ?? undefined}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
+                statusFilter={statusFilter} // ← Đảm bảo có prop này
+                onStatusFilterChange={setStatusFilter}
               />
-
               <ReviewForm
                 onSubmit={handleSubmitReview}
                 isSubmitting={submittingReview}
+                currentUser={currentUser ?? undefined}
               />
 
               <ReviewList
                 reviews={reviews}
                 isLoading={loadingReviews}
+                currentUser={currentUser ?? undefined}
                 onMarkHelpful={handleMarkHelpful}
+                onApprove={isAdmin ? handleApproveReview : undefined}
+                onReject={isAdmin ? handleRejectReview : undefined}
                 currentPage={reviewPage}
                 totalPages={totalPages}
                 onPageChange={setReviewPage}

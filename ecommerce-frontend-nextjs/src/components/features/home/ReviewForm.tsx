@@ -1,27 +1,69 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import Image from "next/image";
+import { X, Upload } from "lucide-react";
+import { UploadButton } from "@/utils/uploadthing";
+import { toast } from "react-toastify";
 
-interface ReviewFormProps {
-  onSubmit: (rating: number, comment: string) => Promise<void>;
-  isSubmitting?: boolean;
+// ============ TYPES ============
+interface User {
+  _id: string;
+  name: string;
+  role: number;
 }
 
-export default function ReviewForm({
+interface Review {
+  _id: string;
+  user?: User;
+  rating: number;
+  comment?: string;
+  images?: string[];
+  is_verified_purchase: boolean;
+  status: "pending" | "approved" | "rejected";
+  helpful_count: number;
+  seller_response?: {
+    message: string;
+    created_at: string;
+  };
+  created_at: string;
+}
+
+// ============ REVIEW FORM WITH IMAGE UPLOAD ============
+interface ReviewFormProps {
+  onSubmit: (
+    rating: number,
+    comment: string,
+    images: string[]
+  ) => Promise<void>;
+  isSubmitting?: boolean;
+  currentUser?: User;
+}
+
+export function ReviewForm({
   onSubmit,
   isSubmitting = false,
+  currentUser,
 }: ReviewFormProps) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [images, setImages] = useState<string[]>([]);
 
   const handleSubmit = async () => {
-    await onSubmit(rating, comment);
+    await onSubmit(rating, comment, images);
     setComment("");
     setRating(5);
+    setImages([]);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
   };
 
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">
       <h3 className="font-bold text-gray-900 mb-4">Viết đánh giá của bạn</h3>
+
       <div className="space-y-4">
+        {/* Rating */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Đánh giá của bạn
@@ -32,6 +74,7 @@ export default function ReviewForm({
                 key={r}
                 onClick={() => setRating(r)}
                 className="transition-transform hover:scale-110"
+                type="button"
               >
                 <svg
                   className={`w-8 h-8 ${
@@ -48,6 +91,7 @@ export default function ReviewForm({
           </div>
         </div>
 
+        {/* Comment */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Nội dung đánh giá
@@ -61,6 +105,61 @@ export default function ReviewForm({
           />
         </div>
 
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Hình ảnh (Tối đa 5 ảnh)
+          </label>
+
+          <div className="space-y-3">
+            {/* Upload Button - ĐÃ SỬA */}
+            {images.length < 5 && (
+              <div className="h-[100px] w-[100px] bg-white rounded-md border-2 border-dashed border-gray-300 flex relative hover:border-pink-400 transition-colors">
+                <UploadButton
+                  className="w-full h-full ut-button:bg-transparent ut-button:text-pink-500 ut-allowed-content:hidden"
+                  endpoint="imageUploader"
+                  onClientUploadComplete={(res) => {
+                    const newImages = [...images, res[0].url];
+                    setImages(newImages);
+                    toast.success("Tải ảnh thành công!");
+                  }}
+                  onUploadError={(error: Error) => {
+                    toast.error(`Lỗi tải ảnh: ${error.message}`);
+                  }}
+                  content={{
+                    button: <Upload className="w-6 h-6" />,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Image Preview Grid */}
+            {images.length > 0 && (
+              <div className="grid grid-cols-5 gap-2">
+                {images.map((url, index) => (
+                  <div key={index} className="relative w-[100px] h-[100px]">
+                    <Image
+                      src={url}
+                      alt={`Review image ${index + 1}`}
+                      fill
+                      className="object-cover rounded-lg"
+                      sizes="100px"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={!comment.trim() || isSubmitting}

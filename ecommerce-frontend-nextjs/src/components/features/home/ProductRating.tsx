@@ -17,24 +17,27 @@ export default function ProductRating({
 }: ProductRatingProps) {
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const loadRatingStats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getRatingStats(productId);
+        if (response.status === 200 && response.data) {
+          setRatingStats(response.data);
+        }
+      } catch (error) {
+        console.error("Error loading rating stats:", error);
+        setError("Không thể tải thống kê đánh giá");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadRatingStats();
   }, [productId]);
-
-  const loadRatingStats = async () => {
-    try {
-      setLoading(true);
-      const response = await getRatingStats(productId);
-      if (response.status === 200 && response.data) {
-        setRatingStats(response.data);
-      }
-    } catch (error) {
-      console.error("Error loading rating stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -44,10 +47,18 @@ export default function ProductRating({
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl p-6 border border-red-200">
+        <p className="text-red-600 text-center">{error}</p>
+      </div>
+    );
+  }
+
   if (
     !ratingStats ||
-    ratingStats.total_reviews === 0 ||
-    typeof ratingStats.average_rating !== "number"
+    ratingStats.totalReviews === 0 ||
+    typeof ratingStats.averageRating !== "number"
   ) {
     return (
       <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -67,14 +78,18 @@ export default function ProductRating({
         {/* Overall Rating */}
         <div className="text-center">
           <div className="text-5xl font-bold text-pink-600 mb-2">
-            {ratingStats.average_rating.toFixed(1)}
+            {ratingStats.averageRating.toFixed(1)}
           </div>
-          <div className="flex items-center justify-center gap-1 mb-2">
+          <div
+            className="flex items-center justify-center gap-1 mb-2"
+            role="img"
+            aria-label={`${ratingStats.averageRating.toFixed(1)} trên 5 sao`}
+          >
             {[...Array(5)].map((_, i) => {
-              const isFilled = i < Math.floor(ratingStats.average_rating);
+              const isFilled = i < Math.floor(ratingStats.averageRating);
               const isHalf =
-                i === Math.floor(ratingStats.average_rating) &&
-                ratingStats.average_rating % 1 >= 0.5;
+                i === Math.floor(ratingStats.averageRating) &&
+                ratingStats.averageRating % 1 >= 0.5;
 
               return (
                 <svg
@@ -85,27 +100,36 @@ export default function ProductRating({
                       : "fill-gray-300 text-gray-300"
                   }`}
                   viewBox="0 0 20 20"
+                  aria-hidden="true"
                 >
                   <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                 </svg>
               );
             })}
           </div>
-          <p className="text-gray-600">{ratingStats.total_reviews} đánh giá</p>
-          {ratingStats.verified_purchase_count > 0 && (
-            <p className="text-sm text-green-600 mt-2">
-              {ratingStats.verified_purchase_count} đã mua hàng
-            </p>
-          )}
+          <p className="text-gray-600">{ratingStats.totalReviews} đánh giá</p>
+          {ratingStats.verifiedPurchaseCount !== undefined &&
+            ratingStats.verifiedPurchaseCount > 0 && (
+              <p className="text-sm text-green-600 mt-2">
+                {ratingStats.verifiedPurchaseCount} đã mua hàng
+              </p>
+            )}
         </div>
 
         {/* Rating Distribution */}
         <div className="space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
-            const count = ratingStats.rating_distribution[star] || 0;
+            // FIX: Kiểm tra cả key number và string
+            console.log("ratingStats:", ratingStats);
+            console.log("distribution:", ratingStats.distribution);
+            const distribution = ratingStats.distribution || {};
+            const count =
+              (distribution as any)[star] ||
+              (distribution as any)[star.toString()] ||
+              0;
             const percentage =
-              ratingStats.total_reviews > 0
-                ? (count / ratingStats.total_reviews) * 100
+              ratingStats.totalReviews > 0
+                ? (count / ratingStats.totalReviews) * 100
                 : 0;
 
             return (
@@ -116,13 +140,19 @@ export default function ProductRating({
                     activeFilter === String(star) ? "" : String(star)
                   )
                 }
+                aria-label={`Lọc theo ${star} sao (${count} đánh giá)`}
+                aria-pressed={activeFilter === String(star)}
                 className={`flex items-center gap-3 w-full group hover:bg-gray-50 p-2 rounded transition-colors ${
                   activeFilter === String(star) ? "bg-pink-50" : ""
                 }`}
               >
                 <div className="flex items-center gap-1 w-16">
                   <span className="text-sm font-medium">{star}</span>
-                  <svg className="w-4 h-4 fill-yellow-400" viewBox="0 0 20 20">
+                  <svg
+                    className="w-4 h-4 fill-yellow-400"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                 </div>
