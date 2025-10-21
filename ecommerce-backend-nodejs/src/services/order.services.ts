@@ -353,7 +353,7 @@ class OrderService {
     const ordersCollection = databaseService.orders
 
     const page = parseInt(query.page || '1')
-    const limit = parseInt(query.limit || '20')
+    const limit = parseInt(query.limit || '500')
     const skip = (page - 1) * limit
 
     const filter: any = {}
