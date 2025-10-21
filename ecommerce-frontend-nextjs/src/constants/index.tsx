@@ -8,8 +8,14 @@ import {
 } from "@/components/icon";
 import { TMenuItem } from "@/types";
 import { EUserRole } from "@/types/enums";
+import { LayoutDashboard } from "lucide-react";
 
 export const menuItems: TMenuItem[] = [
+  {
+    url: "/manage/overview",
+    title: "Dashboard",
+    icon: <LayoutDashboard className="size-5" />,
+  },
   {
     url: "/manage/user",
     title: "User Management",
