@@ -15,7 +15,423 @@ class EmailService {
       }
     })
   }
+  /**
+   * Gửi email xác nhận đơn hàng khi tạo mới
+   */
+  async sendOrderConfirmationEmail(to: string, orderData: any) {
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Xác nhận đơn hàng</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background: #f5f5f5; padding: 20px; }
+            .email-wrapper { max-width: 650px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #ff6b9d, #c44569); padding: 30px; text-align: center; color: white; }
+            .header h1 { font-size: 28px; margin-bottom: 10px; }
+            .content { padding: 30px; }
+            .order-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .order-info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+            .order-info-row:last-child { border-bottom: none; }
+            .label { font-weight: 600; color: #495057; }
+            .value { color: #212529; }
+            .items-section { margin: 30px 0; }
+            .items-section h2 { font-size: 20px; color: #c44569; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b9d; }
+            .item { display: flex; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; }
+            .item-image { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+            .item-details { flex: 1; }
+            .item-name { font-weight: 600; color: #212529; margin-bottom: 5px; }
+            .item-variant { font-size: 14px; color: #6c757d; margin-bottom: 5px; }
+            .item-price { display: flex; justify-content: space-between; font-size: 14px; }
+            .shipping-address { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3; }
+            .shipping-address h3 { color: #1976d2; margin-bottom: 10px; font-size: 18px; }
+            .shipping-address p { color: #424242; margin: 5px 0; }
+            .price-summary { background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .price-row { display: flex; justify-content: space-between; padding: 8px 0; color: #424242; }
+            .price-row.total { border-top: 2px solid #ff9800; margin-top: 10px; padding-top: 15px; font-size: 18px; font-weight: 700; color: #e65100; }
+            .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; background: #ffc107; color: #000; }
+            .button { display: inline-block; padding: 14px 30px; background: linear-gradient(135deg, #ff6b9d, #c44569); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef; }
+            .footer p { color: #6c757d; font-size: 14px; margin: 5px 0; }
+            @media (max-width: 600px) {
+                .item { flex-direction: column; }
+                .item-image { width: 100%; height: 150px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-wrapper">
+            <div class="header">
+                <h1>🎉 Đơn hàng đã được tạo thành công!</h1>
+                <p>Cảm ơn bạn đã mua sắm tại Cosmetic Store</p>
+            </div>
+            
+            <div class="content">
+                <div class="order-info">
+                    <div class="order-info-row">
+                        <span class="label">Mã đơn hàng:</span>
+                        <span class="value">${orderData.order_code}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Ngày đặt:</span>
+                        <span class="value">${new Date(orderData.created_at).toLocaleString('vi-VN')}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Trạng thái:</span>
+                        <span class="value"><span class="status-badge">Chờ xác nhận</span></span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Phương thức thanh toán:</span>
+                        <span class="value">${orderData.payment_method === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : orderData.payment_method === 'momo' ? 'Ví MoMo' : orderData.payment_method === 'vnpay' ? 'VNPay' : 'Chuyển khoản ngân hàng'}</span>
+                    </div>
+                </div>
+                
+                <div class="items-section">
+                    <h2>📦 Chi tiết sản phẩm</h2>
+                    ${orderData.items
+                      .map(
+                        (item: any) => `
+                        <div class="item">
+                            ${item.variant_image || item.product_image ? `<img src="${item.variant_image || item.product_image}" alt="${item.product_name}" class="item-image">` : ''}
+                            <div class="item-details">
+                                <div class="item-name">${item.product_name}</div>
+                                <div class="item-variant">
+                                    ${item.variant_shade_color ? `Màu: ${item.variant_shade_color}` : ''}
+                                    ${item.variant_volume_size ? `${item.variant_shade_color ? ' | ' : ''}Dung tích: ${item.variant_volume_size}` : ''}
+                                </div>
+                                <div class="item-price">
+                                    <span>Số lượng: ${item.quantity}</span>
+                                    <span style="font-weight: 600;">${item.subtotal.toLocaleString('vi-VN')}₫</span>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                      )
+                      .join('')}
+                </div>
+                
+                <div class="shipping-address">
+                    <h3>📍 Địa chỉ giao hàng</h3>
+                    <p><strong>${orderData.shipping_address.full_name}</strong></p>
+                    <p>📞 ${orderData.shipping_address.phone_number}</p>
+                    <p>🏠 ${orderData.shipping_address.address}</p>
+                    ${orderData.shipping_address.ward ? `<p>${orderData.shipping_address.ward}${orderData.shipping_address.district ? `, ${orderData.shipping_address.district}` : ''}, ${orderData.shipping_address.city}</p>` : `<p>${orderData.shipping_address.city}</p>`}
+                    ${orderData.note ? `<p style="margin-top: 10px;"><em>Ghi chú: ${orderData.note}</em></p>` : ''}
+                </div>
+                
+                <div class="price-summary">
+                    <div class="price-row">
+                        <span>Tạm tính:</span>
+                        <span>${orderData.subtotal.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Phí vận chuyển:</span>
+                        <span>${orderData.shipping_fee.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                    ${
+                      orderData.discount_amount > 0
+                        ? `
+                    <div class="price-row" style="color: #28a745;">
+                        <span>Giảm giá${orderData.coupon_code ? ` (${orderData.coupon_code})` : ''}:</span>
+                        <span>-${orderData.discount_amount.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                    `
+                        : ''
+                    }
+                    <div class="price-row total">
+                        <span>Tổng cộng:</span>
+                        <span>${orderData.total_amount.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="${process.env.CLIENT_URL}/orders/${orderData._id}" class="button">
+                        Xem chi tiết đơn hàng
+                    </a>
+                </div>
+                
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #4caf50;">
+                    <p style="color: #2e7d32; margin: 0;">
+                        <strong>✅ Tiếp theo:</strong> Chúng tôi sẽ xác nhận đơn hàng và bắt đầu chuẩn bị giao hàng cho bạn. 
+                        Bạn sẽ nhận được email thông báo khi đơn hàng có cập nhật.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Cảm ơn bạn đã tin tưởng Cosmetic Store! 💖</strong></p>
+                <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `
 
+    const params = {
+      Source: process.env.MAIL_FROM as string,
+      Destination: { ToAddresses: [to] },
+      Message: {
+        Subject: {
+          Data: `🎉 Đơn hàng ${orderData.order_code} đã được tạo thành công`,
+          Charset: 'UTF-8'
+        },
+        Body: {
+          Html: { Data: htmlContent, Charset: 'UTF-8' }
+        }
+      }
+    }
+
+    try {
+      const command = new SendEmailCommand(params)
+      const response = await this.sesClient.send(command)
+      console.log('Order confirmation email sent:', response.MessageId)
+      return { success: true, messageId: response.MessageId }
+    } catch (error) {
+      console.error('Error sending order confirmation email:', error)
+      throw new Error('Failed to send order confirmation email')
+    }
+  }
+
+  /**
+   * Gửi email cập nhật trạng thái đơn hàng
+   */
+  async sendOrderStatusUpdateEmail(to: string, orderData: any) {
+    const statusConfig = {
+      confirmed: {
+        title: '✅ Đơn hàng đã được xác nhận',
+        color: '#28a745',
+        bgcolor: '#d4edda',
+        icon: '✅',
+        message: 'Đơn hàng của bạn đã được xác nhận và đang được chuẩn bị.',
+        nextStep: 'Chúng tôi sẽ tiến hành đóng gói và giao hàng trong thời gian sớm nhất.'
+      },
+      processing: {
+        title: '📦 Đơn hàng đang được xử lý',
+        color: '#007bff',
+        bgcolor: '#d1ecf1',
+        icon: '📦',
+        message: 'Chúng tôi đang chuẩn bị đơn hàng của bạn.',
+        nextStep: 'Đơn hàng sẽ sớm được chuyển đến đơn vị vận chuyển.'
+      },
+      shipping: {
+        title: '🚚 Đơn hàng đang được giao',
+        color: '#ff9800',
+        bgcolor: '#fff3cd',
+        icon: '🚚',
+        message: 'Đơn hàng của bạn đang trên đường giao đến bạn!',
+        nextStep: 'Vui lòng chú ý điện thoại để nhận hàng.'
+      },
+      delivered: {
+        title: '🎉 Đơn hàng đã giao thành công',
+        color: '#4caf50',
+        bgcolor: '#d4edda',
+        icon: '🎉',
+        message: 'Đơn hàng đã được giao thành công đến bạn!',
+        nextStep: 'Cảm ơn bạn đã mua sắm tại Cosmetic Store. Hẹn gặp lại bạn!'
+      },
+      cancelled: {
+        title: '❌ Đơn hàng đã bị hủy',
+        color: '#dc3545',
+        bgcolor: '#f8d7da',
+        icon: '❌',
+        message: 'Đơn hàng của bạn đã bị hủy.',
+        nextStep: orderData.cancellation_reason
+          ? `Lý do: ${orderData.cancellation_reason}`
+          : 'Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.'
+      },
+      refunded: {
+        title: '💰 Đơn hàng đã được hoàn tiền',
+        color: '#6c757d',
+        bgcolor: '#e2e3e5',
+        icon: '💰',
+        message: 'Đơn hàng của bạn đã được hoàn tiền.',
+        nextStep: 'Số tiền sẽ được chuyển về tài khoản của bạn trong 3-5 ngày làm việc.'
+      }
+    }
+
+    const config = statusConfig[orderData.status as keyof typeof statusConfig]
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cập nhật đơn hàng</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background: #f5f5f5; padding: 20px; }
+            .email-wrapper { max-width: 650px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .header { background: ${config.color}; padding: 30px; text-align: center; color: white; }
+            .header h1 { font-size: 28px; margin-bottom: 10px; }
+            .content { padding: 30px; }
+            .status-card { background: ${config.bgcolor}; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${config.color}; text-align: center; }
+            .status-icon { font-size: 48px; margin-bottom: 15px; }
+            .status-message { font-size: 18px; font-weight: 600; color: ${config.color}; margin-bottom: 10px; }
+            .status-detail { color: #424242; font-size: 14px; }
+            .order-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .order-info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+            .order-info-row:last-child { border-bottom: none; }
+            .label { font-weight: 600; color: #495057; }
+            .value { color: #212529; }
+            .timeline { margin: 30px 0; }
+            .timeline-item { display: flex; gap: 15px; margin-bottom: 20px; }
+            .timeline-icon { width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+            .timeline-icon.active { background: ${config.color}; color: white; }
+            .timeline-content { flex: 1; }
+            .timeline-title { font-weight: 600; color: #212529; }
+            .timeline-time { font-size: 14px; color: #6c757d; }
+            .button { display: inline-block; padding: 14px 30px; background: linear-gradient(135deg, #ff6b9d, #c44569); color: white; text-decoration: none; border-radius: 25px; font-weight: 600; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef; }
+            .footer p { color: #6c757d; font-size: 14px; margin: 5px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="email-wrapper">
+            <div class="header">
+                <h1>${config.title}</h1>
+                <p>Mã đơn hàng: ${orderData.order_code}</p>
+            </div>
+            
+            <div class="content">
+                <div class="status-card">
+                    <div class="status-icon">${config.icon}</div>
+                    <div class="status-message">${config.message}</div>
+                    <div class="status-detail">${config.nextStep}</div>
+                </div>
+                
+                <div class="order-info">
+                    <div class="order-info-row">
+                        <span class="label">Mã đơn hàng:</span>
+                        <span class="value">${orderData.order_code}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Trạng thái hiện tại:</span>
+                        <span class="value" style="color: ${config.color}; font-weight: 600;">${config.title}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Ngày cập nhật:</span>
+                        <span class="value">${new Date().toLocaleString('vi-VN')}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="label">Tổng tiền:</span>
+                        <span class="value" style="font-weight: 700;">${orderData.total_amount.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <h3 style="margin-bottom: 20px; color: #212529;">📋 Lịch sử đơn hàng</h3>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-icon active">✓</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Đơn hàng đã được tạo</div>
+                            <div class="timeline-time">${new Date(orderData.created_at).toLocaleString('vi-VN')}</div>
+                        </div>
+                    </div>
+                    
+                    ${
+                      orderData.confirmed_at
+                        ? `
+                    <div class="timeline-item">
+                        <div class="timeline-icon active">✓</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Đơn hàng đã được xác nhận</div>
+                            <div class="timeline-time">${new Date(orderData.confirmed_at).toLocaleString('vi-VN')}</div>
+                        </div>
+                    </div>
+                    `
+                        : ''
+                    }
+                    
+                    ${
+                      orderData.shipping_at
+                        ? `
+                    <div class="timeline-item">
+                        <div class="timeline-icon active">✓</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Đơn hàng đang được giao</div>
+                            <div class="timeline-time">${new Date(orderData.shipping_at).toLocaleString('vi-VN')}</div>
+                        </div>
+                    </div>
+                    `
+                        : ''
+                    }
+                    
+                    ${
+                      orderData.delivered_at
+                        ? `
+                    <div class="timeline-item">
+                        <div class="timeline-icon active">✓</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Đơn hàng đã giao thành công</div>
+                            <div class="timeline-time">${new Date(orderData.delivered_at).toLocaleString('vi-VN')}</div>
+                        </div>
+                    </div>
+                    `
+                        : ''
+                    }
+                    
+                    ${
+                      orderData.cancelled_at
+                        ? `
+                    <div class="timeline-item">
+                        <div class="timeline-icon" style="background: #dc3545; color: white;">✕</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Đơn hàng đã bị hủy</div>
+                            <div class="timeline-time">${new Date(orderData.cancelled_at).toLocaleString('vi-VN')}</div>
+                            ${orderData.cancellation_reason ? `<div class="timeline-time">Lý do: ${orderData.cancellation_reason}</div>` : ''}
+                        </div>
+                    </div>
+                    `
+                        : ''
+                    }
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="${process.env.CLIENT_URL}/orders/${orderData._id}" class="button">
+                        Xem chi tiết đơn hàng
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Cosmetic Store</strong></p>
+                <p>Cảm ơn bạn đã mua sắm tại cửa hàng của chúng tôi! 💖</p>
+                <p>Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `
+
+    const params = {
+      Source: process.env.MAIL_FROM as string,
+      Destination: { ToAddresses: [to] },
+      Message: {
+        Subject: {
+          Data: `${config.icon} ${config.title} - ${orderData.order_code}`,
+          Charset: 'UTF-8'
+        },
+        Body: {
+          Html: { Data: htmlContent, Charset: 'UTF-8' }
+        }
+      }
+    }
+
+    try {
+      const command = new SendEmailCommand(params)
+      const response = await this.sesClient.send(command)
+      console.log('Order status update email sent:', response.MessageId)
+      return { success: true, messageId: response.MessageId }
+    } catch (error) {
+      console.error('Error sending order status update email:', error)
+      throw new Error('Failed to send order status update email')
+    }
+  }
   async sendVerificationEmail(to: string, email_verify_token: string) {
     const verifyEmailUrl = `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`
 

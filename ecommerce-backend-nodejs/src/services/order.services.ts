@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb'
 import databaseService from './database.services'
+import emailService from './email.services'
 import { ORDER_MESSAGES } from '~/constants/messages'
 import { Order, IOrder, IOrderItem } from '~/models/schemas/Order.schema'
 import { CreateOrderReqBody, GetOrdersReqQuery } from '~/models/requests/Order.requests'
@@ -14,6 +15,7 @@ class OrderService {
     const ordersCollection = databaseService.orders
     const productsCollection = databaseService.products
     const couponsCollection = databaseService.coupons
+    const usersCollection = databaseService.users
 
     // 1. Lấy giỏ hàng của user
     const userCart = await cartCollection.findOne({
@@ -260,6 +262,19 @@ class OrderService {
     // 9. Xóa giỏ hàng
     await cartCollection.updateOne({ user_id: new ObjectId(userId) }, { $set: { items: [] } })
 
+    // 10. GỬI EMAIL XÁC NHẬN ĐỦN HÀNG
+    try {
+      const user = await usersCollection.findOne({ _id: new ObjectId(userId) })
+      if (user && user.email) {
+        const orderWithId = { ...order, _id: result.insertedId }
+        await emailService.sendOrderConfirmationEmail(user.email, orderWithId)
+        console.log(`✅ Order confirmation email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('❌ Failed to send order confirmation email:', emailError)
+      // Không throw error để không ảnh hưởng việc tạo đơn hàng
+    }
+
     return { ...order, _id: result.insertedId }
   }
 
@@ -410,6 +425,7 @@ class OrderService {
     }
   ) {
     const ordersCollection = databaseService.orders
+    const usersCollection = databaseService.users
 
     const order = await ordersCollection.findOne({ _id: new ObjectId(orderId) })
     if (!order) {
@@ -475,6 +491,18 @@ class OrderService {
       { returnDocument: 'after' }
     )
 
+    // GỬI EMAIL CẬP NHẬT TRẠNG THÁI
+    try {
+      const user = await usersCollection.findOne({ _id: order.user_id })
+      if (user && user.email && result) {
+        await emailService.sendOrderStatusUpdateEmail(user.email, result)
+        console.log(`✅ Order status update email sent to ${user.email} - Status: ${status}`)
+      }
+    } catch (emailError) {
+      console.error('❌ Failed to send order status update email:', emailError)
+      // Không throw error để không ảnh hưởng việc cập nhật trạng thái
+    }
+
     return result
   }
 
@@ -534,6 +562,7 @@ class OrderService {
    */
   async cancelOrder(orderId: string, userId: string, reason: string) {
     const ordersCollection = databaseService.orders
+    const usersCollection = databaseService.users
 
     const order = await ordersCollection.findOne({
       _id: new ObjectId(orderId),
@@ -560,6 +589,17 @@ class OrderService {
       { $set: orderInstance },
       { returnDocument: 'after' }
     )
+
+    // GỬI EMAIL THÔNG BÁO HỦY ĐƠN
+    try {
+      const user = await usersCollection.findOne({ _id: order.user_id })
+      if (user && user.email && result) {
+        await emailService.sendOrderStatusUpdateEmail(user.email, result)
+        console.log(`✅ Order cancellation email sent to ${user.email}`)
+      }
+    } catch (emailError) {
+      console.error('❌ Failed to send order cancellation email:', emailError)
+    }
 
     return result
   }
