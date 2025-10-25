@@ -30,8 +30,8 @@ import {
 } from "@/lib/auth.action";
 import { migrateCart } from "@/api/cart.api";
 const formSchema = z.object({
-  email: z.email({ message: "Email không hợp lệ" }),
-  password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
+  email: z.email({ message: "Invalid email" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
 export default function LoginForm() {
@@ -51,22 +51,22 @@ export default function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      // ⭐ 1. Lấy cart session ID TRƯỚC KHI LOGIN
+      // ⭐ 1. Get cart session ID BEFORE LOGIN
       const guestSessionId = await getCartSessionId();
 
       const response = await AuthAPI.login(values);
       const refreshToken = response.data?.refresh_token;
 
-      // 2. Lưu refresh token vào cookie
+      // 2. Save refresh token to cookie
       if (refreshToken) {
         await saveRefreshTokenToCookie(refreshToken);
       }
 
-      // 3. Gọi API /me
+      // 3. Call API /me
       const meResponse = await AuthAPI.me();
       await mutate(meResponse.data, { revalidate: false });
 
-      // ⭐ 4. MIGRATE CART nếu có guest session
+      // ⭐ 4. MIGRATE CART if guest session exists
       if (guestSessionId) {
         try {
           const migrateResult = await migrateCart({
@@ -75,12 +75,12 @@ export default function LoginForm() {
 
           if (migrateResult.success) {
             console.log("Cart migrated successfully!");
-            // Xóa cookie cart_session_id cũ
+            // Delete old cart_session_id cookie
             await deleteCartSessionCookie();
           }
         } catch (migrateError) {
           console.error("Cart migration failed:", migrateError);
-          // Không block login flow nếu migrate fail
+          // Don't block login flow if migrate fails
         }
       }
 
