@@ -266,7 +266,7 @@ export default function ProductDetail({
     images: string[]
   ) => {
     if (!product || !comment.trim()) {
-      toast.error("Vui lòng nhập nội dung đánh giá");
+      toast.error("Please enter review content");
       return;
     }
 
@@ -281,7 +281,7 @@ export default function ProductDetail({
       });
 
       if (result.success) {
-        toast.success("Đánh giá của bạn đã được gửi và đang chờ duyệt!");
+        toast.success("Your review has been submitted and is awaiting approval!");
 
         // Reload reviews and stats
         const isAdminUser = currentUser?.role === 1;
@@ -289,11 +289,11 @@ export default function ProductDetail({
         loadRatingStats(product._id);
         setReviewPage(1);
       } else {
-        toast.error(result.error || "Không thể gửi đánh giá");
+        toast.error(result.error || "Unable to submit review");
       }
     } catch (error) {
       console.error("Error submitting review:", error);
-      toast.error("Đã xảy ra lỗi khi gửi đánh giá");
+      toast.error("An error occurred while submitting the review");
     } finally {
       setSubmittingReview(false);
     }
@@ -303,7 +303,7 @@ export default function ProductDetail({
     try {
       const result = await markReviewHelpful(reviewId);
       if (result.success) {
-        toast.success("Cảm ơn phản hồi của bạn!");
+        toast.success("Thanks for your feedback!");
         // Reload reviews to get updated helpful count
         if (product?._id) {
           const isAdminUser = currentUser?.role === 1;
@@ -312,7 +312,7 @@ export default function ProductDetail({
       }
     } catch (error) {
       console.error("Error marking review as helpful:", error);
-      toast.error("Không thể đánh dấu hữu ích");
+      toast.error("Unable to mark useful");
     }
   };
 
@@ -321,18 +321,18 @@ export default function ProductDetail({
       const { approveReview } = await import("@/api/review.api");
       const result = await approveReview(reviewId);
       if (result.success) {
-        toast.success("Đã duyệt đánh giá!");
+        toast.success("Approved review!");
         if (product?._id) {
           const isAdminUser = currentUser?.role === 1;
           loadReviews(product._id, reviewPage, isAdminUser);
           loadRatingStats(product._id);
         }
       } else {
-        toast.error(result.error || "Không thể duyệt đánh giá");
+        toast.error(result.error || "Unable to approve review");
       }
     } catch (error) {
       console.error("Error approving review:", error);
-      toast.error("Đã xảy ra lỗi khi duyệt đánh giá");
+      toast.error("An error occurred while reviewing the review");
     }
   };
 
@@ -341,18 +341,18 @@ export default function ProductDetail({
       const { rejectReview } = await import("@/api/review.api");
       const result = await rejectReview(reviewId);
       if (result.success) {
-        toast.success("Đã từ chối đánh giá!");
+        toast.success("Review rejected!");
         if (product?._id) {
           const isAdminUser = currentUser?.role === 1;
           loadReviews(product._id, reviewPage, isAdminUser);
           loadRatingStats(product._id);
         }
       } else {
-        toast.error(result.error || "Không thể từ chối đánh giá");
+        toast.error(result.error || "Cannot refuse to review");
       }
     } catch (error) {
       console.error("Error rejecting review:", error);
-      toast.error("Đã xảy ra lỗi khi từ chối đánh giá");
+      toast.error("An error occurred while rejecting the review");
     }
   };
 
@@ -395,7 +395,7 @@ export default function ProductDetail({
         const variantInfo =
           selectedVariant.shade_color ||
           selectedVariant.volume_size ||
-          "Mặc định";
+          "Default";
 
         const productImage =
           selectedVariant.images && selectedVariant.images.length > 0
@@ -431,7 +431,7 @@ export default function ProductDetail({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <p className="font-semibold text-sm">Đã thêm vào giỏ hàng!</p>
+                  <p className="font-semibold text-sm">Added to cart!</p>
                 </div>
                 <p className="text-sm text-gray-700 line-clamp-2">
                   {product.name}
@@ -448,7 +448,7 @@ export default function ProductDetail({
               onClick={() => router.push("/cart")}
               className="w-full bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
             >
-              Xem giỏ hàng
+              View cart
             </button>
           </div>,
           {
@@ -465,11 +465,11 @@ export default function ProductDetail({
 
         setTimeout(() => setAddedToCart(false), 2000);
       } else {
-        toast.error(result.error || "Không thể thêm vào giỏ hàng");
+        toast.error(result.error || "Cannot add to cart");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      toast.error("Đã xảy ra lỗi khi thêm vào giỏ hàng");
+      toast.error("An error occurred while adding to cart");
     } finally {
       setAddingToCart(false);
     }
@@ -505,10 +505,10 @@ export default function ProductDetail({
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Hôm nay";
-    if (diffDays === 1) return "Hôm qua";
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+    if (diffDays === 0) return "Today"; 
+    if (diffDays === 1) return "Yesterday"; 
+    if (diffDays < 7) return `${diffDays} days ago`; 
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} last week`;
     return date.toLocaleDateString("vi-VN");
   };
 
@@ -567,7 +567,7 @@ export default function ProductDetail({
               />
             </svg>
             <p className="text-red-600 font-semibold text-lg">
-              {error || "Sản phẩm không tìm thấy"}
+              {error || "Product not found"}
             </p>
           </div>
         </div>
@@ -592,7 +592,7 @@ export default function ProductDetail({
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <span className="font-medium">Đã thêm vào giỏ hàng!</span>
+          <span className="font-medium">Added to cart!</span>
         </div>
       )}
 
@@ -603,14 +603,14 @@ export default function ProductDetail({
               href="/"
               className="text-gray-500 hover:text-pink-600 transition-colors"
             >
-              Trang chủ
+              Home
             </Link>
             <span className="text-gray-300">/</span>
             <Link
               href="/products"
               className="text-gray-500 hover:text-pink-600 transition-colors"
             >
-              Sản phẩm
+              Product
             </Link>
             <span className="text-gray-300">/</span>
             <span className="text-gray-700 font-medium truncate">
@@ -769,7 +769,7 @@ export default function ProductDetail({
 
             {product.description && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Mô tả</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Describe</h3>
                 <p className="text-gray-600 leading-relaxed">
                   {stripHtml(product.description)}
                 </p>
@@ -779,7 +779,7 @@ export default function ProductDetail({
             {product.variants.length > 0 && (
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">
-                  Chọn loại sản phẩm
+                  Select product type
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {product.variants.map((variant) => (
@@ -832,7 +832,7 @@ export default function ProductDetail({
                         </div>
                         {!variant.is_available && (
                           <div className="text-xs text-red-500 mt-1">
-                            Hết hàng
+                            Out of stock
                           </div>
                         )}
                       </div>
@@ -858,8 +858,8 @@ export default function ProductDetail({
                   }`}
                 >
                   {selectedVariant.stock_quantity > 0
-                    ? `Còn ${selectedVariant.stock_quantity} sản phẩm`
-                    : "Hết hàng"}
+                    ? `Còn ${selectedVariant.stock_quantity} product`
+                    : "Out of stock"}
                 </p>
               </div>
             )}
@@ -916,7 +916,7 @@ export default function ProductDetail({
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Đang thêm...
+                        Adding...
                       </>
                     ) : (
                       <>
@@ -933,7 +933,7 @@ export default function ProductDetail({
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        Thêm vào giỏ
+                        Add to cart
                       </>
                     )}
                   </button>
@@ -945,7 +945,7 @@ export default function ProductDetail({
                 {product.skin_type && product.skin_type.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">
-                      Loại da phù hợp
+                      Suitable skin type
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {product.skin_type.map((type) => (
@@ -962,7 +962,7 @@ export default function ProductDetail({
                 {product.origin && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">
-                      Xuất xứ
+                      Origin
                     </h4>
                     <p className="text-gray-600">{product.origin}</p>
                   </div>
@@ -970,7 +970,7 @@ export default function ProductDetail({
                 {product.ingredients && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">
-                      Thành phần
+                      Ingredient
                     </h4>
                     <div
                       className="text-gray-600 text-sm prose prose-sm max-w-none"
@@ -993,7 +993,7 @@ export default function ProductDetail({
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Chi tiết sản phẩm
+              Product details
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
@@ -1003,7 +1003,7 @@ export default function ProductDetail({
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Đánh giá ({reviewCount})
+              Evaluate ({reviewCount})
             </button>
           </div>
 
@@ -1012,7 +1012,7 @@ export default function ProductDetail({
               {product.how_to_use && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Hướng dẫn sử dụng
+                    Instructions for use
                   </h3>
                   <div
                     className="text-gray-600 leading-relaxed"

@@ -53,9 +53,9 @@ export default function ChatbotWidget() {
         console.error("Error fetching suggestions:", error);
         // Set default suggestions as fallback
         setSuggestions([
-          "Tư vấn sản phẩm cho da khô",
-          "Sản phẩm chống lão hóa tốt nhất",
-          "Cách chăm sóc da mặt hàng ngày",
+          "Product advice for dry skin",
+          "Best anti-aging products",
+          "Daily facial care routine",
         ]);
       }
     };
@@ -94,7 +94,7 @@ export default function ChatbotWidget() {
         // Backend returns bot_message, not response
         const botResponse =
           response.data.data.bot_message ||
-          "Xin lỗi, tôi không thể xử lý câu hỏi của bạn lúc này.";
+          "Sorry, I cannot process your question at the moment.";
 
         const assistantMessage: Message = {
           role: "assistant",
@@ -109,7 +109,7 @@ export default function ChatbotWidget() {
       console.error("Error sending message:", error);
       const errorMessage: Message = {
         role: "assistant",
-        content: "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.",
+        content: "Sorry, an error occurred. Please try again later.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -183,7 +183,7 @@ export default function ChatbotWidget() {
                   Beauty Assistant
                 </h3>
                 <p className="text-pink-100 text-xs">
-                  Online • Always here to help
+                  Online - Always here to help
                 </p>
               </div>
             </div>
@@ -228,17 +228,17 @@ export default function ChatbotWidget() {
                   </svg>
                 </div>
                 <h4 className="text-gray-700 font-semibold mb-2">
-                  Chào mừng bạn đến với Beauty Assistant! 💄
+                  Welcome to Beauty Assistant!
                 </h4>
                 <p className="text-gray-500 text-sm mb-6">
-                  Tôi có thể giúp bạn tìm sản phẩm phù hợp, tư vấn chăm sóc da,
-                  và nhiều hơn nữa.
+                  I can help you find suitable products, provide skincare advice,
+                  and much more.
                 </p>
 
                 {/* Quick Suggestions */}
                 {suggestions.length > 0 && (
                   <div className="w-full space-y-2">
-                    <p className="text-xs text-gray-400 mb-2">Gợi ý nhanh:</p>
+                    <p className="text-xs text-gray-400 mb-2">Quick suggestions:</p>
                     {suggestions.slice(0, 3).map((suggestion, index) => (
                       <button
                         key={index}
@@ -278,7 +278,7 @@ export default function ChatbotWidget() {
                         }`}
                       >
                         {new Date(message.timestamp).toLocaleTimeString(
-                          "vi-VN",
+                          "en-US",
                           {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -313,7 +313,7 @@ export default function ChatbotWidget() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Nhập tin nhắn..."
+                placeholder="Enter message..."
                 disabled={isLoading}
                 className="flex-1 px-4 py-3 rounded-xl border border-pink-200 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all text-sm disabled:bg-gray-50"
               />
