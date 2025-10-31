@@ -44,12 +44,12 @@ export default function CartPage() {
         if (hasAnyToken) {
           await fetchUserProfile();
         } else {
-          toast.error("Vui lòng đăng nhập để xem giỏ hàng");
+          toast.error("Please login to view cart");
           router.push("/sign-in");
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        toast.error("Vui lòng đăng nhập để tiếp tục");
+        toast.error("Please login to continue");
         router.push("/sign-in");
       }
     };
@@ -67,7 +67,7 @@ export default function CartPage() {
       if (error?.response?.status === 401) {
         localStorage.removeItem("access_token");
         await deleteRefreshTokenCookie();
-        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
+        toast.error("Session expired. Please login again");
         router.push("/sign-in");
       }
     }
@@ -87,7 +87,7 @@ export default function CartPage() {
       }
     } catch (error) {
       console.error("Error loading cart:", error);
-      toast.error("Không thể tải giỏ hàng");
+      toast.error("Unable to load cart");
     } finally {
       setLoading(false);
     }
@@ -110,13 +110,13 @@ export default function CartPage() {
 
       if (result.success && result.data?.data) {
         setCart(result.data.data);
-        toast.success("Đã cập nhật số lượng");
+        toast.success("Quantity updated");
       } else {
-        toast.error(result.error || "Không thể cập nhật số lượng");
+        toast.error(result.error || "Unable to update quantity");
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      toast.error("Đã xảy ra lỗi khi cập nhật");
+      toast.error("An error occurred while updating");
     } finally {
       setUpdating(null);
     }
@@ -131,33 +131,33 @@ export default function CartPage() {
 
       if (result.success && result.data?.data) {
         setCart(result.data.data);
-        toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
+        toast.success("Product removed from cart");
       } else {
-        toast.error(result.error || "Không thể xóa sản phẩm");
+        toast.error(result.error || "Unable to remove product");
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      toast.error("Đã xảy ra lỗi khi xóa sản phẩm");
+      toast.error("An error occurred while removing product");
     } finally {
       setUpdating(null);
     }
   };
 
   const handleClearCart = async () => {
-    if (!confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng?")) return;
+    if (!confirm("Are you sure you want to clear the entire cart?")) return;
 
     try {
       const result = await clearCart();
 
       if (result.success) {
         setCart({ ...cart!, items: [] });
-        toast.success("Đã xóa toàn bộ giỏ hàng");
+        toast.success("Cart cleared");
       } else {
-        toast.error(result.error || "Không thể xóa giỏ hàng");
+        toast.error(result.error || "Unable to clear cart");
       }
     } catch (error) {
       console.error("Error clearing cart:", error);
-      toast.error("Đã xảy ra lỗi");
+      toast.error("An error occurred");
     }
   };
 
@@ -241,10 +241,10 @@ export default function CartPage() {
               href="/"
               className="text-gray-500 hover:text-pink-600 transition-colors"
             >
-              Trang chủ
+              Home
             </Link>
             <span className="text-gray-300">/</span>
-            <span className="text-gray-700 font-medium">Giỏ hàng</span>
+            <span className="text-gray-700 font-medium">Cart</span>
           </div>
         </div>
       </div>
@@ -253,12 +253,12 @@ export default function CartPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Giỏ hàng của bạn
+              Your Cart
             </h1>
             <p className="text-gray-600">
               {isEmpty
-                ? "Chưa có sản phẩm nào"
-                : `${cart.items.length} sản phẩm`}
+                ? "No products yet"
+                : `${cart.items.length} products`}
             </p>
           </div>
           {!isEmpty && (
@@ -279,7 +279,7 @@ export default function CartPage() {
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              Xóa tất cả
+              Clear all
             </button>
           )}
         </div>
@@ -301,11 +301,10 @@ export default function CartPage() {
                 />
               </svg>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                Giỏ hàng trống
+                Empty Cart
               </h2>
               <p className="text-gray-600 mb-8">
-                Bạn chưa có sản phẩm nào trong giỏ hàng. Hãy khám phá và thêm
-                sản phẩm yêu thích của bạn!
+                You have no products in your cart. Explore and add your favorite products!
               </p>
               <Link
                 href="/products"
@@ -324,7 +323,7 @@ export default function CartPage() {
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
-                Mua sắm ngay
+                Shop now
               </Link>
             </div>
           </div>

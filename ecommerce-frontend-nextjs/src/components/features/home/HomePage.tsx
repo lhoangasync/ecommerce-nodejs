@@ -154,7 +154,7 @@ export default function HomePage() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <span className="font-medium">Đăng xuất thành công!</span>
+          <span className="font-medium">Signed out successfully!</span>
         </div>
       )}
 

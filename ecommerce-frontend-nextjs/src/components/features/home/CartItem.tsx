@@ -23,14 +23,14 @@ export default function CartItem({
   updating,
   formatPrice,
 }: CartItemProps) {
-  // Cache data để giữ lại khi update
+  // Cache data to keep when updating
   const [cachedProduct, setCachedProduct] = useState<any>(null);
   const [cachedVariant, setCachedVariant] = useState<any>(null);
 
   const product = item.product || item.product_id;
   const variant = item.variant || item.variant_id;
 
-  // Cập nhật cache khi có data hợp lệ
+  // Update cache when valid data is available
   useEffect(() => {
     if (product && typeof product !== "string") {
       setCachedProduct(product);
@@ -40,18 +40,18 @@ export default function CartItem({
     }
   }, [product, variant]);
 
-  // Sử dụng cached data nếu current data không hợp lệ
+  // Use cached data if current data is invalid
   const displayProduct =
     product && typeof product !== "string" ? product : cachedProduct;
   const displayVariant =
     variant && typeof variant !== "string" ? variant : cachedVariant;
 
-  // Chỉ return null nếu chưa có cache nào
+  // Only return null if no cache available
   if (!displayProduct || !displayVariant) {
     return null;
   }
 
-  // ✅ FIX: Lấy ID từ item gốc thay vì displayProduct/displayVariant
+  // FIX: Get ID from original item instead of displayProduct/displayVariant
   const productId =
     typeof item.product_id === "object" ? item.product_id._id : item.product_id;
 
@@ -64,7 +64,7 @@ export default function CartItem({
   const isUpdating = updating === updateKey;
 
   const variantInfo =
-    displayVariant.shade_color || displayVariant.volume_size || "Mặc định";
+    displayVariant.shade_color || displayVariant.volume_size || "Default";
   const productImage =
     displayVariant.images?.[0] ||
     displayProduct.images?.[0] ||
@@ -99,7 +99,7 @@ export default function CartItem({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span className="text-sm font-medium">Đang cập nhật...</span>
+            <span className="text-sm font-medium">Updating...</span>
           </div>
         </div>
       )}
@@ -132,7 +132,7 @@ export default function CartItem({
                 {displayProduct.name}
               </Link>
               <p className="text-sm text-gray-500 mt-1">
-                Phân loại: <span className="font-medium">{variantInfo}</span>
+                Variant: <span className="font-medium">{variantInfo}</span>
               </p>
               {displayVariant.sku && (
                 <p className="text-xs text-gray-400 mt-1">
@@ -146,7 +146,7 @@ export default function CartItem({
               onClick={() => onRemove(productId, variantId)}
               disabled={isUpdating}
               className="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-              title="Xóa sản phẩm"
+              title="Remove product"
             >
               <svg
                 className="w-5 h-5"
@@ -168,7 +168,7 @@ export default function CartItem({
             {/* Quantity Controls */}
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600 font-medium">
-                Số lượng:
+                Quantity:
               </span>
               <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden">
                 <button
@@ -208,7 +208,7 @@ export default function CartItem({
                 </div>
               )}
               <div className="text-xs text-gray-500 mt-1">
-                {formatPrice(displayVariant.price)} / sản phẩm
+                {formatPrice(displayVariant.price)} / product
               </div>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function CartItem({
           {/* Stock Warning */}
           {displayVariant.stock_quantity < 10 && (
             <div className="mt-3 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg inline-block">
-              ⚠️ Chỉ còn {displayVariant.stock_quantity} sản phẩm
+              ⚠️ Only {displayVariant.stock_quantity} products left
             </div>
           )}
         </div>

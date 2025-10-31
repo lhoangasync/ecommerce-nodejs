@@ -80,9 +80,9 @@ export default function CartSummary({
         subtotal < selectedCoupon.min_order_value
       ) {
         toast.error(
-          `Đơn hàng tối thiểu ${formatPrice(
+          `Minimum order ${formatPrice(
             selectedCoupon.min_order_value
-          )} để áp dụng mã này`
+          )} to apply this code`
         );
         setSelectedCoupon(null);
         setCouponCode("");
@@ -134,14 +134,14 @@ export default function CartSummary({
     setCouponCode(coupon.code);
     setSelectedCoupon(coupon);
     setShowCouponModal(false);
-    toast.success(`Đã áp dụng mã ${coupon.code}`);
+    toast.success(`Applied code ${coupon.code}`);
   };
 
   const handleRemoveCoupon = () => {
     setSelectedCoupon(null);
     setCouponDiscount(0);
     setCouponCode("");
-    toast.info("Đã xóa mã giảm giá");
+    toast.info("Discount code removed");
   };
 
   const handleCheckout = async () => {
@@ -168,7 +168,7 @@ export default function CartSummary({
       const response = await createOrder(orderData);
 
       if (!response.success || !response.data) {
-        toast.error(response.error || "Có lỗi xảy ra khi tạo đơn hàng");
+        toast.error(response.error || "An error occurred while creating order");
         setIsProcessing(false);
         return;
       }
@@ -180,17 +180,17 @@ export default function CartSummary({
           window.location.href = payment_url;
         } else {
           toast.error(
-            "Không thể tạo liên kết thanh toán. Vui lòng thử lại sau."
+            "Cannot create payment link. Please try again later."
           );
           router.push(`/orders/${order._id}?payment_status=failed`);
         }
       } else if (paymentMethod === "cod") {
-        toast.success("Đặt hàng thành công!");
+        toast.success("Order placed successfully!");
         router.push(`/orders/${order._id}?payment_status=pending`);
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("Có lỗi xảy ra trong quá trình thanh toán");
+      toast.error("An error occurred during checkout");
       setIsProcessing(false);
     }
   };
@@ -200,13 +200,13 @@ export default function CartSummary({
       id: "vnpay" as PaymentMethod,
       name: "VNPay",
       logo: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png",
-      description: "Thanh toán qua VNPay",
+      description: "Payment via VNPay",
     },
     {
       id: "momo" as PaymentMethod,
       name: "MoMo",
       logo: "https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png",
-      description: "Ví điện tử MoMo",
+      description: "MoMo E-Wallet",
     },
     {
       id: "cod" as PaymentMethod,
@@ -226,7 +226,7 @@ export default function CartSummary({
           />
         </svg>
       ),
-      description: "Thanh toán khi nhận hàng",
+      description: "Cash on Delivery",
     },
   ];
 
@@ -249,7 +249,7 @@ export default function CartSummary({
                 d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
               />
             </svg>
-            Phương thức thanh toán
+            Payment Method
           </h3>
 
           <div className="space-y-3">
@@ -327,7 +327,7 @@ export default function CartSummary({
                 d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
               />
             </svg>
-            Phương thức vận chuyển
+            Shipping Method
           </h3>
 
           <div className="space-y-3">
@@ -356,9 +356,9 @@ export default function CartSummary({
                 </svg>
                 <div className="text-left">
                   <div className="font-semibold text-gray-900">
-                    Giao hàng tiêu chuẩn
+                    Standard Delivery
                   </div>
-                  <div className="text-xs text-gray-500">3-5 ngày làm việc</div>
+                  <div className="text-xs text-gray-500">3-5 business days</div>
                 </div>
               </div>
               <div className="text-right">
@@ -393,9 +393,9 @@ export default function CartSummary({
                 </svg>
                 <div className="text-left">
                   <div className="font-semibold text-gray-900">
-                    Giao hàng nhanh
+                    Express Delivery
                   </div>
-                  <div className="text-xs text-gray-500">1-2 ngày làm việc</div>
+                  <div className="text-xs text-gray-500">1-2 business days</div>
                 </div>
               </div>
               <div className="text-right">
@@ -423,7 +423,7 @@ export default function CartSummary({
                 d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
               />
             </svg>
-            Mã giảm giá
+            Discount Code
           </h3>
 
           {selectedCoupon ? (
@@ -437,7 +437,7 @@ export default function CartSummary({
                     {selectedCoupon.description}
                   </div>
                   <div className="text-sm font-semibold text-green-700 mt-2">
-                    Giảm {formatPrice(couponDiscount)}
+                    Save {formatPrice(couponDiscount)}
                   </div>
                 </div>
                 <button
@@ -467,7 +467,7 @@ export default function CartSummary({
                 type="text"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                placeholder="Nhập mã giảm giá"
+                placeholder="Enter discount code"
                 disabled={isProcessing}
                 className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50 uppercase"
               />
@@ -493,7 +493,7 @@ export default function CartSummary({
                   d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
                 />
               </svg>
-              Mã của tôi ({userAutoCoupons.length})
+              My Coupons ({userAutoCoupons.length})
             </button>
           )}
         </div>
@@ -501,23 +501,23 @@ export default function CartSummary({
         {/* Order Summary */}
         <div className="border-t pt-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Tóm tắt đơn hàng
+            Order Summary
           </h2>
 
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-gray-600">
-              <span>Tạm tính ({itemCount} sản phẩm)</span>
+              <span>Subtotal ({itemCount} items)</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
 
             <div className="flex justify-between text-gray-600">
-              <span>Phí vận chuyển</span>
+              <span>Shipping Fee</span>
               <span className="font-semibold">{formatPrice(shippingFee)}</span>
             </div>
 
             {couponDiscount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Giảm giá</span>
+                <span>Discount</span>
                 <span className="font-semibold">
                   -{formatPrice(couponDiscount)}
                 </span>
@@ -527,7 +527,7 @@ export default function CartSummary({
             <div className="border-t pt-3">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-gray-900">
-                  Tổng cộng
+                  Total
                 </span>
                 <span className="text-2xl font-bold text-pink-600">
                   {formatPrice(total)}
@@ -562,11 +562,11 @@ export default function CartSummary({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span>Đang xử lý...</span>
+                <span>Processing...</span>
               </>
             ) : (
               <>
-                <span>Thanh toán</span>
+                <span>Checkout</span>
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -601,7 +601,7 @@ export default function CartSummary({
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            <span>Tiếp tục mua sắm</span>
+            <span>Continue Shopping</span>
           </Link>
         </div>
 
@@ -621,7 +621,7 @@ export default function CartSummary({
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-            <span>Thanh toán an toàn & bảo mật</span>
+            <span>Safe and Secure Payment</span>
           </div>
 
           <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -638,7 +638,7 @@ export default function CartSummary({
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-            <span>Hỗ trợ 24/7</span>
+            <span>24/7 Support</span>
           </div>
 
           <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -655,7 +655,7 @@ export default function CartSummary({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            <span>Đổi trả miễn phí trong 7 ngày</span>
+            <span>Free Returns within 7 days</span>
           </div>
         </div>
       </div>
@@ -666,7 +666,7 @@ export default function CartSummary({
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-900">
-                Mã giảm giá của tôi
+                My Discount Codes
               </h3>
               <button
                 onClick={() => setShowCouponModal(false)}
@@ -714,7 +714,7 @@ export default function CartSummary({
                 </div>
               ) : userAutoCoupons.length === 0 ? (
                 <p className="text-center text-gray-500 py-8">
-                  Bạn chưa có mã giảm giá nào
+                  You do not have any discount codes yet
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -744,12 +744,12 @@ export default function CartSummary({
                               </div>
                               {isExpired && (
                                 <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">
-                                  Hết hạn
+                                  Expired
                                 </span>
                               )}
                               {isMinOrderNotMet && !isExpired && (
                                 <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full">
-                                  Chưa đủ điều kiện
+                                  Not Eligible
                                 </span>
                               )}
                             </div>
@@ -758,29 +758,29 @@ export default function CartSummary({
                             </div>
                             {coupon.discount_type === "percentage" ? (
                               <div className="text-sm font-semibold text-pink-600 mt-1">
-                                Giảm {coupon.discount_value}%
+                                Save {coupon.discount_value}%
                                 {coupon.max_discount_amount && (
                                   <span className="text-gray-500 text-xs ml-1">
-                                    (tối đa{" "}
+                                    (max{" "}
                                     {formatPrice(coupon.max_discount_amount)})
                                   </span>
                                 )}
                               </div>
                             ) : (
                               <div className="text-sm font-semibold text-pink-600 mt-1">
-                                Giảm {formatPrice(coupon.discount_value)}
+                                Save {formatPrice(coupon.discount_value)}
                               </div>
                             )}
                             {coupon.min_order_value && (
                               <div className="text-xs text-gray-500 mt-1">
-                                Đơn tối thiểu:{" "}
+                                Minimum order:{" "}
                                 {formatPrice(coupon.min_order_value)}
                               </div>
                             )}
                             <div className="text-xs text-gray-500 mt-1">
-                              HSD:{" "}
+                              Valid until:{" "}
                               {new Date(coupon.end_date).toLocaleDateString(
-                                "vi-VN"
+                                "en-US"
                               )}
                             </div>
                           </div>
