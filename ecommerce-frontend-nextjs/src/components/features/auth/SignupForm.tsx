@@ -29,17 +29,17 @@ import { getMsg } from "@/utils/error-message";
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Email không hợp lệ" }),
-    password: z.string().min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
+    email: z.email({ message: "Invalid email" }),
+    password: z.string().min(6, { message: "Password must be at least 6 characters" }),
     confirm_password: z
       .string()
-      .min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
-    first_name: z.string().min(1, { message: "Vui lòng nhập tên" }),
-    last_name: z.string().min(1, { message: "Vui lòng nhập họ" }),
-    address: z.string().min(1, { message: "Vui lòng nhập địa chỉ" }),
+      .min(6, { message: "Password must be at least 6 characters" }),
+    first_name: z.string().min(1, { message: "Please enter first name" }),
+    last_name: z.string().min(1, { message: "Please enter last name" }),
+    address: z.string().min(1, { message: "Please enter address" }),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "Mật khẩu không khớp",
+    message: "Passwords do not match",
     path: ["confirm_password"],
   });
 export default function SignupForm() {

@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 import { getMsg } from "@/utils/error-message";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Email không hợp lệ" }),
+  email: z.string().email({ message: "Invalid email" }),
 });
 
 export default function ForgotPasswordForm() {
@@ -43,7 +43,7 @@ export default function ForgotPasswordForm() {
 
       setIsEmailSent(true);
       toast.success(
-        "Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư của bạn."
+        "Password reset email has been sent! Please check your inbox."
       );
     } catch (error) {
       const { msg } = getMsg(error);
@@ -76,15 +76,15 @@ export default function ForgotPasswordForm() {
             />
           </svg>
         </div>
-        <Heading className="mb-6">Kiểm tra Email của bạn</Heading>
+        <Heading className="mb-6">Check Your Email</Heading>
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Chúng tôi đã gửi liên kết đặt lại mật khẩu đến{" "}
-          <span className="font-medium">{form.getValues("email")}</span>. Vui
-          lòng kiểm tra hộp thư và làm theo hướng dẫn để đặt lại mật khẩu.
+          We have sent a password reset link to{" "}
+          <span className="font-medium">{form.getValues("email")}</span>. Please
+          check your inbox and follow the instructions to reset your password.
         </p>
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
-            Không nhận được email? Kiểm tra thư mục spam hoặc thử lại.
+            Did not receive the email? Check your spam folder or try again.
           </p>
           <div className="flex justify-center gap-3">
             <Button
@@ -92,11 +92,11 @@ export default function ForgotPasswordForm() {
               onClick={() => setIsEmailSent(false)}
               className="rounded-lg"
             >
-              Thử lại
+              Try Again
             </Button>
             <Link href="/sign-in">
               <Button variant="outline" className="rounded-lg">
-                Quay lại Đăng nhập
+                Back to Sign In
               </Button>
             </Link>
           </div>

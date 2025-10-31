@@ -26,20 +26,20 @@ const formSchema = z
   .object({
     password: z
       .string()
-      .min(6, { message: "Mật khẩu ít nhất 6 ký tự" })
+      .min(6, { message: "Password must be at least 6 characters" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
         {
           message:
-            "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt",
+            "Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character",
         }
       ),
     confirm_password: z
       .string()
-      .min(6, { message: "Mật khẩu ít nhất 6 ký tự" }),
+      .min(6, { message: "Password must be at least 6 characters" }),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "Mật khẩu không khớp",
+    message: "Passwords do not match",
     path: ["confirm_password"],
   });
 
@@ -64,7 +64,7 @@ export default function ResetPasswordForm() {
     if (!urlToken) {
       setIsValidToken(false);
       toast.error(
-        "Liên kết đặt lại không hợp lệ. Vui lòng yêu cầu liên kết mới."
+        "Invalid reset link. Please request a new link."
       );
     } else {
       setToken(urlToken);
@@ -74,7 +74,7 @@ export default function ResetPasswordForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!token) {
-      toast.error("Token đặt lại không hợp lệ");
+      toast.error("Invalid reset token");
       return;
     }
 
@@ -87,7 +87,7 @@ export default function ResetPasswordForm() {
       });
 
       toast.success(
-        "Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới."
+        "Password reset successfully! Please login with your new password."
       );
       router.push("/sign-in");
     } catch (error) {
@@ -130,8 +130,7 @@ export default function ResetPasswordForm() {
         </div>
         <Heading className="mb-6">Invalid Reset Link</Heading>
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Liên kết đặt lại mật khẩu này không hợp lệ hoặc đã hết hạn. Vui lòng
-          yêu cầu liên kết mới.
+          This password reset link is invalid or has expired. Please request a new link.
         </p>
         <Link href="/forgot-password">
           <Button className="bg-gradient-to-primary text-white rounded-lg">
