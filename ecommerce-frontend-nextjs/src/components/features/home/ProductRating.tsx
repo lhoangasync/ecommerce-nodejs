@@ -30,7 +30,7 @@ export default function ProductRating({
         }
       } catch (error) {
         console.error("Error loading rating stats:", error);
-        setError("Không thể tải thống kê đánh giá");
+        setError("Unable to load rating statistics");
       } finally {
         setLoading(false);
       }
@@ -63,9 +63,9 @@ export default function ProductRating({
     return (
       <div className="bg-white rounded-xl p-6 border border-gray-200">
         <div className="text-center text-gray-500">
-          <p className="font-medium">Chưa có đánh giá nào</p>
+          <p className="font-medium">No reviews yet</p>
           <p className="text-sm mt-1">
-            Hãy là người đầu tiên đánh giá sản phẩm này!
+            Be the first to review this product!
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function ProductRating({
           <div
             className="flex items-center justify-center gap-1 mb-2"
             role="img"
-            aria-label={`${ratingStats.averageRating.toFixed(1)} trên 5 sao`}
+            aria-label={`${ratingStats.averageRating.toFixed(1)} out of 5 stars`}
           >
             {[...Array(5)].map((_, i) => {
               const isFilled = i < Math.floor(ratingStats.averageRating);
@@ -107,11 +107,11 @@ export default function ProductRating({
               );
             })}
           </div>
-          <p className="text-gray-600">{ratingStats.totalReviews} đánh giá</p>
+          <p className="text-gray-600">{ratingStats.totalReviews} reviews</p>
           {ratingStats.verifiedPurchaseCount !== undefined &&
             ratingStats.verifiedPurchaseCount > 0 && (
               <p className="text-sm text-green-600 mt-2">
-                {ratingStats.verifiedPurchaseCount} đã mua hàng
+                {ratingStats.verifiedPurchaseCount} verified purchases
               </p>
             )}
         </div>
@@ -119,7 +119,7 @@ export default function ProductRating({
         {/* Rating Distribution */}
         <div className="space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
-            // FIX: Kiểm tra cả key number và string
+            // FIX: Check both number and string keys
             console.log("ratingStats:", ratingStats);
             console.log("distribution:", ratingStats.distribution);
             const distribution = ratingStats.distribution || {};
@@ -140,7 +140,7 @@ export default function ProductRating({
                     activeFilter === String(star) ? "" : String(star)
                   )
                 }
-                aria-label={`Lọc theo ${star} sao (${count} đánh giá)`}
+                aria-label={`Filter by ${star} stars (${count} reviews)`}
                 aria-pressed={activeFilter === String(star)}
                 className={`flex items-center gap-3 w-full group hover:bg-gray-50 p-2 rounded transition-colors ${
                   activeFilter === String(star) ? "bg-pink-50" : ""

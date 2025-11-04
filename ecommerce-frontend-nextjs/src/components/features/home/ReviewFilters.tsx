@@ -35,7 +35,7 @@ export function ReviewFilters({
             onClick={() => onFilterChange("")}
             className="flex items-center gap-2 px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors"
           >
-            <span>{filterRating} sao</span>
+            <span>{filterRating} stars</span>
             <X className="w-4 h-4" />
           </button>
         )}
@@ -47,10 +47,10 @@ export function ReviewFilters({
             onChange={(e) => onStatusFilterChange(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500"
           >
-            <option value="">Tất cả trạng thái</option>
-            <option value="pending">Chờ duyệt</option>
-            <option value="approved">Đã duyệt</option>
-            <option value="rejected">Đã từ chối</option>
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         )}
       </div>
@@ -65,9 +65,9 @@ export function ReviewFilters({
         }
         className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500"
       >
-        <option value="created_at">Mới nhất</option>
-        <option value="rating">Đánh giá cao nhất</option>
-        <option value="helpful_count">Hữu ích nhất</option>
+        <option value="created_at">Newest</option>
+        <option value="rating">Highest rating</option>
+        <option value="helpful_count">Most helpful</option>
       </select>
     </div>
   );

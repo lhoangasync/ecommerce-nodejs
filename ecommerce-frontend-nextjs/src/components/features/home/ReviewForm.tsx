@@ -60,13 +60,13 @@ export function ReviewForm({
 
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">
-      <h3 className="font-bold text-gray-900 mb-4">Viết đánh giá của bạn</h3>
+      <h3 className="font-bold text-gray-900 mb-4">Write your review</h3>
 
       <div className="space-y-4">
         {/* Rating */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Đánh giá của bạn
+            Your rating
           </label>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((r) => (
@@ -94,12 +94,12 @@ export function ReviewForm({
         {/* Comment */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Nội dung đánh giá
+            Review content
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+            placeholder="Share your experience about this product..."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 resize-none"
             rows={4}
           />
@@ -108,11 +108,11 @@ export function ReviewForm({
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Hình ảnh (Tối đa 5 ảnh)
+            Images (Maximum 5 images)
           </label>
 
           <div className="space-y-3">
-            {/* Upload Button - ĐÃ SỬA */}
+            {/* Upload Button - FIXED */}
             {images.length < 5 && (
               <div className="h-[100px] w-[100px] bg-white rounded-md border-2 border-dashed border-gray-300 flex relative hover:border-pink-400 transition-colors">
                 <UploadButton
@@ -121,10 +121,10 @@ export function ReviewForm({
                   onClientUploadComplete={(res) => {
                     const newImages = [...images, res[0].url];
                     setImages(newImages);
-                    toast.success("Tải ảnh thành công!");
+                    toast.success("Image uploaded successfully!");
                   }}
                   onUploadError={(error: Error) => {
-                    toast.error(`Lỗi tải ảnh: ${error.message}`);
+                    toast.error(`Upload error: ${error.message}`);
                   }}
                   content={{
                     button: <Upload className="w-6 h-6" />,
@@ -186,10 +186,10 @@ export function ReviewForm({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Đang gửi...
+              Submitting...
             </>
           ) : (
-            "Gửi đánh giá"
+            "Submit review"
           )}
         </button>
       </div>
