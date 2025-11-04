@@ -37,11 +37,11 @@ export function ReviewList({
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Hôm nay";
-    if (diffDays === 1) return "Hôm qua";
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-    return date.toLocaleDateString("vi-VN");
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString("en-US");
   };
 
   const getStatusBadge = (status: string) => {
@@ -56,21 +56,21 @@ export function ReviewList({
                 clipRule="evenodd"
               />
             </svg>
-            Chờ duyệt
+            Pending
           </span>
         );
       case "approved":
         return (
           <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
             <Check className="w-3 h-3" />
-            Đã duyệt
+            Approved
           </span>
         );
       case "rejected":
         return (
           <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
             <XCircle className="w-3 h-3" />
-            Đã từ chối
+            Rejected
           </span>
         );
       default:
@@ -120,9 +120,9 @@ export function ReviewList({
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <p className="text-gray-500 font-medium">Chưa có đánh giá nào</p>
+        <p className="text-gray-500 font-medium">No reviews yet</p>
         <p className="text-sm text-gray-400 mt-2">
-          Hãy là người đầu tiên đánh giá sản phẩm này!
+          Be the first to review this product!
         </p>
       </div>
     );
@@ -145,7 +145,7 @@ export function ReviewList({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <p className="font-semibold text-gray-900">
-                  {review.user?.name || "Người dùng"}
+                  {review.user?.name || "User"}
                 </p>
                 {review.is_verified_purchase && (
                   <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded flex items-center gap-1">
@@ -160,7 +160,7 @@ export function ReviewList({
                         clipRule="evenodd"
                       />
                     </svg>
-                    Đã mua hàng
+                    Verified Purchase
                   </span>
                 )}
                 {isAdmin && getStatusBadge(review.status)}
@@ -231,7 +231,7 @@ export function ReviewList({
                   />
                 </svg>
                 <p className="font-semibold text-pink-600">
-                  Phản hồi từ người bán
+                  Response from seller
                 </p>
               </div>
               <p className="text-gray-700">{review.seller_response.message}</p>
@@ -261,7 +261,7 @@ export function ReviewList({
                   d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
                 />
               </svg>
-              <span>Hữu ích ({review.helpful_count || 0})</span>
+              <span>Helpful ({review.helpful_count || 0})</span>
             </button>
 
             {/* Admin Actions - only visible to admin */}
@@ -273,7 +273,7 @@ export function ReviewList({
                     className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors"
                   >
                     <Check className="w-4 h-4" />
-                    Duyệt
+                    Approve
                   </button>
                 )}
                 {onReject && (
@@ -282,7 +282,7 @@ export function ReviewList({
                     className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
                   >
                     <XCircle className="w-4 h-4" />
-                    Từ chối
+                    Reject
                   </button>
                 )}
               </>
@@ -299,17 +299,17 @@ export function ReviewList({
             disabled={currentPage === 1}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Trước
+            Previous
           </button>
           <span className="text-sm text-gray-600">
-            Trang {currentPage} / {totalPages}
+            Page {currentPage} / {totalPages}
           </span>
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Sau
+            Next
           </button>
         </div>
       )}
