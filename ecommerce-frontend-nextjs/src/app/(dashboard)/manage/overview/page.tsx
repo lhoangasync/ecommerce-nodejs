@@ -116,7 +116,7 @@ export default function OverviewPage() {
         // Import the API functions
         const { getAllOrders } = await import("@/api/order.api");
 
-        // Fetch all orders (không filter gì cả)
+        // Fetch all orders (no filter)
         const allOrdersResponse = await getAllOrders({});
         const allOrdersData =
           (allOrdersResponse?.data as any)?.orders ||
@@ -241,7 +241,7 @@ export default function OverviewPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Tổng quan doanh thu
+          Revenue Overview
         </h1>
 
         {/* Stats Grid - Row 1 */}
@@ -249,12 +249,12 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng doanh thu</p>
+                <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(stats.totalRevenue)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Từ đơn đã thanh toán
+                  From paid orders
                 </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
@@ -266,12 +266,12 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Lợi nhuận (50%)</p>
+                <p className="text-sm text-gray-600 mb-1">Profit (50%)</p>
                 <p className="text-2xl font-bold text-green-600">
                   {formatCurrency(stats.totalProfit)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Từ đơn đã thanh toán
+                  From paid orders
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
@@ -283,11 +283,11 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đơn đã thanh toán</p>
+                <p className="text-sm text-gray-600 mb-1">Paid Orders</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.totalOrders}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Tính vào doanh thu</p>
+                <p className="text-xs text-gray-500 mt-1">Counted in revenue</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
                 <ShoppingCart className="w-6 h-6 text-purple-600" />
@@ -298,11 +298,11 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Giá trị TB/đơn</p>
+                <p className="text-sm text-gray-600 mb-1">Avg Order Value</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(stats.avgOrderValue)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Đơn đã thanh toán</p>
+                <p className="text-xs text-gray-500 mt-1">Paid orders</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <Package className="w-6 h-6 text-orange-600" />
@@ -316,7 +316,7 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đơn chưa xác nhận</p>
+                <p className="text-sm text-gray-600 mb-1">Pending Orders</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {stats.pendingOrders}
                 </p>
@@ -330,7 +330,7 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đơn chưa giao</p>
+                <p className="text-sm text-gray-600 mb-1">Undelivered Orders</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {stats.undeliveredOrders}
                 </p>
@@ -344,7 +344,7 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng đơn đã TT</p>
+                <p className="text-sm text-gray-600 mb-1">Total Paid Orders</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {stats.paidOrders}
                 </p>
@@ -358,11 +358,11 @@ export default function OverviewPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đơn hoàn tất</p>
+                <p className="text-sm text-gray-600 mb-1">Completed Orders</p>
                 <p className="text-2xl font-bold text-green-600">
                   {stats.completedOrders}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Đã giao & đã TT</p>
+                <p className="text-xs text-gray-500 mt-1">Delivered & Paid</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <CheckCircle className="w-6 h-6 text-green-600" />
@@ -376,7 +376,7 @@ export default function OverviewPage() {
           {/* Revenue & Profit Chart */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Doanh thu & Lợi nhuận theo ngày
+              Revenue & Profit by Day
             </h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
@@ -392,14 +392,14 @@ export default function OverviewPage() {
                   type="monotone"
                   dataKey="revenue"
                   stroke="#3B82F6"
-                  name="Doanh thu"
+                  name="Revenue"
                   strokeWidth={2}
                 />
                 <Line
                   type="monotone"
                   dataKey="profit"
                   stroke="#10B981"
-                  name="Lợi nhuận"
+                  name="Profit"
                   strokeWidth={2}
                 />
               </LineChart>
@@ -409,7 +409,7 @@ export default function OverviewPage() {
           {/* Top Products Pie Chart */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Top 5 sản phẩm bán chạy
+              Top 5 Best Selling Products
             </h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -443,7 +443,7 @@ export default function OverviewPage() {
         {/* Orders Bar Chart */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Số đơn hàng theo ngày
+            Orders by Day
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
@@ -452,7 +452,7 @@ export default function OverviewPage() {
               <YAxis fontSize={12} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="orders" fill="#8B5CF6" name="Số đơn hàng" />
+              <Bar dataKey="orders" fill="#8B5CF6" name="Number of Orders" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -461,7 +461,7 @@ export default function OverviewPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
-              Đơn hàng gần đây (Đã thanh toán)
+              Recent Orders (Paid)
             </h2>
           </div>
           <div className="overflow-x-auto">
@@ -469,25 +469,25 @@ export default function OverviewPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mã đơn
+                    Order Code
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sản phẩm
+                    Products
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Doanh thu
+                    Revenue
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phí ship
+                    Shipping Fee
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Giảm giá
+                    Discount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lợi nhuận (50%)
+                    Profit (50%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạng thái giao hàng
+                    Delivery Status
                   </th>
                 </tr>
               </thead>
@@ -498,7 +498,7 @@ export default function OverviewPage() {
                       colSpan={7}
                       className="px-6 py-8 text-center text-gray-500"
                     >
-                      Chưa có đơn hàng nào
+                      No orders yet
                     </td>
                   </tr>
                 ) : (
@@ -544,14 +544,14 @@ export default function OverviewPage() {
                             }`}
                           >
                             {order.status === "delivered"
-                              ? "Đã giao"
+                              ? "Delivered"
                               : order.status === "shipping"
-                              ? "Đang giao"
+                              ? "Shipping"
                               : order.status === "processing"
-                              ? "Đang xử lý"
+                              ? "Processing"
                               : order.status === "confirmed"
-                              ? "Đã xác nhận"
-                              : "Chờ xác nhận"}
+                              ? "Confirmed"
+                              : "Pending"}
                           </span>
                         </td>
                       </tr>
