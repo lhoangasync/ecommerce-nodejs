@@ -89,13 +89,13 @@ export default function OrdersPage() {
 
   const getStatusText = (status: Order["status"]) => {
     const texts = {
-      pending: "Chờ xác nhận",
-      confirmed: "Đã xác nhận",
-      processing: "Đang xử lý",
-      shipping: "Đang giao hàng",
-      delivered: "Đã giao hàng",
-      cancelled: "Đã hủy",
-      refunded: "Đã hoàn tiền",
+      pending: "Pending",
+      confirmed: "Confirmed",
+      processing: "Processing",
+      shipping: "Shipping",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      refunded: "Refunded",
     };
     return texts[status] || status;
   };
@@ -104,13 +104,13 @@ export default function OrdersPage() {
     value: Order["status"] | "all";
     label: string;
   }> = [
-    { value: "all", label: "Tất cả" },
-    { value: "pending", label: "Chờ xác nhận" },
-    { value: "confirmed", label: "Đã xác nhận" },
-    { value: "processing", label: "Đang xử lý" },
-    { value: "shipping", label: "Đang giao" },
-    { value: "delivered", label: "Đã giao" },
-    { value: "cancelled", label: "Đã hủy" },
+    { value: "all", label: "All" },
+    { value: "pending", label: "Pending" },
+    { value: "confirmed", label: "Confirmed" },
+    { value: "processing", label: "Processing" },
+    { value: "shipping", label: "Shipping" },
+    { value: "delivered", label: "Delivered" },
+    { value: "cancelled", label: "Cancelled" },
   ];
 
   return (
@@ -119,9 +119,9 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Đơn hàng của tôi
+            My Orders
           </h1>
-          <p className="text-gray-600">Quản lý và theo dõi đơn hàng của bạn</p>
+          <p className="text-gray-600">Manage and track your orders</p>
         </div>
 
         {/* Filters */}
@@ -150,7 +150,7 @@ export default function OrdersPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-pink-500 mb-4"></div>
-            <p className="text-gray-600">Đang tải đơn hàng...</p>
+            <p className="text-gray-600">Loading orders...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
@@ -168,16 +168,16 @@ export default function OrdersPage() {
               />
             </svg>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Chưa có đơn hàng nào
+              No orders yet
             </h3>
             <p className="text-gray-600 mb-6">
-              Bạn chưa có đơn hàng nào trong danh sách này
+              You have no orders in this list
             </p>
             <Link
               href="/products"
               className="inline-block bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105"
             >
-              Khám phá sản phẩm
+              Explore products
             </Link>
           </div>
         ) : (
@@ -192,14 +192,14 @@ export default function OrdersPage() {
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div>
-                        <p className="text-sm text-gray-600">Mã đơn hàng</p>
+                        <p className="text-sm text-gray-600">Order Code</p>
                         <p className="font-bold text-gray-900">
                           {order.order_code}
                         </p>
                       </div>
                       <div className="h-8 w-px bg-gray-300"></div>
                       <div>
-                        <p className="text-sm text-gray-600">Ngày đặt</p>
+                        <p className="text-sm text-gray-600">Order Date</p>
                         <p className="font-semibold text-gray-900">
                           {formatDate(order.created_at)}
                         </p>
@@ -241,7 +241,7 @@ export default function OrdersPage() {
                           </h3>
                           <div className="flex gap-2 text-sm text-gray-600 mt-1">
                             {item.variant_shade_color && (
-                              <span>Màu: {item.variant_shade_color}</span>
+                              <span>Color: {item.variant_shade_color}</span>
                             )}
                             {item.variant_volume_size && (
                               <span>| Size: {item.variant_volume_size}</span>
@@ -260,7 +260,7 @@ export default function OrdersPage() {
                     ))}
                     {order.items.length > 2 && (
                       <p className="text-sm text-gray-600 text-center">
-                        +{order.items.length - 2} sản phẩm khác
+                        +{order.items.length - 2} more items
                       </p>
                     )}
                   </div>
@@ -268,7 +268,7 @@ export default function OrdersPage() {
                   {/* Order Footer */}
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">Tổng cộng</p>
+                      <p className="text-sm text-gray-600">Total</p>
                       <p className="text-2xl font-bold text-pink-600">
                         {formatPrice(order.total_amount)}
                       </p>
@@ -277,7 +277,7 @@ export default function OrdersPage() {
                       href={`/orders/${order._id}`}
                       className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105"
                     >
-                      Xem chi tiết
+                      View Details
                     </Link>
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default function OrdersPage() {
               disabled={currentPage === 1}
               className="px-4 py-2 bg-white rounded-xl font-semibold text-gray-700 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Trước
+              Previous
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
@@ -316,7 +316,7 @@ export default function OrdersPage() {
               disabled={currentPage === totalPages}
               className="px-4 py-2 bg-white rounded-xl font-semibold text-gray-700 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Sau
+              Next
             </button>
           </div>
         )}

@@ -37,7 +37,7 @@ function PaymentResultContent() {
   useEffect(() => {
     const processReturn = async () => {
       try {
-        // Phát hiện payment gateway dựa vào query params
+        // Detect payment gateway based on query params
         const hasVNPayParams = searchParams.has("vnp_TxnRef");
         const hasMoMoParams =
           searchParams.has("orderId") && searchParams.has("partnerCode");
@@ -50,12 +50,12 @@ function PaymentResultContent() {
           await processMoMoReturn();
         } else {
           setStatus("failed");
-          setMessage("Không xác định được phương thức thanh toán");
+          setMessage("Unable to determine payment method");
         }
       } catch (error) {
         console.error("Error processing payment return:", error);
         setStatus("failed");
-        setMessage("Có lỗi xảy ra khi xử lý thanh toán");
+        setMessage("An error occurred while processing payment");
       }
     };
 
@@ -86,14 +86,14 @@ function PaymentResultContent() {
 
       if (payment_status === "completed" || params.vnp_ResponseCode === "00") {
         setStatus("success");
-        setMessage("Thanh toán thành công!");
+        setMessage("Payment successful!");
       } else {
         setStatus("failed");
         setMessage(getVNPayErrorMessage(params.vnp_ResponseCode));
       }
     } else {
       setStatus("failed");
-      setMessage(response.error || "Có lỗi xảy ra khi xử lý thanh toán");
+      setMessage(response.error || "An error occurred while processing payment");
     }
   };
 
@@ -122,62 +122,62 @@ function PaymentResultContent() {
 
       if (payment_status === "completed" || params.resultCode === "0") {
         setStatus("success");
-        setMessage("Thanh toán thành công!");
+        setMessage("Payment successful!");
       } else {
         setStatus("failed");
         setMessage(getMoMoErrorMessage(params.resultCode, params.message));
       }
     } else {
       setStatus("failed");
-      setMessage(response.error || "Có lỗi xảy ra khi xử lý thanh toán");
+      setMessage(response.error || "An error occurred while processing payment");
     }
   };
 
   const getVNPayErrorMessage = (code: string): string => {
     const errorMessages: Record<string, string> = {
-      "07": "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).",
-      "09": "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng chưa đăng ký dịch vụ InternetBanking.",
-      "10": "Giao dịch không thành công do: Khách hàng xác thực thông tin thẻ/tài khoản không đúng quá 3 lần",
-      "11": "Giao dịch không thành công do: Đã hết hạn chờ thanh toán.",
-      "12": "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng bị khóa.",
-      "13": "Giao dịch không thành công do Quý khách nhập sai mật khẩu xác thực giao dịch (OTP).",
-      "24": "Giao dịch không thành công do: Khách hàng hủy giao dịch",
-      "51": "Giao dịch không thành công do: Tài khoản của quý khách không đủ số dư để thực hiện giao dịch.",
-      "65": "Giao dịch không thành công do: Tài khoản của Quý khách đã vượt quá giới hạn giao dịch trong ngày.",
-      "75": "Ngân hàng thanh toán đang bảo trì.",
-      "79": "Giao dịch không thành công do: KH nhập sai mật khẩu thanh toán quá số lần quy định.",
-      "99": "Các lỗi khác",
+      "07": "Money deducted successfully. Transaction suspected of fraud or unusual activity.",
+      "09": "Transaction failed: Customer card or account has not registered for InternetBanking service.",
+      "10": "Transaction failed: Customer entered incorrect card or account information more than 3 times",
+      "11": "Transaction failed: Payment timeout has expired.",
+      "12": "Transaction failed: Customer card or account is locked.",
+      "13": "Transaction failed: Customer entered incorrect OTP authentication password.",
+      "24": "Transaction failed: Customer canceled transaction",
+      "51": "Transaction failed: Your account does not have sufficient balance to complete the transaction.",
+      "65": "Transaction failed: Your account has exceeded the daily transaction limit.",
+      "75": "Payment bank is under maintenance.",
+      "79": "Transaction failed: Customer entered incorrect payment password more than allowed times.",
+      "99": "Other errors",
     };
-    return errorMessages[code] || "Thanh toán thất bại. Vui lòng thử lại.";
+    return errorMessages[code] || "Payment failed. Please try again.";
   };
 
   const getMoMoErrorMessage = (code: string, message: string): string => {
     const errorMessages: Record<string, string> = {
-      "9000": "Giao dịch bị từ chối bởi người dùng.",
+      "9000": "Transaction rejected by user.",
       "1001":
-        "Giao dịch thanh toán thất bại do tài khoản người dùng không đủ tiền.",
-      "1002": "Giao dịch bị từ chối do nhà phát hành tài khoản thanh toán.",
-      "1003": "Giao dịch bị hủy.",
+        "Payment transaction failed due to insufficient funds in user account.",
+      "1002": "Transaction rejected by payment account issuer.",
+      "1003": "Transaction canceled.",
       "1004":
-        "Giao dịch thất bại do số tiền thanh toán vượt quá hạn mức thanh toán của người dùng.",
-      "1005": "Giao dịch thất bại do url hoặc QR code đã hết hạn.",
+        "Transaction failed due to payment amount exceeding user payment limit.",
+      "1005": "Transaction failed due to expired URL or QR code.",
       "1006":
-        "Giao dịch thất bại do người dùng đã từ chối xác nhận thanh toán.",
+        "Transaction failed due to user declining payment confirmation.",
       "1007":
-        "Giao dịch bị từ chối vì tài khoản người dùng đang ở trạng thái tạm khóa.",
-      "1017": "Giao dịch thất bại do người dùng hủy giao dịch.",
-      "1026": "Giao dịch bị giới hạn theo quy định.",
-      "2001": "Giao dịch thất bại do sai thông tin.",
-      "3001": "Giao dịch bị từ chối bởi issuer.",
-      "3002": "Thẻ không tồn tại hoặc chưa được đăng ký.",
-      "3003": "Thẻ đã hết hạn hoặc ngày hết hạn không chính xác.",
-      "3004": "Không đủ số dư để thực hiện giao dịch.",
-      "3005": "OTP không hợp lệ.",
-      "3006": "OTP đã hết hạn.",
-      "3007": "Đã vượt quá số lần nhập OTP.",
+        "Transaction rejected because user account is temporarily locked.",
+      "1017": "Transaction failed due to user cancellation.",
+      "1026": "Transaction limited by regulations.",
+      "2001": "Transaction failed due to incorrect information.",
+      "3001": "Transaction rejected by issuer.",
+      "3002": "Card does not exist or has not been registered.",
+      "3003": "Card has expired or expiration date is incorrect.",
+      "3004": "Insufficient balance to complete transaction.",
+      "3005": "Invalid OTP.",
+      "3006": "OTP has expired.",
+      "3007": "OTP entry attempts exceeded.",
     };
     return (
-      errorMessages[code] || message || "Thanh toán thất bại. Vui lòng thử lại."
+      errorMessages[code] || message || "Payment failed. Please try again."
     );
   };
 
@@ -187,9 +187,9 @@ function PaymentResultContent() {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-4"></div>
           <h2 className="text-2xl font-bold text-gray-800">
-            Đang xử lý thanh toán...
+            Processing payment...
           </h2>
-          <p className="text-gray-600 mt-2">Vui lòng không đóng trang này</p>
+          <p className="text-gray-600 mt-2">Please do not close this page</p>
         </div>
       </div>
     );
@@ -218,16 +218,16 @@ function PaymentResultContent() {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
-              Thanh toán thành công!
+              Payment successful!
             </h2>
             <p className="text-center text-gray-600 mb-2">{message}</p>
             {paymentMethod && (
               <p className="text-center text-sm text-gray-500 mb-6">
-                Phương thức: {paymentMethod === "vnpay" ? "VNPay" : "MoMo"}
+                Payment method: {paymentMethod === "vnpay" ? "VNPay" : "MoMo"}
               </p>
             )}
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-600 mb-1">Mã đơn hàng</p>
+              <p className="text-sm text-gray-600 mb-1">Order ID</p>
               <p className="text-lg font-bold text-green-700">{orderId}</p>
             </div>
           </>
@@ -251,12 +251,12 @@ function PaymentResultContent() {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
-              Thanh toán thất bại
+              Payment failed
             </h2>
             <p className="text-center text-gray-600 mb-2">{message}</p>
             {paymentMethod && (
               <p className="text-center text-sm text-gray-500 mb-6">
-                Phương thức: {paymentMethod === "vnpay" ? "VNPay" : "MoMo"}
+                Payment method: {paymentMethod === "vnpay" ? "VNPay" : "MoMo"}
               </p>
             )}
           </>
@@ -268,20 +268,20 @@ function PaymentResultContent() {
               href={`/orders/${orderId}`}
               className="block w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl text-center transition-all duration-300 hover:scale-105"
             >
-              Xem chi tiết đơn hàng
+              View order details
             </Link>
           )}
           <Link
             href="/orders"
             className="block w-full border-2 border-gray-200 hover:border-pink-300 text-gray-700 hover:text-pink-600 font-semibold py-3 px-6 rounded-xl text-center transition-all duration-300"
           >
-            Xem tất cả đơn hàng
+            View all orders
           </Link>
           <Link
             href="/products"
             className="block w-full text-center text-gray-600 hover:text-pink-600 font-medium py-2 transition-colors"
           >
-            Tiếp tục mua sắm
+            Continue shopping
           </Link>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function PaymentResultPage() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-4"></div>
-            <h2 className="text-2xl font-bold text-gray-800">Đang tải...</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Loading...</h2>
           </div>
         </div>
       }
