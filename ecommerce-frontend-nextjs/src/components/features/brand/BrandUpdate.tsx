@@ -66,22 +66,6 @@ function BrandUpdate({ brand, open, onOpenChange }: BrandUpdateProps) {
     },
   });
 
-  //   const addBrandMutation = useMutation({
-  //     mutationFn: (body: AddBrandReqBody) => addBrand(body),
-  //     onSuccess: (result) => {
-  //       if (result.success) {
-  //         toast.success(result.data?.message);
-  //         queryClient.invalidateQueries({ queryKey: ["brands"] });
-  //         setOpen(false);
-  //       } else {
-  //         toast.error(result.error);
-  //       }
-  //     },
-  //     onError: (error) => {
-  //       toast.error(error.message);
-  //     },
-  //   });
-
   const updateBrandMutation = useMutation({
     mutationFn: ({
       brandId,
