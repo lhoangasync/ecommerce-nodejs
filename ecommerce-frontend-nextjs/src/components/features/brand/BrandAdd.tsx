@@ -76,32 +76,6 @@ function BrandAdd() {
     },
   });
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   setIsSubmitting(true);
-  //   try {
-  //     const payload: AddBrandReqBody = {
-  //       name: values.name,
-  //       slug:
-  //         values.slug || slugify(values.name, { lower: true, locale: "vi" }),
-  //       country: values.country || "",
-  //       desc: values.desc || "",
-  //       img: values.img || "",
-  //     };
-
-  //     const res = await addBrand(payload);
-  //     if (res.success) {
-  //       toast.success("Brand added successfully!");
-  //       router.refresh();
-  //     } else {
-  //       toast.error(res.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to add brand:", error);
-  //     toast.error("Failed to add brand. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const payload: AddBrandReqBody = {
       name: values.name,
