@@ -7,7 +7,6 @@ class EmailService {
   private transporter: nodemailer.Transporter
 
   constructor() {
-    // Đảm bảo lấy đúng biến SMTP_PASS và xử lý port
     const SMTP_PORT_NUM = parseInt(process.env.SMTP_PORT || '587');
     const isSecure = SMTP_PORT_NUM === 465 || (process.env.SMTP_SECURE === 'true');
 
@@ -17,21 +16,19 @@ class EmailService {
       secure: isSecure,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        pass: process.env.SMTP_PASSWORD
       },
       tls: {
         rejectUnauthorized: false
       }
     });
 
-    // Verify connection configuration
     this.transporter.verify((error, success) => {
       if (error) {
         console.error('SMTP connection error:', error);
         
-        // SỬA Ở ĐÂY: Thêm (error as any)
         if ((error as any).code === 'EAUTH') {
-          console.error('Authentication Failed: Check SMTP_USER and SMTP_PASS (App Password).');
+          console.error('Authentication Failed: Check SMTP_USER and SMTP_PASSWORD (App Password).');
         }
       } else {
         console.log('SMTP server is ready to send emails');
@@ -39,9 +36,6 @@ class EmailService {
     });
   }
 
-  /**
-   * Gửi email xác nhận đơn hàng khi tạo mới
-   */
   async sendOrderConfirmationEmail(to: string, orderData: any) {
     const htmlContent = `
     <!DOCTYPE html>
@@ -49,7 +43,7 @@ class EmailService {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Xác nhận đơn hàng</title>
+        <title>Order Confirmation</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background: #f5f5f5; padding: 20px; }
@@ -89,32 +83,32 @@ class EmailService {
     <body>
         <div class="email-wrapper">
             <div class="header">
-                <h1>🎉 Đơn hàng đã được tạo thành công!</h1>
-                <p>Cảm ơn bạn đã mua sắm tại Cosmetic Store</p>
+                <h1>Order Successfully Created!</h1>
+                <p>Thank you for shopping at Cosmetic Store</p>
             </div>
             
             <div class="content">
                 <div class="order-info">
                     <div class="order-info-row">
-                        <span class="label">Mã đơn hàng:</span>
+                        <span class="label">Order Code:</span>
                         <span class="value">${orderData.order_code}</span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Ngày đặt:</span>
+                        <span class="label">Order Date:</span>
                         <span class="value">${new Date(orderData.created_at).toLocaleString('vi-VN')}</span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Trạng thái:</span>
-                        <span class="value"><span class="status-badge">Chờ xác nhận</span></span>
+                        <span class="label">Status:</span>
+                        <span class="value"><span class="status-badge">Pending Confirmation</span></span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Phương thức thanh toán:</span>
-                        <span class="value">${orderData.payment_method === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : orderData.payment_method === 'momo' ? 'Ví MoMo' : orderData.payment_method === 'vnpay' ? 'VNPay' : 'Chuyển khoản ngân hàng'}</span>
+                        <span class="label">Payment Method:</span>
+                        <span class="value">${orderData.payment_method === 'cod' ? 'Cash on Delivery (COD)' : orderData.payment_method === 'momo' ? 'MoMo Wallet' : orderData.payment_method === 'vnpay' ? 'VNPay' : 'Bank Transfer'}</span>
                     </div>
                 </div>
                 
                 <div class="items-section">
-                    <h2>📦 Chi tiết sản phẩm</h2>
+                    <h2>Product Details</h2>
                     ${orderData.items
                       .map(
                         (item: any) => `
@@ -123,11 +117,11 @@ class EmailService {
                             <div class="item-details">
                                 <div class="item-name">${item.product_name}</div>
                                 <div class="item-variant">
-                                    ${item.variant_shade_color ? `Màu: ${item.variant_shade_color}` : ''}
-                                    ${item.variant_volume_size ? `${item.variant_shade_color ? ' | ' : ''}Dung tích: ${item.variant_volume_size}` : ''}
+                                    ${item.variant_shade_color ? `Color: ${item.variant_shade_color}` : ''}
+                                    ${item.variant_volume_size ? `${item.variant_shade_color ? ' | ' : ''}Volume: ${item.variant_volume_size}` : ''}
                                 </div>
                                 <div class="item-price">
-                                    <span>Số lượng: ${item.quantity}</span>
+                                    <span>Quantity: ${item.quantity}</span>
                                     <span style="font-weight: 600;">${item.subtotal.toLocaleString('vi-VN')}₫</span>
                                 </div>
                             </div>
@@ -138,56 +132,55 @@ class EmailService {
                 </div>
                 
                 <div class="shipping-address">
-                    <h3>📍 Địa chỉ giao hàng</h3>
+                    <h3>Shipping Address</h3>
                     <p><strong>${orderData.shipping_address.full_name}</strong></p>
-                    <p>📞 ${orderData.shipping_address.phone_number}</p>
-                    <p>🏠 ${orderData.shipping_address.address}</p>
+                    <p>${orderData.shipping_address.phone_number}</p>
+                    <p>${orderData.shipping_address.address}</p>
                     ${orderData.shipping_address.ward ? `<p>${orderData.shipping_address.ward}${orderData.shipping_address.district ? `, ${orderData.shipping_address.district}` : ''}, ${orderData.shipping_address.city}</p>` : `<p>${orderData.shipping_address.city}</p>`}
-                    ${orderData.note ? `<p style="margin-top: 10px;"><em>Ghi chú: ${orderData.note}</em></p>` : ''}
+                    ${orderData.note ? `<p style="margin-top: 10px;"><em>Note: ${orderData.note}</em></p>` : ''}
                 </div>
                 
                 <div class="price-summary">
                     <div class="price-row">
-                        <span>Tạm tính:</span>
+                        <span>Subtotal:</span>
                         <span>${orderData.subtotal.toLocaleString('vi-VN')}₫</span>
                     </div>
                     <div class="price-row">
-                        <span>Phí vận chuyển:</span>
+                        <span>Shipping Fee:</span>
                         <span>${orderData.shipping_fee.toLocaleString('vi-VN')}₫</span>
                     </div>
                     ${
                       orderData.discount_amount > 0
                         ? `
                     <div class="price-row" style="color: #28a745;">
-                        <span>Giảm giá${orderData.coupon_code ? ` (${orderData.coupon_code})` : ''}:</span>
+                        <span>Discount${orderData.coupon_code ? ` (${orderData.coupon_code})` : ''}:</span>
                         <span>-${orderData.discount_amount.toLocaleString('vi-VN')}₫</span>
                     </div>
                     `
                         : ''
                     }
                     <div class="price-row total">
-                        <span>Tổng cộng:</span>
+                        <span>Total:</span>
                         <span>${orderData.total_amount.toLocaleString('vi-VN')}₫</span>
                     </div>
                 </div>
                 
                 <div style="text-align: center;">
                     <a href="${process.env.CLIENT_URL}/orders/${orderData._id}" class="button">
-                        Xem chi tiết đơn hàng
+                        View Order Details
                     </a>
                 </div>
                 
                 <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #4caf50;">
                     <p style="color: #2e7d32; margin: 0;">
-                        <strong>✅ Tiếp theo:</strong> Chúng tôi sẽ xác nhận đơn hàng và bắt đầu chuẩn bị giao hàng cho bạn. 
-                        Bạn sẽ nhận được email thông báo khi đơn hàng có cập nhật.
+                        <strong>Next Step:</strong> We will confirm your order and start preparing for delivery. You will receive email notifications when your order is updated.
                     </p>
                 </div>
             </div>
             
             <div class="footer">
-                <p><strong>Cảm ơn bạn đã tin tưởng Cosmetic Store! 💖</strong></p>
-                <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.</p>
+                <p><strong>Thank you for trusting Cosmetic Store!</strong></p>
+                <p>If you have any questions, please contact us.</p>
             </div>
         </div>
     </body>
@@ -197,7 +190,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.MAIL_FROM,
       to: to,
-      subject: `🎉 Đơn hàng ${orderData.order_code} đã được tạo thành công`,
+      subject: `Order ${orderData.order_code} Successfully Created`,
       html: htmlContent
     }
 
@@ -211,60 +204,57 @@ class EmailService {
     }
   }
 
-  /**
-   * Gửi email cập nhật trạng thái đơn hàng
-   */
   async sendOrderStatusUpdateEmail(to: string, orderData: any) {
     const statusConfig = {
       confirmed: {
-        title: '✅ Đơn hàng đã được xác nhận',
+        title: 'Order Confirmed',
         color: '#28a745',
         bgcolor: '#d4edda',
-        icon: '✅',
-        message: 'Đơn hàng của bạn đã được xác nhận và đang được chuẩn bị.',
-        nextStep: 'Chúng tôi sẽ tiến hành đóng gói và giao hàng trong thời gian sớm nhất.'
+        icon: '✓',
+        message: 'Your order has been confirmed and is being prepared.',
+        nextStep: 'We will proceed with packaging and delivery as soon as possible.'
       },
       processing: {
-        title: '📦 Đơn hàng đang được xử lý',
+        title: 'Order Processing',
         color: '#007bff',
         bgcolor: '#d1ecf1',
         icon: '📦',
-        message: 'Chúng tôi đang chuẩn bị đơn hàng của bạn.',
-        nextStep: 'Đơn hàng sẽ sớm được chuyển đến đơn vị vận chuyển.'
+        message: 'We are preparing your order.',
+        nextStep: 'Your order will soon be transferred to the shipping unit.'
       },
       shipping: {
-        title: '🚚 Đơn hàng đang được giao',
+        title: 'Order Shipping',
         color: '#ff9800',
         bgcolor: '#fff3cd',
         icon: '🚚',
-        message: 'Đơn hàng của bạn đang trên đường giao đến bạn!',
-        nextStep: 'Vui lòng chú ý điện thoại để nhận hàng.'
+        message: 'Your order is on the way to you!',
+        nextStep: 'Please pay attention to your phone to receive the order.'
       },
       delivered: {
-        title: '🎉 Đơn hàng đã giao thành công',
+        title: 'Order Delivered Successfully',
         color: '#4caf50',
         bgcolor: '#d4edda',
-        icon: '🎉',
-        message: 'Đơn hàng đã được giao thành công đến bạn!',
-        nextStep: 'Cảm ơn bạn đã mua sắm tại Cosmetic Store. Hẹn gặp lại bạn!'
+        icon: '✓',
+        message: 'Your order has been successfully delivered!',
+        nextStep: 'Thank you for shopping at Cosmetic Store. See you again!'
       },
       cancelled: {
-        title: '❌ Đơn hàng đã bị hủy',
+        title: 'Order Cancelled',
         color: '#dc3545',
         bgcolor: '#f8d7da',
-        icon: '❌',
-        message: 'Đơn hàng của bạn đã bị hủy.',
+        icon: '✕',
+        message: 'Your order has been cancelled.',
         nextStep: orderData.cancellation_reason
-          ? `Lý do: ${orderData.cancellation_reason}`
-          : 'Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.'
+          ? `Reason: ${orderData.cancellation_reason}`
+          : 'If you have any questions, please contact us.'
       },
       refunded: {
-        title: '💰 Đơn hàng đã được hoàn tiền',
+        title: 'Order Refunded',
         color: '#6c757d',
         bgcolor: '#e2e3e5',
         icon: '💰',
-        message: 'Đơn hàng của bạn đã được hoàn tiền.',
-        nextStep: 'Số tiền sẽ được chuyển về tài khoản của bạn trong 3-5 ngày làm việc.'
+        message: 'Your order has been refunded.',
+        nextStep: 'The amount will be transferred to your account within 3-5 business days.'
       }
     }
 
@@ -276,7 +266,7 @@ class EmailService {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cập nhật đơn hàng</title>
+        <title>Order Update</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background: #f5f5f5; padding: 20px; }
@@ -309,7 +299,7 @@ class EmailService {
         <div class="email-wrapper">
             <div class="header">
                 <h1>${config.title}</h1>
-                <p>Mã đơn hàng: ${orderData.order_code}</p>
+                <p>Order Code: ${orderData.order_code}</p>
             </div>
             
             <div class="content">
@@ -321,30 +311,30 @@ class EmailService {
                 
                 <div class="order-info">
                     <div class="order-info-row">
-                        <span class="label">Mã đơn hàng:</span>
+                        <span class="label">Order Code:</span>
                         <span class="value">${orderData.order_code}</span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Trạng thái hiện tại:</span>
+                        <span class="label">Current Status:</span>
                         <span class="value" style="color: ${config.color}; font-weight: 600;">${config.title}</span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Ngày cập nhật:</span>
+                        <span class="label">Update Date:</span>
                         <span class="value">${new Date().toLocaleString('vi-VN')}</span>
                     </div>
                     <div class="order-info-row">
-                        <span class="label">Tổng tiền:</span>
+                        <span class="label">Total Amount:</span>
                         <span class="value" style="font-weight: 700;">${orderData.total_amount.toLocaleString('vi-VN')}₫</span>
                     </div>
                 </div>
                 
                 <div class="timeline">
-                    <h3 style="margin-bottom: 20px; color: #212529;">📋 Lịch sử đơn hàng</h3>
+                    <h3 style="margin-bottom: 20px; color: #212529;">Order History</h3>
                     
                     <div class="timeline-item">
                         <div class="timeline-icon active">✓</div>
                         <div class="timeline-content">
-                            <div class="timeline-title">Đơn hàng đã được tạo</div>
+                            <div class="timeline-title">Order Created</div>
                             <div class="timeline-time">${new Date(orderData.created_at).toLocaleString('vi-VN')}</div>
                         </div>
                     </div>
@@ -355,7 +345,7 @@ class EmailService {
                     <div class="timeline-item">
                         <div class="timeline-icon active">✓</div>
                         <div class="timeline-content">
-                            <div class="timeline-title">Đơn hàng đã được xác nhận</div>
+                            <div class="timeline-title">Order Confirmed</div>
                             <div class="timeline-time">${new Date(orderData.confirmed_at).toLocaleString('vi-VN')}</div>
                         </div>
                     </div>
@@ -369,7 +359,7 @@ class EmailService {
                     <div class="timeline-item">
                         <div class="timeline-icon active">✓</div>
                         <div class="timeline-content">
-                            <div class="timeline-title">Đơn hàng đang được giao</div>
+                            <div class="timeline-title">Order Shipping</div>
                             <div class="timeline-time">${new Date(orderData.shipping_at).toLocaleString('vi-VN')}</div>
                         </div>
                     </div>
@@ -383,7 +373,7 @@ class EmailService {
                     <div class="timeline-item">
                         <div class="timeline-icon active">✓</div>
                         <div class="timeline-content">
-                            <div class="timeline-title">Đơn hàng đã giao thành công</div>
+                            <div class="timeline-title">Order Delivered Successfully</div>
                             <div class="timeline-time">${new Date(orderData.delivered_at).toLocaleString('vi-VN')}</div>
                         </div>
                     </div>
@@ -397,9 +387,9 @@ class EmailService {
                     <div class="timeline-item">
                         <div class="timeline-icon" style="background: #dc3545; color: white;">✕</div>
                         <div class="timeline-content">
-                            <div class="timeline-title">Đơn hàng đã bị hủy</div>
+                            <div class="timeline-title">Order Cancelled</div>
                             <div class="timeline-time">${new Date(orderData.cancelled_at).toLocaleString('vi-VN')}</div>
-                            ${orderData.cancellation_reason ? `<div class="timeline-time">Lý do: ${orderData.cancellation_reason}</div>` : ''}
+                            ${orderData.cancellation_reason ? `<div class="timeline-time">Reason: ${orderData.cancellation_reason}</div>` : ''}
                         </div>
                     </div>
                     `
@@ -409,15 +399,15 @@ class EmailService {
                 
                 <div style="text-align: center;">
                     <a href="${process.env.CLIENT_URL}/orders/${orderData._id}" class="button">
-                        Xem chi tiết đơn hàng
+                        View Order Details
                     </a>
                 </div>
             </div>
             
             <div class="footer">
                 <p><strong>Cosmetic Store</strong></p>
-                <p>Cảm ơn bạn đã mua sắm tại cửa hàng của chúng tôi! 💖</p>
-                <p>Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.</p>
+                <p>Thank you for shopping at our store!</p>
+                <p>If you have any questions, please contact us.</p>
             </div>
         </div>
     </body>
@@ -467,7 +457,6 @@ class EmailService {
             padding: 20px;
         }
         
-        /* Background pattern overlay */
         body::before {
             content: '';
             position: fixed;
@@ -521,22 +510,10 @@ class EmailService {
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .logo::before {
-            content: '✨';
-            margin-right: 10px;
-            font-size: 28px;
-        }
-        
-        .logo::after {
-            content: '💄';
-            margin-left: 10px;
-            font-size: 28px;
-        }
-        
         .title {
             position: relative;
             z-index: 1;
-            color: #ff3366;;
+            color: white;
             font-size: 24px;
             font-weight: 600;
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -699,15 +676,15 @@ class EmailService {
 <body>
     <div class="email-wrapper">
         <div class="header">
-            <div class="logo">Comestic Store</div>
+            <div class="logo">Cosmetic Store</div>
             <h1 class="title">Verify Your Email Address</h1>
         </div>
         
         <div class="content">
-            <div class="greeting">Hello Beautiful! 💖</div>
+            <div class="greeting">Hello Beautiful!</div>
             
             <p class="message">
-                Thank you for joining our exclusive beauty community! We're thrilled to have you discover our carefully curated collection of premium cosmetics and skincare products.
+                Thank you for joining our exclusive beauty community! We are thrilled to have you discover our carefully curated collection of premium cosmetics and skincare products.
             </p>
             
             <p class="message">
@@ -715,20 +692,19 @@ class EmailService {
             </p>
             
             <div class="cta-section">
-                <a href="${verifyEmailUrl}" class="verify-button">✨ Verify Email Address ✨</a>
+                <a href="${verifyEmailUrl}" class="verify-button">Verify Email Address</a>
             </div>
             
             <div class="link-section">
-                <div class="link-text">Can't click the button? Copy and paste this link in your browser:</div>
+                <div class="link-text">Cannot click the button? Copy and paste this link in your browser:</div>
                 <div class="link-url">${verifyEmailUrl}</div>
             </div>
             
             <div class="warning">
                 <div class="warning-title">
-                    <span>⚠️</span>
                     <span>Important Notice</span>
                 </div>
-                <div>This verification link will expire in 7 days for security reasons. If you didn't create an account with Cosmic Store, please ignore this email safely.</div>
+                <div>This verification link will expire in 7 days for security reasons. If you did not create an account with Cosmetic Store, please ignore this email safely.</div>
             </div>
             
             <div class="beauty-icons">
@@ -742,8 +718,8 @@ class EmailService {
         
         <div class="footer">
             <div class="signature">
-                With love & beauty,<br>
-                <span class="team-name">Comestic Store Team</span>
+                With love and beauty,<br>
+                <span class="team-name">Cosmetic Store Team</span>
             </div>
             
             <div class="support-text">
@@ -765,7 +741,7 @@ class EmailService {
     
     ${verifyEmailUrl}
     
-    This verification link will expire in 7 days. If you didn't create an account with us, please ignore this email.
+    This verification link will expire in 7 days. If you did not create an account with us, please ignore this email.
     
     Best regards,
     The Cosmetic Store Team
@@ -774,7 +750,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.MAIL_FROM,
       to: to,
-      subject: '🌟 Verify Your Email - Cosmetic Store',
+      subject: 'Verify Your Email - Cosmetic Store',
       html: htmlContent,
       text: textContent
     }
@@ -866,31 +842,31 @@ class EmailService {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">🌟 Cosmetic Store</div>
+                <div class="logo">Cosmetic Store</div>
             </div>
             
             <div class="welcome-banner">
-                <h1>Welcome, ${name}! 🎉</h1>
+                <h1>Welcome, ${name}!</h1>
                 <p>Your email has been verified successfully!</p>
             </div>
             
-            <p>Congratulations! You're now part of our beauty community. Get ready to discover amazing cosmetic products and exclusive deals.</p>
+            <p>Congratulations! You are now part of our beauty community. Get ready to discover amazing cosmetic products and exclusive deals.</p>
             
             <div class="features">
                 <div class="feature">
-                    <h3>💄 Premium Products</h3>
+                    <h3>Premium Products</h3>
                     <p>Access to high-quality cosmetics from top brands</p>
                 </div>
                 <div class="feature">
-                    <h3>🎁 Exclusive Offers</h3>
+                    <h3>Exclusive Offers</h3>
                     <p>Special discounts and early access to sales</p>
                 </div>
                 <div class="feature">
-                    <h3>✨ Beauty Tips</h3>
+                    <h3>Beauty Tips</h3>
                     <p>Expert advice and tutorials from makeup artists</p>
                 </div>
                 <div class="feature">
-                    <h3>🚀 Fast Shipping</h3>
+                    <h3>Fast Shipping</h3>
                     <p>Quick delivery right to your doorstep</p>
                 </div>
             </div>
@@ -911,7 +887,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.MAIL_FROM,
       to: to,
-      subject: '🎉 Welcome to Cosmetic Store - Your Account is Ready!',
+      subject: 'Welcome to Cosmetic Store - Your Account is Ready!',
       html: htmlContent
     }
 
@@ -1005,8 +981,8 @@ class EmailService {
   <body>
       <div class="container">
           <div class="header">
-              <div class="logo">🌟 Cosmetic Store</div>
-              <h1 class="title">🔐 Reset Your Password</h1>
+              <div class="logo">Cosmetic Store</div>
+              <h1 class="title">Reset Your Password</h1>
           </div>
           
           <p>Hi ${name},</p>
@@ -1023,21 +999,21 @@ class EmailService {
           </p>
           
           <div class="warning">
-              <strong>⚠️ Important:</strong> This password reset link will expire in 15 minutes for security reasons.
+              <strong>Important:</strong> This password reset link will expire in 15 minutes for security reasons.
           </div>
           
           <div class="security-tips">
-              <strong>🛡️ Security Tips:</strong>
+              <strong>Security Tips:</strong>
               <ul>
                   <li>Never share your password with anyone</li>
                   <li>Use a strong, unique password</li>
-                  <li>If you didn't request this reset, please ignore this email</li>
+                  <li>If you did not request this reset, please ignore this email</li>
                   <li>Consider enabling two-factor authentication</li>
               </ul>
           </div>
           
           <div class="footer">
-              <p>If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+              <p>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p>
               
               <p>Best regards,<br>
               The Cosmetic Store Security Team</p>
@@ -1061,7 +1037,7 @@ class EmailService {
   
   This link will expire in 15 minutes for security reasons.
   
-  If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+  If you did not request a password reset, please ignore this email. Your password will remain unchanged.
   
   Best regards,
   The Cosmetic Store Security Team
@@ -1070,7 +1046,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.MAIL_FROM,
       to: to,
-      subject: '🔐 Reset Your Password - Cosmetic Store',
+      subject: 'Reset Your Password - Cosmetic Store',
       html: htmlContent,
       text: textContent
     }
@@ -1157,11 +1133,11 @@ class EmailService {
   <body>
       <div class="container">
           <div class="header">
-              <div class="logo">🌟 Cosmetic Store</div>
+              <div class="logo">Cosmetic Store</div>
           </div>
           
           <div class="success-banner">
-              <h1>✅ Password Reset Successful!</h1>
+              <h1>Password Reset Successful!</h1>
               <p>Your password has been updated successfully</p>
           </div>
           
@@ -1170,7 +1146,7 @@ class EmailService {
           <p>This email confirms that your password has been successfully reset for your Cosmetic Store account.</p>
           
           <div class="security-notice">
-              <strong>🔐 Security Notice:</strong> For your security, all active sessions have been logged out. You'll need to log in again with your new password.
+              <strong>Security Notice:</strong> For your security, all active sessions have been logged out. You will need to log in again with your new password.
           </div>
           
           <div style="text-align: center;">
@@ -1179,15 +1155,15 @@ class EmailService {
           
           <p><strong>What happens next:</strong></p>
           <ul>
-              <li>✓ Your old password is no longer valid</li>
-              <li>✓ All devices have been logged out for security</li>
-              <li>✓ You can now log in with your new password</li>
-              <li>✓ Your account is secure and ready to use</li>
+              <li>Your old password is no longer valid</li>
+              <li>All devices have been logged out for security</li>
+              <li>You can now log in with your new password</li>
+              <li>Your account is secure and ready to use</li>
           </ul>
           
           <div class="footer">
-              <p><strong>Didn't make this change?</strong></p>
-              <p>If you didn't reset your password, please contact our support team immediately.</p>
+              <p><strong>Did not make this change?</strong></p>
+              <p>If you did not reset your password, please contact our support team immediately.</p>
               
               <p>Best regards,<br>
               The Cosmetic Store Security Team</p>
@@ -1200,7 +1176,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.MAIL_FROM,
       to: to,
-      subject: '✅ Password Reset Successful - Cosmetic Store',
+      subject: 'Password Reset Successful - Cosmetic Store',
       html: htmlContent
     }
 
