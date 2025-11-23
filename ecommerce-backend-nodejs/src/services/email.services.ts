@@ -1,20 +1,44 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import nodemailer from 'nodemailer'
 import { config } from 'dotenv'
 
 config()
 
 class EmailService {
-  private sesClient: SESClient
+  private transporter: nodemailer.Transporter
 
   constructor() {
-    this.sesClient = new SESClient({
-      region: process.env.AWS_REGION as string,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string
+    // Đảm bảo lấy đúng biến SMTP_PASS và xử lý port
+    const SMTP_PORT_NUM = parseInt(process.env.SMTP_PORT || '587');
+    const isSecure = SMTP_PORT_NUM === 465 || (process.env.SMTP_SECURE === 'true');
+
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: SMTP_PORT_NUM,
+      secure: isSecure,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      },
+      tls: {
+        rejectUnauthorized: false
       }
-    })
+    });
+
+    // Verify connection configuration
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('SMTP connection error:', error);
+        
+        // SỬA Ở ĐÂY: Thêm (error as any)
+        if ((error as any).code === 'EAUTH') {
+          console.error('Authentication Failed: Check SMTP_USER and SMTP_PASS (App Password).');
+        }
+      } else {
+        console.log('SMTP server is ready to send emails');
+      }
+    });
   }
+
   /**
    * Gửi email xác nhận đơn hàng khi tạo mới
    */
@@ -170,25 +194,17 @@ class EmailService {
     </html>
     `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: { ToAddresses: [to] },
-      Message: {
-        Subject: {
-          Data: `🎉 Đơn hàng ${orderData.order_code} đã được tạo thành công`,
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: { Data: htmlContent, Charset: 'UTF-8' }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: `🎉 Đơn hàng ${orderData.order_code} đã được tạo thành công`,
+      html: htmlContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Order confirmation email sent:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Order confirmation email sent:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending order confirmation email:', error)
       throw new Error('Failed to send order confirmation email')
@@ -408,30 +424,23 @@ class EmailService {
     </html>
     `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: { ToAddresses: [to] },
-      Message: {
-        Subject: {
-          Data: `${config.icon} ${config.title} - ${orderData.order_code}`,
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: { Data: htmlContent, Charset: 'UTF-8' }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: `${config.icon} ${config.title} - ${orderData.order_code}`,
+      html: htmlContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Order status update email sent:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Order status update email sent:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending order status update email:', error)
       throw new Error('Failed to send order status update email')
     }
   }
+
   async sendVerificationEmail(to: string, email_verify_token: string) {
     const verifyEmailUrl = `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`
 
@@ -762,34 +771,18 @@ class EmailService {
     The Cosmetic Store Team
     `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: {
-        ToAddresses: [to]
-      },
-      Message: {
-        Subject: {
-          Data: '🌟 Verify Your Email - Cosmetic Store',
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: {
-            Data: htmlContent,
-            Charset: 'UTF-8'
-          },
-          Text: {
-            Data: textContent,
-            Charset: 'UTF-8'
-          }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: '🌟 Verify Your Email - Cosmetic Store',
+      html: htmlContent,
+      text: textContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Email sent successfully:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Email sent successfully:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending email:', error)
       throw new Error('Failed to send verification email')
@@ -915,35 +908,23 @@ class EmailService {
     </html>
     `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: {
-        ToAddresses: [to]
-      },
-      Message: {
-        Subject: {
-          Data: '🎉 Welcome to Cosmetic Store - Your Account is Ready!',
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: {
-            Data: htmlContent,
-            Charset: 'UTF-8'
-          }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: '🎉 Welcome to Cosmetic Store - Your Account is Ready!',
+      html: htmlContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Welcome email sent successfully:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Welcome email sent successfully:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending welcome email:', error)
       throw new Error('Failed to send welcome email')
     }
   }
+
   async sendForgotPasswordEmail(to: string, forgot_password_token: string, name: string) {
     const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password?token=${forgot_password_token}`
 
@@ -1086,34 +1067,18 @@ class EmailService {
   The Cosmetic Store Security Team
   `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: {
-        ToAddresses: [to]
-      },
-      Message: {
-        Subject: {
-          Data: '🔐 Reset Your Password - Cosmetic Store',
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: {
-            Data: htmlContent,
-            Charset: 'UTF-8'
-          },
-          Text: {
-            Data: textContent,
-            Charset: 'UTF-8'
-          }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: '🔐 Reset Your Password - Cosmetic Store',
+      html: htmlContent,
+      text: textContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Forgot password email sent successfully:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Forgot password email sent successfully:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending forgot password email:', error)
       throw new Error('Failed to send password reset email')
@@ -1232,30 +1197,17 @@ class EmailService {
   </html>
   `
 
-    const params = {
-      Source: process.env.MAIL_FROM as string,
-      Destination: {
-        ToAddresses: [to]
-      },
-      Message: {
-        Subject: {
-          Data: '✅ Password Reset Successful - Cosmetic Store',
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: {
-            Data: htmlContent,
-            Charset: 'UTF-8'
-          }
-        }
-      }
+    const mailOptions = {
+      from: process.env.MAIL_FROM,
+      to: to,
+      subject: '✅ Password Reset Successful - Cosmetic Store',
+      html: htmlContent
     }
 
     try {
-      const command = new SendEmailCommand(params)
-      const response = await this.sesClient.send(command)
-      console.log('Password reset success email sent successfully:', response.MessageId)
-      return { success: true, messageId: response.MessageId }
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log('Password reset success email sent successfully:', info.messageId)
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       console.error('Error sending password reset success email:', error)
       throw new Error('Failed to send password reset success email')
