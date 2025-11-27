@@ -16,7 +16,6 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         
-        // Load access token từ localStorage
         const token = localStorage.getItem("access_token");
         if (token) {
           setAccessToken(token);
@@ -49,18 +48,6 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [router]);
-
-  const handleLogout = async () => {
-    try {
-      await api.post("/users/logout");
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      localStorage.removeItem("access_token");
-      setAccessToken(null);
-      router.push("/sign-in");
-    }
-  };
 
   if (loading) {
     return (
@@ -242,44 +229,7 @@ export default function ProfilePage() {
             >
               Edit profile
             </button>
-
-            <button
-              onClick={() => router.push("/dashboard/orders")}
-              className="px-6 py-2 bg-rose-100 text-rose-700 rounded-lg hover:bg-rose-200 transition"
-            >
-              View orders
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 ml-auto transition"
-            >
-              Log out
-            </button>
           </div>
-        </div>
-
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-
-          <div className="bg-white rounded-xl shadow p-4 hover:shadow-md transition">
-            <div className="text-gray-600 text-sm mb-1">Total orders</div>
-            <div className="text-2xl font-bold text-pink-500">0</div>
-            <div className="text-xs text-gray-500 mt-1">All orders</div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-4 hover:shadow-md transition">
-            <div className="text-gray-600 text-sm mb-1">Processing</div>
-            <div className="text-2xl font-bold text-orange-500">0</div>
-            <div className="text-xs text-gray-500 mt-1">In delivery</div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-4 hover:shadow-md transition">
-            <div className="text-gray-600 text-sm mb-1">Completed</div>
-            <div className="text-2xl font-bold text-green-500">0</div>
-            <div className="text-xs text-gray-500 mt-1">Delivered successfully</div>
-          </div>
-
         </div>
       </div>
     </div>
