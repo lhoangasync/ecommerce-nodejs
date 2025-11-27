@@ -261,3 +261,20 @@ export const getGoogleAuthURLController = async (req: Request, res: Response) =>
     data: { authURL }
   })
 }
+
+export const updateMeController = async (
+  req: Request<ParamsDictionary, any, UpdateUserReqBody>,
+  res: Response
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const payload = req.body
+  
+  console.log('>>User updating own profile: ', user_id, payload)
+  const updatedUser = await usersService.updateUser(user_id, payload)
+
+  return res.json({
+    status: HTTP_STATUS.OK,
+    message: USERS_MESSAGES.UPDATE_USER_SUCCESS,
+    data: updatedUser
+  })
+}

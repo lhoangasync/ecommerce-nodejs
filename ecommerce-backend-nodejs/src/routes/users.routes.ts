@@ -13,6 +13,7 @@ import {
   registerController,
   resendVerificationEmailController,
   resetPasswordController,
+  updateMeController,
   updateUserController,
   verifyEmailController
 } from '~/controllers/users.controllers'
@@ -83,5 +84,14 @@ usersRouter.delete(
   userIdValidator,
   wrapRequestHandler(deleteUserController)
 )
+
+usersRouter.patch(
+  '/update-me',
+  accessTokenValidator,
+  verifiedUserValidator,
+  updateUserValidator,
+  wrapRequestHandler(updateMeController)
+)
+
 
 export default usersRouter
