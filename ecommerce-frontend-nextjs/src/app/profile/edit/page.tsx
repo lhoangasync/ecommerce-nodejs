@@ -196,11 +196,23 @@ export default function EditProfilePage() {
       setSuccess("");
 
       const payload: UpdateUserReqBody = {};
-      if (formData.name) payload.name = formData.name.trim();
-      if (formData.username) payload.username = formData.username.trim();
-      if (formData.avatar !== undefined) payload.avatar = formData.avatar.trim();
-      if (formData.phone) payload.phone = formData.phone.trim();
-      if (formData.address) payload.address = formData.address.trim();
+      
+      // Chỉ gửi những trường đã thay đổi
+      if (formData.name && formData.name.trim() !== user.name) {
+        payload.name = formData.name.trim();
+      }
+      if (formData.username && formData.username.trim() !== user.username) {
+        payload.username = formData.username.trim();
+      }
+      if (formData.avatar !== user.avatar) {
+        payload.avatar = formData.avatar ? formData.avatar.trim() : "";
+      }
+      if (formData.phone !== user.phone) {
+        payload.phone = formData.phone ? formData.phone.trim() : "";
+      }
+      if (formData.address !== user.address) {
+        payload.address = formData.address ? formData.address.trim() : "";
+      }
 
       const response = await api.patch<IBackEndResponse<UserProfile>>(
         `/users/update-me`,

@@ -88,7 +88,7 @@ usersRouter.delete(
 usersRouter.patch(
   '/update-me',
   accessTokenValidator,
-  verifiedUserValidator,
+  // verifiedUserValidator,
   updateUserValidator,
   wrapRequestHandler(updateMeController)
 )
