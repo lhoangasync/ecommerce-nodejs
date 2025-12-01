@@ -223,10 +223,11 @@ export const googleOAuthController = async (
     const result = await oauthService.handleGoogleLogin(code)
 
     setRefreshCookie(res, result.refresh_token)
+
     return res.json({
       status: HTTP_STATUS.OK,
       message: 'Google login successful',
-      data: { access_token: result.access_token }
+      data: result
     })
   } catch (error) {
     next(error)
@@ -243,16 +244,17 @@ export const facebookOAuthController = async (
     const result = await oauthService.handleFacebookLogin(accessToken)
 
     setRefreshCookie(res, result.refresh_token)
+
+    // Giống như loginController
     return res.json({
       status: HTTP_STATUS.OK,
       message: 'Facebook login successful',
-      data: { access_token: result.access_token }
+      data: result // ← Trả về toàn bộ result
     })
   } catch (error) {
     next(error)
   }
 }
-
 export const getGoogleAuthURLController = async (req: Request, res: Response) => {
   const authURL = oauthService.getGoogleAuthURL()
   return res.json({
@@ -262,13 +264,10 @@ export const getGoogleAuthURLController = async (req: Request, res: Response) =>
   })
 }
 
-export const updateMeController = async (
-  req: Request<ParamsDictionary, any, UpdateUserReqBody>,
-  res: Response
-) => {
+export const updateMeController = async (req: Request<ParamsDictionary, any, UpdateUserReqBody>, res: Response) => {
   const { user_id } = req.decoded_authorization as TokenPayload
   const payload = req.body
-  
+
   console.log('>>User updating own profile: ', user_id, payload)
   const updatedUser = await usersService.updateUser(user_id, payload)
 

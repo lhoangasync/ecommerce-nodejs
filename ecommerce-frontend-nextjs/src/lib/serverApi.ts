@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 export async function createServerApi() {
   const cookieStore = await cookies();
 
-  const refreshToken = cookieStore.get("refresh_token_fe")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
 
   // ✅ Lấy hoặc tạo session_id
   let sessionId = cookieStore.get("cart_session_id")?.value;

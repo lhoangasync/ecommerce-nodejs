@@ -29,7 +29,7 @@ export async function deleteRefreshTokenCookie() {
 export async function checkRefreshTokenExists() {
   try {
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get("refresh_token_fe");
+    const refreshToken = cookieStore.get("refresh_token");
     return { exists: !!refreshToken };
   } catch (error) {
     return { exists: false };
