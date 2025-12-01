@@ -25,12 +25,7 @@ export function ReviewList({
   onPageChange,
 }: ReviewListProps) {
   const isAdmin = currentUser?.role === 1; // Assuming role 1 is admin
-  console.log("=== ReviewList Debug ===");
-  console.log("currentUser:", currentUser);
-  console.log("isAdmin:", isAdmin);
-  console.log("reviews:", reviews);
-  console.log("reviews.length:", reviews.length);
-  console.log("isLoading:", isLoading);
+ 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();

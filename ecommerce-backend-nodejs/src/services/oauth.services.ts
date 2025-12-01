@@ -44,7 +44,6 @@ class OAuthService {
         include_granted_scopes: true
       })
     } catch (error) {
-      console.error('Error generating Google auth URL:', error)
       throw new Error('Failed to generate Google authentication URL')
     }
   }
@@ -55,14 +54,12 @@ class OAuthService {
         throw new Error('Authorization code is required and cannot be empty')
       }
 
-      console.log('Getting tokens with code:', code)
       const { tokens } = await this.oauth2Client.getToken(code)
 
       if (!tokens || !tokens.access_token) {
         throw new Error('Failed to obtain access token from Google')
       }
 
-      console.log('Setting credentials')
       this.oauth2Client.setCredentials(tokens)
 
       const oauth2 = google.oauth2({
@@ -70,17 +67,14 @@ class OAuthService {
         version: 'v2'
       })
 
-      console.log('Fetching user info from Google')
       const { data } = await oauth2.userinfo.get()
 
       if (!data) {
         throw new Error('No user data received from Google')
       }
 
-      console.log('Google user data:', data)
       return data
     } catch (error: any) {
-      console.error('Error in getGoogleUserInfo:', error)
 
       if (error.code === 400 || error.message?.includes('invalid_grant')) {
         throw new Error('Invalid or expired authorization code. Please try logging in again.')
@@ -100,18 +94,15 @@ class OAuthService {
 
   async handleGoogleLogin(code: string) {
     try {
-      console.log('Starting Google OAuth login process')
       const googleUser = await this.getGoogleUserInfo(code)
 
       if (!googleUser.email) {
         throw new Error('Email not provided by Google. Please make sure email permission is granted.')
       }
 
-      console.log('Looking for existing user with email:', googleUser.email)
       let user = await databaseService.users.findOne({ email: googleUser.email })
 
       if (!user) {
-        console.log('User not found, creating new user')
         // Create new user
         const user_id = new ObjectId()
         const newUser = new User({
@@ -129,7 +120,6 @@ class OAuthService {
           forgot_password_token: ''
         })
 
-        console.log('Inserting new user into database')
         const insertResult = await databaseService.users.insertOne(newUser)
 
         if (!insertResult.acknowledged) {
@@ -137,9 +127,7 @@ class OAuthService {
         }
 
         user = newUser
-        console.log('New user created successfully')
       } else {
-        console.log('User exists, updating OAuth info')
         // Update existing user with Google info if needed
         const updateResult = await databaseService.users.updateOne(
           { _id: user._id },
@@ -164,10 +152,8 @@ class OAuthService {
         user.verify = UserVerifyStatus.VERIFIED
         user.role = user.role || UserRoles.USER
 
-        console.log('User updated successfully')
       }
 
-      console.log('Generating login tokens')
       // Generate tokens
       const result = await usersService.login({
         user_id: user._id.toString(),
@@ -175,10 +161,8 @@ class OAuthService {
         role: user.role
       })
 
-      console.log('Google OAuth login completed successfully')
       return result
     } catch (error) {
-      console.error('Google OAuth error:', error)
       throw error
     }
   }
@@ -190,14 +174,12 @@ class OAuthService {
         throw new Error('Facebook access token is required and cannot be empty')
       }
 
-      console.log('Fetching Facebook user info')
       const response = await fetch(
         `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
       )
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Facebook API error response:', errorText)
 
         if (response.status === 400) {
           throw new Error('Invalid Facebook access token')
@@ -209,33 +191,27 @@ class OAuthService {
       const userData = await response.json()
 
       if (userData.error) {
-        console.error('Facebook API returned error:', userData.error)
         throw new Error(`Facebook error: ${userData.error.message}`)
       }
 
-      console.log('Facebook user data:', userData)
       return userData
     } catch (error) {
-      console.error('Error fetching Facebook user info:', error)
       throw error
     }
   }
 
   async handleFacebookLogin(accessToken: string) {
     try {
-      console.log('Starting Facebook OAuth login process')
       const facebookUser = await this.getFacebookUserInfo(accessToken)
 
       if (!facebookUser.email) {
         throw new Error('Email not provided by Facebook. Please make sure email permission is granted.')
       }
 
-      console.log('Looking for existing user with email:', facebookUser.email)
       // Check if user already exists
       let user = await databaseService.users.findOne({ email: facebookUser.email })
 
       if (!user) {
-        console.log('User not found, creating new user')
         // Create new user
         const user_id = new ObjectId()
         const newUser = new User({
@@ -253,7 +229,6 @@ class OAuthService {
           forgot_password_token: ''
         })
 
-        console.log('Inserting new user into database')
         const insertResult = await databaseService.users.insertOne(newUser)
 
         if (!insertResult.acknowledged) {
@@ -261,9 +236,7 @@ class OAuthService {
         }
 
         user = newUser
-        console.log('New user created successfully')
       } else {
-        console.log('User exists, updating OAuth info')
         // Update existing user with Facebook info if needed
         const updateResult = await databaseService.users.updateOne(
           { _id: user._id },
@@ -288,10 +261,8 @@ class OAuthService {
         user.verify = UserVerifyStatus.VERIFIED
         user.role = user.role || UserRoles.USER
 
-        console.log('User updated successfully')
       }
 
-      console.log('Generating login tokens')
       // Generate tokens
       const result = await usersService.login({
         user_id: user._id.toString(),
@@ -299,10 +270,8 @@ class OAuthService {
         role: user.role
       })
 
-      console.log('Facebook OAuth login completed successfully')
       return result
     } catch (error) {
-      console.error('Facebook OAuth error:', error)
       throw error
     }
   }

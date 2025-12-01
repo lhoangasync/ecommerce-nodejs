@@ -97,7 +97,6 @@ export const updateProductController = async (
 ) => {
   const { product_id } = req.params
   const payload = req.body
-  console.log('>>>>update product: ', payload)
   const updatedProduct = await productsService.updateProduct(product_id, payload)
 
   return res.json({

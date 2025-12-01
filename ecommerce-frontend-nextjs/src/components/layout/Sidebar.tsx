@@ -20,7 +20,6 @@ const Sidebar = () => {
       toast.success("Logout successfully!");
       await mutate();
     } catch (error) {
-      console.log(error);
     }
   };
 

@@ -90,12 +90,7 @@ export const deleteAutoCouponRuleController = async (req: Request<RuleIdParams>,
 export const getUserAutoCouponsController = async (req: Request, res: Response, next: NextFunction) => {
   const { user_id } = req.decoded_authorization as TokenPayload
 
-  console.log('🔍 getUserAutoCoupons called for user_id:', user_id)
-
   const result = await autoCouponService.getUserAutoCoupons(user_id)
-
-  console.log('📦 Result from service:', result)
-  console.log('📊 Number of coupons:', result.length)
 
   return res.json({
     status: HTTP_STATUS.OK,

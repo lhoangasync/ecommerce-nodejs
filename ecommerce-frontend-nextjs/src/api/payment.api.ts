@@ -52,7 +52,6 @@ export async function createPayment(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error creating payment:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -82,7 +81,6 @@ export async function getPaymentByOrder(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error fetching payment for order ${orderId}:`, error);
 
     let errorMessage = "An unknown error occurred while fetching payment.";
     if (isAxiosError(error) && error.response) {
@@ -111,7 +109,6 @@ export async function verifyPayment(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error verifying payment ${paymentId}:`, error);
 
     let errorMessage = "An unknown error occurred while verifying payment.";
     if (isAxiosError(error) && error.response) {
@@ -184,7 +181,6 @@ export async function refundPayment(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error refunding payment ${paymentId}:`, error);
 
     let errorMessage = "An unknown error occurred while refunding payment.";
     if (isAxiosError(error) && error.response) {
@@ -215,7 +211,6 @@ export async function handleMoMoCallback(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error handling MoMo callback:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -258,7 +253,6 @@ export async function handleMoMoReturn(params: MomoReturnParams) {
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error handling MoMo return:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -304,7 +298,6 @@ export const handleVNPayReturn = async (params: VnpayReturnReqQuery) => {
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error handling VNPay return:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

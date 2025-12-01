@@ -19,10 +19,6 @@ export function ReviewFilters({
   statusFilter,
   onStatusFilterChange,
 }: ReviewFiltersProps) {
-  console.log("Current User in ReviewFilters:", currentUser);
-  console.log("Current User Role:", currentUser?.role);
-  console.log("Status Filter:", statusFilter);
-  console.log("onStatusFilterChange:", onStatusFilterChange);
 
   const isAdmin = currentUser?.role === 1;
 

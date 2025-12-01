@@ -29,7 +29,6 @@ export default function ProductRating({
           setRatingStats(response.data);
         }
       } catch (error) {
-        console.error("Error loading rating stats:", error);
         setError("Unable to load rating statistics");
       } finally {
         setLoading(false);
@@ -120,8 +119,6 @@ export default function ProductRating({
         <div className="space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
             // FIX: Check both number and string keys
-            console.log("ratingStats:", ratingStats);
-            console.log("distribution:", ratingStats.distribution);
             const distribution = ratingStats.distribution || {};
             const count =
               (distribution as any)[star] ||

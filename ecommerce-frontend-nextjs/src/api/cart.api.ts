@@ -40,7 +40,6 @@ export async function addToCart(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding to cart:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -66,7 +65,6 @@ export async function updateCartItem(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating cart item:`, error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -97,7 +95,6 @@ export async function removeFromCart(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error removing item from cart:`, error);
 
     let errorMessage = "An unknown error occurred while removing item.";
     if (isAxiosError(error) && error.response) {
@@ -120,7 +117,6 @@ export async function clearCart(): Promise<
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error clearing cart:", error);
 
     let errorMessage = "An unknown error occurred while clearing cart.";
     if (isAxiosError(error) && error.response) {
@@ -143,7 +139,6 @@ export async function migrateCart(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error migrating cart:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {

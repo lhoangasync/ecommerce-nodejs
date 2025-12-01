@@ -44,6 +44,4 @@ export { wsService }
 
 // Single listen call on httpServer (handles both HTTP and WebSocket)
 httpServer.listen(port, () => {
-  console.log(`Server running on port ${port}`)
-  console.log(`WebSocket server ready`)
 })

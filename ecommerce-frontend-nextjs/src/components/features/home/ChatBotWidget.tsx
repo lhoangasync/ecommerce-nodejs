@@ -50,7 +50,6 @@ export default function ChatbotWidget() {
           setSuggestions(processedSuggestions);
         }
       } catch (error) {
-        console.error("Error fetching suggestions:", error);
         // Set default suggestions as fallback
         setSuggestions([
           "Product advice for dry skin",
@@ -106,7 +105,6 @@ export default function ChatbotWidget() {
         throw new Error(response.error || "Failed to send message");
       }
     } catch (error) {
-      console.error("Error sending message:", error);
       const errorMessage: Message = {
         role: "assistant",
         content: "Sorry, an error occurred. Please try again later.",

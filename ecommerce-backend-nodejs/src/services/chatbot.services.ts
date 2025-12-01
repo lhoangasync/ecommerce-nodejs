@@ -272,8 +272,6 @@ class CosmeticChatbotService {
         geminiAnalysis
       }
     } catch (error) {
-      console.error('Chat response generation error:', error)
-
       // Fallback về phương thức cơ bản nếu Gemini lỗi
       const basicAnalysis = this.analyzeUserMessageBasic(userMessage)
       const recommendations = await this.recommendProducts(userMessage, undefined, 5)

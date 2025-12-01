@@ -21,7 +21,6 @@ export default function CategoriesSection() {
           setCategories(response.data.items.slice(0, 10));
         }
       } catch (err) {
-        console.error("Error loading categories:", err);
       } finally {
         setLoading(false);
       }

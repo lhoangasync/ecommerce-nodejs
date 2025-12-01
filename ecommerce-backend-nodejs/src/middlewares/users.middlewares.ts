@@ -616,7 +616,6 @@ export const optionalAccessTokenValidator = async (req: Request, res: Response, 
     return next()
   } catch (error) {
     // Token invalid → ignore, fallback to session_id
-    console.log('Invalid access token, using session_id instead')
     return next()
   }
 }

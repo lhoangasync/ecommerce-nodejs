@@ -53,7 +53,6 @@ function PaymentResultContent() {
           setMessage("Unable to determine payment method");
         }
       } catch (error) {
-        console.error("Error processing payment return:", error);
         setStatus("failed");
         setMessage("An error occurred while processing payment");
       }

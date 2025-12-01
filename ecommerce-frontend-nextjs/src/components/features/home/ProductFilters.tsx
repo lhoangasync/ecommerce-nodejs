@@ -95,7 +95,6 @@ export default function ProductFilters({
           setCategories(categoriesRes.data.items);
         }
       } catch (error) {
-        console.error("Error loading filters data:", error);
       } finally {
         setLoadingData(false);
       }

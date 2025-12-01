@@ -17,11 +17,9 @@ export const useSocket = () => {
         const token = getAccessToken();
 
         if (!token) {
-          console.warn("⚠️ No access token - user not logged in");
           return;
         }
 
-        console.log("🔌 Connecting socket with token...");
         const socketUrl =
           process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") ||
           "http://localhost:4000";
@@ -35,23 +33,19 @@ export const useSocket = () => {
         });
 
         socket.on("connect", () => {
-          console.log("✅ Socket connected:", socket.id);
           setIsConnected(true);
         });
 
         socket.on("connect_error", (err) => {
-          console.error("❌ Connection error:", err.message);
           setIsConnected(false);
         });
 
         socket.on("disconnect", (reason) => {
-          console.log("⚠️ Disconnected:", reason);
           setIsConnected(false);
         });
 
         socketRef.current = socket;
       } catch (err) {
-        console.error("❌ Socket init failed:", err);
       }
     };
 
@@ -60,7 +54,6 @@ export const useSocket = () => {
     return () => {
       mounted = false;
       if (socketRef.current) {
-        console.log("🔌 Disconnecting socket...");
         socketRef.current.disconnect();
         socketRef.current = null;
       }

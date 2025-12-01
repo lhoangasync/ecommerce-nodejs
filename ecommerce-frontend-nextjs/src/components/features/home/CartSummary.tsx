@@ -121,7 +121,6 @@ export default function CartSummary({
           );
         }
       } catch (error) {
-        console.error("Error loading user auto coupons:", error);
       } finally {
         setLoadingAutoCoupons(false);
       }
@@ -189,7 +188,6 @@ export default function CartSummary({
         router.push(`/orders/${order._id}?payment_status=pending`);
       }
     } catch (error) {
-      console.error("Checkout error:", error);
       toast.error("An error occurred during checkout");
       setIsProcessing(false);
     }

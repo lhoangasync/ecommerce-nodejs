@@ -53,7 +53,6 @@ export default function ProductsClient({
       setProducts(response.data.items);
       setMeta(response.data.meta);
     } catch (error) {
-      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
@@ -69,7 +68,6 @@ export default function ProductsClient({
       setProducts(response.data.items);
       setMeta(response.data.meta);
     } catch (error) {
-      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }

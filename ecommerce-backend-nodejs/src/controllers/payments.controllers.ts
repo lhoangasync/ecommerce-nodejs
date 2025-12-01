@@ -80,7 +80,6 @@ export const momoCallbackProcessController = async (req: Request, res: Response)
       }
     })
   } catch (error: any) {
-    console.error('MoMo callback processing error:', error)
     return res.status(400).json({
       status: 400,
       message: error.message || 'Payment verification failed',
@@ -107,7 +106,6 @@ export const momoCallbackController = async (req: Request, res: Response) => {
       }
     })
   } catch (error: any) {
-    console.error('MoMo callback error:', error)
     return res.status(200).json({
       status: 200,
       message: error.message,
@@ -157,7 +155,6 @@ export const vnpayCallbackController = async (req: Request, res: Response) => {
       }
     })
   } catch (error: any) {
-    console.error('VNPay callback error:', error)
     return res.status(400).json({
       status: 400,
       message: error.message || 'Payment verification failed',

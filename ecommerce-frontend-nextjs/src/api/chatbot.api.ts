@@ -30,8 +30,6 @@ export async function sendChatMessage(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error sending chat message:", error);
-
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to send message.";
@@ -86,7 +84,6 @@ export async function explainIngredients(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error explaining ingredients:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -109,7 +106,6 @@ export async function createRoutine(): Promise<
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error creating routine:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -133,7 +129,6 @@ export async function compareProducts(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error comparing products:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {

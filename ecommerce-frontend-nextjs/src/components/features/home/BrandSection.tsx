@@ -20,7 +20,6 @@ export default function BrandsSection() {
           setBrands(response.data.items);
         }
       } catch (err) {
-        console.error("Error loading brands:", err);
       } finally {
         setLoading(false);
       }

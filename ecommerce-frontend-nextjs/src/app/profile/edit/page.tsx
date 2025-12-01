@@ -53,8 +53,6 @@ export default function EditProfilePage() {
           throw new Error("Cannot get user information");
         }
       } catch (error: any) {
-        console.error("Error while getting profile:", error);
-
         if (error.response?.status === 401) {
           setError("Login session expired");
           localStorage.removeItem("access_token");
@@ -141,7 +139,6 @@ export default function EditProfilePage() {
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (error: any) {
-      console.error("Error uploading avatar:", error);
       setError(error.response?.data?.message || "Failed to upload avatar. Please try again.");
       // Revert preview on error
       setAvatarPreview(formData.avatar || "");
@@ -225,9 +222,7 @@ export default function EditProfilePage() {
           router.push("/profile");
         }, 1500);
       }
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      
+    } catch (error: any) {      
       if (error.response?.data?.message) {
         setError(error.response.data.message);
       } else if (error.response?.status === 403) {

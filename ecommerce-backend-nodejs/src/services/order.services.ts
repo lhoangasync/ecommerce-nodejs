@@ -268,10 +268,8 @@ class OrderService {
       if (user && user.email) {
         const orderWithId = { ...order, _id: result.insertedId }
         await emailService.sendOrderConfirmationEmail(user.email, orderWithId)
-        console.log(`✅ Order confirmation email sent to ${user.email}`)
       }
     } catch (emailError) {
-      console.error('❌ Failed to send order confirmation email:', emailError)
       // Không throw error để không ảnh hưởng việc tạo đơn hàng
     }
 
@@ -496,10 +494,8 @@ class OrderService {
       const user = await usersCollection.findOne({ _id: order.user_id })
       if (user && user.email && result) {
         await emailService.sendOrderStatusUpdateEmail(user.email, result)
-        console.log(`✅ Order status update email sent to ${user.email} - Status: ${status}`)
       }
     } catch (emailError) {
-      console.error('❌ Failed to send order status update email:', emailError)
       // Không throw error để không ảnh hưởng việc cập nhật trạng thái
     }
 
@@ -521,7 +517,6 @@ class OrderService {
         await autoCouponService.checkAndCreateCoupon(order.user_id)
       }
     } catch (error) {
-      console.error('Error checking auto coupon:', error)
     }
   }
 
@@ -595,10 +590,8 @@ class OrderService {
       const user = await usersCollection.findOne({ _id: order.user_id })
       if (user && user.email && result) {
         await emailService.sendOrderStatusUpdateEmail(user.email, result)
-        console.log(`✅ Order cancellation email sent to ${user.email}`)
       }
     } catch (emailError) {
-      console.error('❌ Failed to send order cancellation email:', emailError)
     }
 
     return result

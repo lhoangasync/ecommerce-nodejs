@@ -57,13 +57,11 @@ class WebSocketService {
 
         next()
       } catch (error: any) {
-        console.error('WebSocket authentication error:', error.message)
         next(new Error('Authentication failed'))
       }
     })
 
     this.io.on('connection', (socket: Socket) => {
-      console.log('Client connected:', socket.id)
 
       // Join product room để nhận updates của product cụ thể
       socket.on('join:product', (product_id: string) => {
@@ -77,7 +75,6 @@ class WebSocketService {
         })
         this.users.set(product_id, users)
 
-        console.log(`User ${socket.data.user.user_id} joined product:${product_id}`)
 
         // Emit active users count
         this.io.to(`product:${product_id}`).emit('users:count', users.length)
@@ -217,7 +214,6 @@ class WebSocketService {
       socket.on('join:admin', () => {
         if (socket.data.user.role === UserRoles.ADMIN) {
           socket.join('admin')
-          console.log(`Admin ${socket.data.user.user_id} joined admin room`)
         } else {
           socket.emit('error', { message: 'Unauthorized: Admin permission required' })
         }
@@ -225,7 +221,6 @@ class WebSocketService {
 
       // Disconnect
       socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id)
 
         // Remove from all product rooms
         this.users.forEach((users, product_id) => {

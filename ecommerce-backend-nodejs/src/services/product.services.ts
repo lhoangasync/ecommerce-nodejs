@@ -220,10 +220,6 @@ class ProductsService {
 
     const matchCondition = isObjectId ? { _id: new ObjectId(identifier) } : { slug: identifier }
 
-    console.log('getProductById - identifier:', identifier)
-    console.log('getProductById - isObjectId:', isObjectId)
-    console.log('getProductById - matchCondition:', matchCondition)
-
     const product = await databaseService.products
       .aggregate([
         {
@@ -261,7 +257,6 @@ class ProductsService {
       .toArray()
 
     if (product.length === 0) {
-      console.log('Product not found with identifier:', identifier)
       return {
         message: PRODUCTS_MESSAGES.PRODUCT_NOT_FOUND
       }

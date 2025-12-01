@@ -53,7 +53,6 @@ export async function addCategory(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding category:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -80,7 +79,6 @@ export async function deleteCategory(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting category with ID ${category_id}:`, error);
 
     let errorMessage = "An unknown error occurred while deleting the category.";
     if (isAxiosError(error) && error.response) {
@@ -104,7 +102,6 @@ export async function updateCategory(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating brand ${categoryId}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
