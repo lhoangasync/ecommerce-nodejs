@@ -31,7 +31,6 @@ export default function OrdersPage() {
       }
 
       const response = await getMyOrders(params);
-      console.log("Fetched orders:", response);
 
       // FIX: Access the nested data correctly
       // response is IBackEndResponse<Paginated<Order>>
@@ -52,7 +51,6 @@ export default function OrdersPage() {
         setTotalPages(1);
       }
     } catch (error) {
-      console.error("Error loading orders:", error);
       setOrders([]);
       setTotalPages(1);
     }

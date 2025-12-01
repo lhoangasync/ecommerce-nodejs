@@ -50,7 +50,6 @@ export default function ProductDetail({
   const [addingToCart, setAddingToCart] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  console.log("Current User in ProductDetail:", currentUser);
   const isAdmin = currentUser?.role === 1;
   // Review states
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -75,16 +74,13 @@ export default function ProductDetail({
     if (!socket || !isConnected || !product?._id || hasJoinedRoom.current)
       return;
 
-    console.log("🚪 Joining product room:", product._id);
     socket.emit("join:product", product._id);
     hasJoinedRoom.current = true;
 
     socket.on("users:count", (count: number) => {
-      console.log("👥 Active users:", count);
     });
 
     socket.on("review:new", (review: any) => {
-      console.log("✨ New review:", review);
       setReviews((prev) => [review, ...prev]);
       if (product._id) loadRatingStats(product._id);
     });
@@ -119,7 +115,6 @@ export default function ProductDetail({
 
     return () => {
       if (socket && product._id) {
-        console.log("👋 Leaving room:", product._id);
         socket.emit("leave:product", product._id);
         socket.off("users:count");
         socket.off("review:new");
@@ -140,7 +135,6 @@ export default function ProductDetail({
           setCurrentUser(response.data);
         }
       } catch (error) {
-        console.error("Error loading current user:", error);
       }
     }
 
@@ -168,7 +162,6 @@ export default function ProductDetail({
           setError(response.message || "Không thể tải sản phẩm");
         }
       } catch (err) {
-        console.error("Error loading product:", err);
         setError("Đã xảy ra lỗi khi tải sản phẩm");
       } finally {
         setLoading(false);
@@ -187,20 +180,12 @@ export default function ProductDetail({
         setRatingStats(response.data);
       }
     } catch (error) {
-      console.error("Error loading rating stats:", error);
     }
   };
 
   const loadReviews = async (productId: string, page = 1, isAdmin = false) => {
     try {
       setLoadingReviews(true);
-
-      console.log(
-        "Loading reviews with isAdmin:",
-        isAdmin,
-        "currentUser:",
-        currentUser
-      );
 
       const response = await getReviews({
         product_id: productId,
@@ -214,23 +199,19 @@ export default function ProductDetail({
         ...(!isAdmin ? { status: "approved" } : {}),
       });
 
-      console.log("Reviews response:", response);
 
       if (response.status === 200 && response.data) {
         if ("items" in response.data && "meta" in response.data) {
           setReviews(response.data.items);
-          console.log("Total items:", response.data.items);
           setTotalReviews(response.data.meta.totalItems);
           setTotalPages(response.data.meta.totalPages);
         } else {
-          console.warn("Unexpected response structure:", response.data);
           setReviews([]);
           setTotalReviews(0);
           setTotalPages(0);
         }
       }
     } catch (error) {
-      console.error("Error loading reviews:", error);
       setReviews([]);
       setTotalReviews(0);
       setTotalPages(0);
@@ -241,8 +222,7 @@ export default function ProductDetail({
 
   // Debug log để kiểm tra
   useEffect(() => {
-    console.log("Current user changed:", currentUser);
-    console.log("Is admin:", currentUser?.role === 1);
+
   }, [currentUser]);
 
   useEffect(() => {
@@ -292,7 +272,6 @@ export default function ProductDetail({
         toast.error(result.error || "Unable to submit review");
       }
     } catch (error) {
-      console.error("Error submitting review:", error);
       toast.error("An error occurred while submitting the review");
     } finally {
       setSubmittingReview(false);
@@ -311,7 +290,6 @@ export default function ProductDetail({
         }
       }
     } catch (error) {
-      console.error("Error marking review as helpful:", error);
       toast.error("Unable to mark useful");
     }
   };
@@ -331,7 +309,6 @@ export default function ProductDetail({
         toast.error(result.error || "Unable to approve review");
       }
     } catch (error) {
-      console.error("Error approving review:", error);
       toast.error("An error occurred while reviewing the review");
     }
   };
@@ -351,7 +328,6 @@ export default function ProductDetail({
         toast.error(result.error || "Cannot refuse to review");
       }
     } catch (error) {
-      console.error("Error rejecting review:", error);
       toast.error("An error occurred while rejecting the review");
     }
   };
@@ -468,7 +444,6 @@ export default function ProductDetail({
         toast.error(result.error || "Cannot add to cart");
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
       toast.error("An error occurred while adding to cart");
     } finally {
       setAddingToCart(false);
@@ -493,7 +468,6 @@ export default function ProductDetail({
           100
       )
     : 0;
-  console.log("Rating Stats:", ratingStats);
   const avgRating = ratingStats?.averageRating || 0;
   const reviewCount = ratingStats?.totalReviews || 0;
   const fullStars = Math.floor(avgRating);

@@ -125,7 +125,6 @@ export default function OverviewPage() {
 
         if (allOrdersData.length > 0) {
           const allOrdersList: Order[] = allOrdersData;
-          console.log("Fetched orders:", allOrdersList);
           // Filter orders that are paid (regardless of delivery status)
           const paidOrdersList = allOrdersList.filter(
             (o) => o.payment_status === "paid"
@@ -211,7 +210,6 @@ export default function OverviewPage() {
           setProductStats(topProducts);
         }
       } catch (error) {
-        console.error("Error fetching orders:", error);
       } finally {
         setLoading(false);
       }

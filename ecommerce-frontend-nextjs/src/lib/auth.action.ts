@@ -13,7 +13,6 @@ export async function saveRefreshTokenToCookie(refreshToken: string) {
     });
     return { success: true };
   } catch (error) {
-    console.error("Failed to set refresh token cookie:", error);
     return { success: false, error: "Could not save session." };
   }
 }
@@ -41,7 +40,6 @@ export async function getCartSessionId() {
     const cartSession = cookieStore.get("cart_session_id");
     return cartSession?.value || null;
   } catch (error) {
-    console.error("Failed to get cart session:", error);
     return null;
   }
 }
@@ -51,7 +49,6 @@ export async function deleteCartSessionCookie() {
     (await cookies()).delete("cart_session_id");
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete cart session cookie:", error);
     return { success: false };
   }
 }

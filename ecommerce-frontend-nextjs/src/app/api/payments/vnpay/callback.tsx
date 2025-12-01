@@ -28,12 +28,6 @@ export async function GET(request: NextRequest) {
       vnp_SecureHash: searchParams.get("vnp_SecureHash") || "",
     };
 
-    console.log("Received VNPay IPN:", {
-      vnp_TxnRef: vnpayParams.vnp_TxnRef,
-      vnp_ResponseCode: vnpayParams.vnp_ResponseCode,
-      vnp_TransactionStatus: vnpayParams.vnp_TransactionStatus,
-    });
-
     // Gọi API backend để xử lý IPN
     const response = await handleVNPayReturn(vnpayParams);
 
@@ -44,14 +38,12 @@ export async function GET(request: NextRequest) {
         Message: "Confirm Success",
       });
     } else {
-      console.error("Error processing VNPay IPN:", response.error);
       return NextResponse.json({
         RspCode: "99", // 99 = unknown error
         Message: response.error || "Failed to process IPN",
       });
     }
   } catch (error) {
-    console.error("VNPay IPN error:", error);
     return NextResponse.json(
       {
         RspCode: "99",

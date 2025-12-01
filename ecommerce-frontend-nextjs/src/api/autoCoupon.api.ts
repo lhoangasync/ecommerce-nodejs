@@ -55,15 +55,8 @@ export async function getAutoCouponRuleById(
       `/auto-coupons/rules/${rule_id}`
     );
 
-    console.log("API Response:", {
-      status: data.status,
-      ruleName: data.data?.name,
-      triggerType: data.data?.trigger_type,
-    });
-
     return data;
   } catch (error) {
-    console.error("Error fetching auto coupon rule:", error);
     throw error;
   }
 }
@@ -80,7 +73,6 @@ export async function createAutoCouponRule(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error creating auto coupon rule:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -104,7 +96,6 @@ export async function updateAutoCouponRule(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating auto coupon rule ${rule_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -129,7 +120,6 @@ export async function deleteAutoCouponRule(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting auto coupon rule with ID ${rule_id}:`, error);
 
     let errorMessage =
       "An unknown error occurred while deleting the auto coupon rule.";
@@ -154,14 +144,8 @@ export async function getUserAutoCoupons(): Promise<
       `/auto-coupons/my-coupons`
     );
 
-    console.log("API Response:", {
-      status: data.status,
-      totalCoupons: data.data?.length,
-    });
-
     return data;
   } catch (error) {
-    console.error("Error fetching user auto coupons:", error);
     throw error;
   }
 }

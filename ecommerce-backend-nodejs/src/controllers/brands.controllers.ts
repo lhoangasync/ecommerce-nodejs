@@ -68,7 +68,6 @@ export const updateBrandController = async (
 ) => {
   const { brand_id } = req.params
   const payload = req.body
-  console.log('>>>>update brand: ', payload)
   const updatedBrand = await brandsService.updateBrand(brand_id, payload)
 
   return res.json({

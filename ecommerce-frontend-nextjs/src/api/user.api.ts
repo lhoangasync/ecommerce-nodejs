@@ -37,7 +37,6 @@ export async function getAllUsers(
 
     return data;
   } catch (error) {
-    console.error("Failed to fetch users:", error);
     return {
       status: 500,
       message: "Failed to fetch users",
@@ -68,7 +67,6 @@ export async function updateUsers(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating user ${userId}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to update user.";
@@ -94,7 +92,6 @@ export async function deleteUser(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting user ${userId}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to delete user.";

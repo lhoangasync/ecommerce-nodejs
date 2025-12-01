@@ -39,9 +39,7 @@ export async function createServerApi() {
         }
       );
       accessToken = data?.data?.access_token;
-      console.log("✅ Got new access_token from refresh_token");
     } catch (error) {
-      console.error("❌ Failed to refresh access_token:", error);
       // Nếu refresh thất bại → xóa refresh_token
       cookieStore.delete("refresh_token_fe");
     }
@@ -61,11 +59,7 @@ export async function createServerApi() {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  console.log(">> Headers:", {
-    hasRefreshToken: !!refreshToken,
-    hasAccessToken: !!accessToken,
-    sessionId,
-  });
+  
 
   const instance = axios.create({
     baseURL:
@@ -128,7 +122,6 @@ export async function createServerApi() {
             return instance(original);
           }
         } catch (refreshError) {
-          console.error("❌ Refresh token failed:", refreshError);
           cookieStore.delete("refresh_token_fe");
           flush(null);
           throw refreshError;

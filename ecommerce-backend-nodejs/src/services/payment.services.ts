@@ -145,7 +145,6 @@ class PaymentService {
       orderExpireTime: 15 // 15 minutes
     }
 
-    console.log('MoMo Request Body:', JSON.stringify(requestBody, null, 2))
 
     try {
       const response = await axios.post('https://test-payment.momo.vn/v2/gateway/api/create', requestBody, {
@@ -155,7 +154,6 @@ class PaymentService {
         timeout: 10000
       })
 
-      console.log('MoMo Response:', JSON.stringify(response.data, null, 2))
 
       const { resultCode, payUrl, qrCodeUrl, deeplink, message } = response.data
 
@@ -176,7 +174,6 @@ class PaymentService {
       }
     } catch (error: any) {
       if (error.response) {
-        console.error('MoMo API Error Response:', error.response.data)
         throw new Error(`MoMo API error: ${JSON.stringify(error.response.data)}`)
       }
       throw new Error(`Failed to create MoMo payment: ${error.message}`)
@@ -303,10 +300,6 @@ class PaymentService {
     const validSignature = crypto.createHmac('sha512', secretKey).update(signData).digest('hex')
 
     if (vnp_SecureHash !== validSignature) {
-      console.error('VNPay signature mismatch:')
-      console.error('Received hash:', vnp_SecureHash)
-      console.error('Calculated hash:', validSignature)
-      console.error('Sign data:', signData)
       throw new Error('Invalid VNPay signature')
     }
 

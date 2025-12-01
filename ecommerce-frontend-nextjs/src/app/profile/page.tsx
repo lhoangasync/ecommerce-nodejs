@@ -29,7 +29,6 @@ export default function ProfilePage() {
           throw new Error("Cannot get user information");
         }
       } catch (error: any) {
-        console.error("Error while getting profile:", error);
 
         if (error.response?.status === 401) {
           setError("Login session expired");

@@ -27,8 +27,6 @@ export const uploadSingleImageController = async (req: Request, res: Response, n
       }
     })
   } catch (error) {
-    console.error('Upload failed with detailed error:', error) 
-
     // Kiểm tra xem lỗi có phải từ Cloudinary không (Cloudinary thường trả về lỗi có cấu trúc)
     const errorMessage = (error as any)?.message || 'Failed to upload image';
 
@@ -67,7 +65,6 @@ export const uploadMultipleImagesController = async (req: Request, res: Response
       }
     })
   } catch (error) {
-    console.error('Upload error:', error)
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       message: 'Failed to upload images'
@@ -102,7 +99,6 @@ export const deleteImageController = async (req: Request, res: Response, next: N
       data: result
     })
   } catch (error) {
-    console.error('Delete error:', error)
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       message: 'Failed to delete image'

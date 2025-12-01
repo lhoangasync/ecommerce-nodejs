@@ -29,7 +29,6 @@ export async function createOrder(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error creating order:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -139,8 +138,6 @@ export async function getOrder(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error fetching order with ID ${orderId}:`, error);
-
     let errorMessage = "An unknown error occurred while fetching the order.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to fetch order.";
@@ -157,8 +154,6 @@ export async function getOrderStatistics(): Promise<FetchApiResponse<any>> {
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error fetching order statistics:", error);
-
     let errorMessage = "An unknown error occurred while fetching statistics.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -186,7 +181,6 @@ export async function updateOrderStatus(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating order status ${orderId}:`, error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -215,7 +209,6 @@ export async function cancelOrder(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error cancelling order with ID ${orderId}:`, error);
 
     let errorMessage = "An unknown error occurred while cancelling the order.";
     if (isAxiosError(error) && error.response) {

@@ -22,18 +22,6 @@ class EmailService {
         rejectUnauthorized: false
       }
     });
-
-    this.transporter.verify((error, success) => {
-      if (error) {
-        console.error('SMTP connection error:', error);
-        
-        if ((error as any).code === 'EAUTH') {
-          console.error('Authentication Failed: Check SMTP_USER and SMTP_PASSWORD (App Password).');
-        }
-      } else {
-        console.log('SMTP server is ready to send emails');
-      }
-    });
   }
 
   async sendOrderConfirmationEmail(to: string, orderData: any) {
@@ -196,10 +184,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Order confirmation email sent:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending order confirmation email:', error)
       throw new Error('Failed to send order confirmation email')
     }
   }
@@ -423,10 +409,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Order status update email sent:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending order status update email:', error)
       throw new Error('Failed to send order status update email')
     }
   }
@@ -757,10 +741,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Email sent successfully:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending email:', error)
       throw new Error('Failed to send verification email')
     }
   }
@@ -893,10 +875,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Welcome email sent successfully:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending welcome email:', error)
       throw new Error('Failed to send welcome email')
     }
   }
@@ -1053,10 +1033,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Forgot password email sent successfully:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending forgot password email:', error)
       throw new Error('Failed to send password reset email')
     }
   }
@@ -1182,10 +1160,8 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions)
-      console.log('Password reset success email sent successfully:', info.messageId)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error('Error sending password reset success email:', error)
       throw new Error('Failed to send password reset success email')
     }
   }

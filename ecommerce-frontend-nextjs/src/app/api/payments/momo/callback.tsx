@@ -12,12 +12,6 @@ export async function POST(request: NextRequest) {
   try {
     const body: MomoCallbackReqBody = await request.json();
 
-    console.log("Received MoMo IPN:", {
-      orderId: body.orderId,
-      resultCode: body.resultCode,
-      message: body.message,
-    });
-
     // Gọi API backend để xử lý IPN
     const response = await handleMoMoCallback(body);
 
@@ -32,7 +26,6 @@ export async function POST(request: NextRequest) {
         responseTime: Date.now(),
       });
     } else {
-      console.error("Error processing MoMo IPN:", response.error);
       return NextResponse.json({
         partnerCode: body.partnerCode,
         orderId: body.orderId,
@@ -43,7 +36,6 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error("MoMo IPN error:", error);
     return NextResponse.json(
       {
         resultCode: 1,

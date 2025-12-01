@@ -160,7 +160,6 @@ class UsersService {
         message: 'Password reset email sent successfully'
       }
     } catch (error) {
-      console.error('Failed to send forgot password email:', error)
       throw new ErrorWithStatus({
         message: 'Failed to send password reset email',
         status: HTTP_STATUS.INTERNAL_SERVER_ERROR
@@ -203,9 +202,7 @@ class UsersService {
 
     try {
       await emailService.sendPasswordResetSuccessEmail(user.email, user.name)
-      console.log('Password reset success email sent to:', user.email)
     } catch (error) {
-      console.error('Failed to send password reset success email:', error)
       // Continue even if email fails
     }
 
@@ -242,9 +239,7 @@ class UsersService {
     await databaseService.refreshTokens.insertOne(new RefreshToken({ user_id, token: refresh_token }))
     try {
       await emailService.sendVerificationEmail(payload.email, email_verify_token)
-      console.log('Verification email sent successfully to:', payload.email)
     } catch (error) {
-      console.error('Failed to send verification email:', error)
     }
 
     return {
@@ -306,9 +301,7 @@ class UsersService {
     if (user) {
       try {
         await emailService.sendWelcomeEmail(user.email, user.name)
-        console.log('Welcome email sent successfully to:', user.email)
       } catch (error) {
-        console.error('Failed to send welcome email:', error)
         // Continue with verification even if welcome email fails
       }
     }
@@ -457,7 +450,6 @@ class UsersService {
         message: 'Verification email sent successfully'
       }
     } catch (error) {
-      console.error('Failed to resend verification email:', error)
       throw new ErrorWithStatus({
         message: 'Failed to send verification email',
         status: HTTP_STATUS.INTERNAL_SERVER_ERROR

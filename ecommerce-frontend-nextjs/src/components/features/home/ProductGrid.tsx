@@ -27,7 +27,6 @@ export default function ProductGrid() {
           setError(response.message || "Unable to load products");
         }
       } catch (err) {
-        console.error("Error loading products:", err);
         setError("An error occurred while loading products");
       } finally {
         setLoading(false);

@@ -99,7 +99,6 @@ Hãy phân tích tin nhắn và trả về JSON với format sau:
         suggestions: text
       }
     } catch (error) {
-      console.error('Gemini analysis error:', error)
       return {
         analysis: 'Đang phân tích...',
         concerns: [],
@@ -152,7 +151,6 @@ Sử dụng emoji phù hợp để tạo cảm giác gần gũi 😊`
       const response = await result.response
       return response.text()
     } catch (error) {
-      console.error('Gemini response error:', error)
       return this.createFallbackResponse(productRecommendations)
     }
   }
@@ -197,7 +195,6 @@ Trả lời ngắn gọn, dễ hiểu (tối đa 200 từ).`
       const response = await result.response
       return response.text()
     } catch (error) {
-      console.error('Gemini ingredients error:', error)
       return 'Xin lỗi, tôi không thể phân tích thành phần lúc này.'
     }
   }
@@ -233,7 +230,6 @@ Trả lời dễ hiểu, thực tế (tối đa 300 từ).`
       const response = await result.response
       return response.text()
     } catch (error) {
-      console.error('Gemini routine error:', error)
       return 'Xin lỗi, tôi không thể tạo quy trình chăm sóc da lúc này.'
     }
   }
@@ -271,7 +267,6 @@ Trả lời khách quan, dễ hiểu (tối đa 300 từ).`
       const response = await result.response
       return response.text()
     } catch (error) {
-      console.error('Gemini compare error:', error)
       return 'Xin lỗi, tôi không thể so sánh sản phẩm lúc này.'
     }
   }

@@ -74,12 +74,10 @@ export default function LoginForm() {
           });
 
           if (migrateResult.success) {
-            console.log("Cart migrated successfully!");
             // Delete old cart_session_id cookie
             await deleteCartSessionCookie();
           }
         } catch (migrateError) {
-          console.error("Cart migration failed:", migrateError);
           // Do not block login flow if migrate fails
         }
       }

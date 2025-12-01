@@ -153,7 +153,6 @@ export const updateUserController = async (
 ) => {
   const { user_id } = req.params
   const payload = req.body
-  console.log('>>backend req bod: ', payload)
   const updatedUser = await usersService.updateUser(user_id, payload)
 
   return res.json({
@@ -268,7 +267,6 @@ export const updateMeController = async (req: Request<ParamsDictionary, any, Upd
   const { user_id } = req.decoded_authorization as TokenPayload
   const payload = req.body
 
-  console.log('>>User updating own profile: ', user_id, payload)
   const updatedUser = await usersService.updateUser(user_id, payload)
 
   return res.json({

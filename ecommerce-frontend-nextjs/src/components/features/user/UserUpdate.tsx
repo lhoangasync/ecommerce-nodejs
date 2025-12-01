@@ -292,11 +292,9 @@ function UserUpdate({ user, open, onOpenChange }: UserUpdateProps) {
                                 form.setValue("avatar", res[0].ufsUrl, {
                                   shouldDirty: true,
                                 });
-                                console.log(">>>>>>>>>", res[0].ufsUrl);
                               }}
                               onUploadError={(error: Error) => {
                                 // Do something with the error.
-                                console.error(`ERROR! ${error.message}`);
                               }}
                             />
                           ) : (

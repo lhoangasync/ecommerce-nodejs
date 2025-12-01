@@ -48,7 +48,6 @@ export default function CartPage() {
           router.push("/sign-in");
         }
       } catch (error) {
-        console.error("Auth check error:", error);
         toast.error("Please login to continue");
         router.push("/sign-in");
       }
@@ -62,7 +61,6 @@ export default function CartPage() {
       const response = await AuthAPI.me();
       setUserProfile(response.data);
     } catch (error: any) {
-      console.error("Failed to fetch user profile:", error);
 
       if (error?.response?.status === 401) {
         localStorage.removeItem("access_token");
@@ -81,12 +79,10 @@ export default function CartPage() {
     try {
       setLoading(true);
       const response = await getCart();
-      console.log("Cart loaded:", response);
       if (response.data) {
         setCart(response.data);
       }
     } catch (error) {
-      console.error("Error loading cart:", error);
       toast.error("Unable to load cart");
     } finally {
       setLoading(false);
@@ -115,7 +111,6 @@ export default function CartPage() {
         toast.error(result.error || "Unable to update quantity");
       }
     } catch (error) {
-      console.error("Error updating quantity:", error);
       toast.error("An error occurred while updating");
     } finally {
       setUpdating(null);
@@ -136,7 +131,6 @@ export default function CartPage() {
         toast.error(result.error || "Unable to remove product");
       }
     } catch (error) {
-      console.error("Error removing item:", error);
       toast.error("An error occurred while removing product");
     } finally {
       setUpdating(null);
@@ -156,7 +150,6 @@ export default function CartPage() {
         toast.error(result.error || "Unable to clear cart");
       }
     } catch (error) {
-      console.error("Error clearing cart:", error);
       toast.error("An error occurred");
     }
   };

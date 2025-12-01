@@ -57,7 +57,6 @@ export async function getReviews(
 
     // Validate response structure
     if (!data.data) {
-      console.error("Invalid response structure:", data);
       return {
         status: data.status || 200,
         message: data.message || "Success",
@@ -75,7 +74,6 @@ export async function getReviews(
 
     return data;
   } catch (error) {
-    console.error("Error fetching reviews:", error);
     // Return empty paginated result instead of throwing
     return {
       status: 500,
@@ -107,7 +105,6 @@ export async function getReviewById(
     );
     return data;
   } catch (error) {
-    console.error("Error fetching review:", error);
     throw error;
   }
 }
@@ -125,7 +122,6 @@ export async function getRatingStats(
     );
     return data;
   } catch (error) {
-    console.error("Error fetching rating stats:", error);
     // Return default stats instead of throwing
     return {
       status: 200,
@@ -152,7 +148,6 @@ export async function createReview(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error creating review:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -179,7 +174,6 @@ export async function updateReview(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating review ${review_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to update review.";
@@ -206,7 +200,6 @@ export async function deleteReview(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting review with ID ${review_id}:`, error);
 
     let errorMessage = "An unknown error occurred while deleting the review.";
     if (isAxiosError(error) && error.response) {
@@ -232,7 +225,6 @@ export async function markReviewHelpful(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error marking review ${review_id} as helpful:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -255,7 +247,6 @@ export async function reportReview(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error reporting review ${review_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to report review.";
@@ -279,10 +270,6 @@ export async function addSellerResponse(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(
-      `Error adding seller response to review ${review_id}:`,
-      error
-    );
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -307,7 +294,6 @@ export async function approveReview(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error approving review ${review_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -330,7 +316,6 @@ export async function rejectReview(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error rejecting review ${review_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to reject review.";

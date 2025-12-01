@@ -120,15 +120,8 @@ export async function getProductById(
       `/products/${product_id}`
     );
 
-    console.log("API Response:", {
-      status: data.status,
-      productName: data.data?.name,
-      hasVariants: data.data?.variants?.length,
-    });
-
     return data;
   } catch (error) {
-    console.error("Error fetching product:", error);
     throw error;
   }
 }
@@ -165,7 +158,6 @@ export async function addProduct(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding product:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -189,7 +181,6 @@ export async function updateProduct(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating product ${product_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -214,7 +205,6 @@ export async function deleteProduct(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting product with ID ${product_id}:`, error);
 
     let errorMessage = "An unknown error occurred while deleting the product.";
     if (isAxiosError(error) && error.response) {
@@ -241,7 +231,6 @@ export async function addVariant(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding variant:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -275,7 +264,6 @@ export async function updateVariant(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating variant ${variant_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -298,7 +286,6 @@ export async function updateVariantStock(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating variant stock ${variant_id}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage =
@@ -324,7 +311,6 @@ export async function deleteVariant(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting variant ${variant_id}:`, error);
 
     let errorMessage = "An unknown error occurred while deleting the variant.";
     if (isAxiosError(error) && error.response) {

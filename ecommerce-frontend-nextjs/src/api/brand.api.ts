@@ -50,7 +50,6 @@ export async function addBrand(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error("Error adding brand:", error);
 
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
@@ -77,7 +76,6 @@ export async function deleteBrand(
 
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error deleting brand with ID ${brand_id}:`, error);
 
     let errorMessage = "An unknown error occurred while deleting the brand.";
     if (isAxiosError(error) && error.response) {
@@ -100,7 +98,6 @@ export async function updateBrand(
     );
     return { success: true, data: data };
   } catch (error) {
-    console.error(`Error updating brand ${brandId}:`, error);
     let errorMessage = "An unknown error occurred.";
     if (isAxiosError(error) && error.response) {
       errorMessage = error.response.data?.message || "Failed to update brand.";

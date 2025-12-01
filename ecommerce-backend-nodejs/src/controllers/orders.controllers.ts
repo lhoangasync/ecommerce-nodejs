@@ -31,7 +31,6 @@ export const createOrderController = async (req: Request, res: Response) => {
       )
       payment_url = paymentResult.payment_url
     } catch (error: any) {
-      console.error('Error creating payment:', error)
     }
   }
 

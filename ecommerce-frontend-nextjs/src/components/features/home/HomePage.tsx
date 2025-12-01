@@ -35,12 +35,6 @@ export default function HomePage() {
 
         const hasAnyToken = !!(accessToken || hasRefreshToken);
 
-        console.log("Auth check:", {
-          accessToken: !!accessToken,
-          hasRefreshToken,
-          hasAnyToken,
-        });
-
         if (hasAnyToken) {
           await fetchUserProfile();
         } else {
@@ -48,7 +42,6 @@ export default function HomePage() {
           setUserProfile(null);
         }
       } catch (error) {
-        console.error("Auth check error:", error);
         setIsLoggedIn(false);
         setUserProfile(null);
       }
@@ -79,7 +72,6 @@ export default function HomePage() {
       setUserProfile(response.data);
       setIsLoggedIn(true);
     } catch (error: any) {
-      console.error("Failed to fetch user profile:", error);
 
       // Nếu lỗi 401, token không hợp lệ
       if (error?.response?.status === 401) {
@@ -118,8 +110,6 @@ export default function HomePage() {
         window.location.href = "/";
       }, 1000);
     } catch (error) {
-      console.error("Error while logging out:", error);
-
       // Ngay cả khi có lỗi, vẫn xóa token local
       localStorage.removeItem("access_token");
       await deleteRefreshTokenCookie();
@@ -336,7 +326,7 @@ export default function HomePage() {
                         {userProfile?.role === 1 && (
                           <button
                             onClick={() => {
-                              router.push("/admin");
+                              router.push("/manage");
                               setShowProfileMenu(false);
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 flex items-center gap-3 font-medium"

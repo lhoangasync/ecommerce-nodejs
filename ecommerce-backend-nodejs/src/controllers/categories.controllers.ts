@@ -79,7 +79,6 @@ export const updateCategoryController = async (
 ) => {
   const { category_id } = req.params
   const payload = req.body
-  console.log('>>>>update category: ', payload)
   const updatedCategory = await categoriesService.updateCategory(category_id, payload)
 
   return res.json({
