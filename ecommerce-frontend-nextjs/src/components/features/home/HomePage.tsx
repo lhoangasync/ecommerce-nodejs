@@ -326,7 +326,7 @@ export default function HomePage() {
                         {userProfile?.role === 1 && (
                           <button
                             onClick={() => {
-                              router.push("/manage");
+                              router.push("/manage/overview");
                               setShowProfileMenu(false);
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 flex items-center gap-3 font-medium"
